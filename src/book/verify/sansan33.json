@@ -1,0 +1,67 @@
+{
+  "familyHash": "1904343524a0da",
+  "model": "kata1-b18c384nbt-s9996604416-d4316597426",
+  "visits": 400,
+  "nodes": {
+    "sansan33:W:Q16": {
+      "loss": 0,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15": {
+      "loss": 0,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17": {
+      "loss": 0,
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:O16/B:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:O16/B:R14/W:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:O16/B:R14/W:Q14/B:R13": {
+      "loss": 0,
+      "bestAt": "R13",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16": {
+      "loss": 0.34,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:Q14/W:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:Q14/W:R12/B:L16": {
+      "loss": 0,
+      "bestAt": "L16",
+      "kind": "joseki"
+    }
+  }
+}

@@ -96,3 +96,7 @@ All scores come back from the point of view of the player to move, whatever `rep
 The pure parts (query building, perspective conversion, loss, flags, freshness) live in `katago-protocol.ts` and `book-check.ts` and are unit tested without an engine.
 
 KataGo is MIT licensed, see `LICENSES/KataGo.txt`. `tools/katago/analysis.cfg` is adapted from its `analysis_example.cfg`.
+
+## Engine benchmark
+
+`tools/engine-bench/` picked the network the in-browser teacher runs: `reference.ts` gets native KataGo's top moves on 30 positions (with `katago.ts`), and `run.ts` drives the app's own engine in Chromium and WebKit through Playwright. The results, the choice and the commands to rerun it are in `docs/engine-choice.md`. `txt-to-bin.ts` converts KataGo's older text-format networks to the binary format the browser engine reads.

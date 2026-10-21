@@ -1,0 +1,2370 @@
+{
+ "about": "Raw results of tools/engine-bench/run.ts, one entry per run, 2026-10-21/22 on an Apple Silicon Mac. See docs/engine-choice.md.",
+ "runs": {
+  "answer-wasm": {
+   "what": "Reply after an off-book move (scoreFor + analyzeCorner, app defaults: 100 visits, 2000 ms), WASM: Chromium 4x (main thread) and WebKit (worker).",
+   "date": "2026-10-21T18:03:42.256Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 367,
+     "timing": [],
+     "answer": [
+      3024,
+      3053.2000000476837,
+      2890.7000000476837,
+      3043.7999999523163,
+      2786.5,
+      3018.4000000953674,
+      3159.5,
+      3064.6999999284744
+     ],
+     "maxTimeMs": 600000,
+     "strength": []
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 156,
+     "timing": [],
+     "answer": [
+      2314,
+      2255,
+      2280,
+      2201,
+      2304,
+      2307,
+      2282,
+      2273
+     ],
+     "maxTimeMs": 600000,
+     "strength": []
+    }
+   ]
+  },
+  "answer-webgpu": {
+   "what": "Reply after an off-book move, app defaults, WebKit WebGPU; GPU shared with another session's native KataGo.",
+   "date": "2026-10-21T18:04:15.832Z",
+   "backendPreference": "webgpu",
+   "results": [
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 185,
+     "timing": [],
+     "answer": [
+      1409,
+      1371,
+      1190,
+      1118,
+      1176,
+      1213,
+      1222,
+      1183
+     ],
+     "maxTimeMs": 600000,
+     "strength": []
+    }
+   ]
+  },
+  "chromium-capped-1500": {
+   "what": "Strength + time under throttle: b10c128, Chromium 4x, WASM main thread, 100 visits, 1500 ms budget.",
+   "date": "2026-10-21T17:55:34.275Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "kata1-b10c128-s1141046784-d204142634.bin.gz",
+     "bytes": 11146584,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 531.0999999046326,
+     "timing": [],
+     "maxTimeMs": 1500,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": true,
+       "agree": 26,
+       "total": 30,
+       "ms": [
+        3504.399999976158,
+        3689.7999999523163,
+        3897.2999999523163,
+        4135.200000047684,
+        4175,
+        4241.599999904633,
+        4461.399999976158,
+        4468.899999976158,
+        4176.299999952316,
+        4144.399999976158,
+        4217.199999928474,
+        4556.200000047684,
+        4034.600000023842,
+        4231.399999976158,
+        4208.100000023842,
+        3972.600000023842,
+        6264.899999976158,
+        4415.600000023842,
+        3652.7000000476837,
+        3754.399999976158,
+        4179.600000023842,
+        3850.899999976158,
+        3479.3000000715256,
+        3956.399999976158,
+        3821.899999976158,
+        3574.2999999523163,
+        3568.2000000476837,
+        3604,
+        3567.9000000953674,
+        3621.600000023842
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "S15",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13",
+         "got": "R13",
+         "top3": [
+          "P14",
+          "P13",
+          "R15"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "P17",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "chromium-capped-2000": {
+   "what": "Strength + time under throttle: the chosen setting, Chromium 4x, WASM main thread, 100 visits, 2000 ms budget.",
+   "date": "2026-10-21T18:02:52.741Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 321,
+     "timing": [],
+     "answer": [],
+     "maxTimeMs": 2000,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": true,
+       "agree": 24,
+       "total": 30,
+       "ms": [
+        2172.100000023842,
+        2169,
+        1994.8999999761581,
+        2143.100000023842,
+        2165.5,
+        2181.1999999284744,
+        2042,
+        2201.2999999523163,
+        2239.100000023842,
+        2195.1999999284744,
+        2039,
+        2188.899999976158,
+        2238.3000000715256,
+        2172.1999999284744,
+        2285.3000000715256,
+        2166.2000000476837,
+        2140,
+        2167.2999999523163,
+        2140.4000000953674,
+        2140.1999999284744,
+        2020,
+        2130.0999999046326,
+        1981.7999999523163,
+        2275.6999999284744,
+        2135.9000000953674,
+        2139.5,
+        2111,
+        2114.100000023842,
+        2085.4000000953674,
+        2092.2999999523163
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W T19, B S19, W R13, B T18",
+         "got": "S17",
+         "top3": [
+          "Q13",
+          "R10",
+          "Q10"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "Q13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R14",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "chromium-capped-2500": {
+   "what": "Strength + time under throttle: Chromium 4x, WASM main thread, 100 visits, 2500 ms budget.",
+   "date": "2026-10-21T17:53:08.776Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 357.5,
+     "timing": [],
+     "maxTimeMs": 2500,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": true,
+       "agree": 24,
+       "total": 30,
+       "ms": [
+        2662.6999999284744,
+        2603.7000000476837,
+        2441.399999976158,
+        2567.7000000476837,
+        2597.6999999284744,
+        2546.8000000715256,
+        2354.7000000476837,
+        2486.899999976158,
+        2502.5,
+        2485.9000000953674,
+        2349.1999999284744,
+        2317.2000000476837,
+        2601.399999976158,
+        2515.2000000476837,
+        2626.2999999523163,
+        2508.2999999523163,
+        2501.5,
+        2506.6999999284744,
+        2503.4000000953674,
+        2491.899999976158,
+        2630.7999999523163,
+        2501,
+        2379.1999999284744,
+        2638.600000023842,
+        2498.399999976158,
+        2253.7999999523163,
+        2501.5,
+        2506.7000000476837,
+        2500.5,
+        2253.100000023842
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "O17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W T19, B S19, W R13, B T18",
+         "got": "Q15",
+         "top3": [
+          "Q13",
+          "R10",
+          "Q10"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "R13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R14",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "kata1-b10c128-s1141046784-d204142634.bin.gz",
+     "bytes": 11146584,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 410.8000000715256,
+     "timing": [],
+     "maxTimeMs": 2500,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": true,
+       "agree": 25,
+       "total": 30,
+       "ms": [
+        3624.5,
+        3613.2000000476837,
+        3579.2999999523163,
+        3583.399999976158,
+        3566.7000000476837,
+        3588,
+        3616.2000000476837,
+        3607.1999999284744,
+        3610.7999999523163,
+        3595.899999976158,
+        3595.899999976158,
+        3607.7999999523163,
+        3623.899999976158,
+        3676.8000000715256,
+        3654.7999999523163,
+        3571,
+        3565.399999976158,
+        3579.399999976158,
+        3596.899999976158,
+        3608.9000000953674,
+        3609,
+        3618.5,
+        3276.899999976158,
+        3858.1999999284744,
+        3646.100000023842,
+        3619.600000023842,
+        3628.399999976158,
+        3633.3000000715256,
+        3632.2000000476837,
+        3590.7999999523163
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "S15",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13",
+         "got": "R13",
+         "top3": [
+          "P14",
+          "P13",
+          "R15"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R13",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "chromium-capped": {
+   "what": "Strength + time under throttle: Chromium 4x, WASM main thread, 100 visits, 3000 ms budget (before the overrun-aware budget split).",
+   "date": "2026-10-21T17:48:32.400Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 397.3000000715256,
+     "timing": [],
+     "maxTimeMs": 3000,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": true,
+       "agree": 26,
+       "total": 30,
+       "ms": [
+        3458,
+        3491.600000023842,
+        3935.5,
+        3945.4000000953674,
+        3414.2000000476837,
+        3454.8000000715256,
+        3550.2000000476837,
+        3525.5,
+        3515.7999999523163,
+        3527.7000000476837,
+        3454.7999999523163,
+        3415.600000023842,
+        3471.1999999284744,
+        3596.2000000476837,
+        3508.8000000715256,
+        3426.7999999523163,
+        3324.5,
+        4162.599999904633,
+        3431.600000023842,
+        3376.1999999284744,
+        3491.600000023842,
+        3589.2999999523163,
+        3449,
+        3460.8000000715256,
+        3363.7000000476837,
+        3441.899999976158,
+        3421.7999999523163,
+        3381.5,
+        3595.2999999523163,
+        3585.899999976158
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "R13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R11",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "kata1-b10c128-s1141046784-d204142634.bin.gz",
+     "bytes": 11146584,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 508.1999999284744,
+     "timing": [],
+     "maxTimeMs": 3000,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": true,
+       "agree": 27,
+       "total": 30,
+       "ms": [
+        5745.800000071526,
+        6116.299999952316,
+        4612.5,
+        4513.399999976158,
+        4452.5,
+        4561.199999928474,
+        4447.5,
+        4418,
+        4455.600000023842,
+        3990.7999999523163,
+        4315.800000071526,
+        4313.100000023842,
+        4321.5,
+        4401,
+        4389.399999976158,
+        4314.800000071526,
+        4327.800000071526,
+        4325.700000047684,
+        4322.5,
+        4314.299999952316,
+        4316.100000023842,
+        4311.200000047684,
+        3959,
+        3781.2999999523163,
+        4313.900000095367,
+        4290.799999952316,
+        4273.5,
+        4274,
+        4272.899999976158,
+        4321.699999928474
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "R15",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W R13, B Q13",
+         "got": "Q12",
+         "top3": [
+          "R15",
+          "Q15",
+          "R16"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "kata1-b15c192-s1672170752-d466197061.bin.gz",
+     "bytes": 36977892,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 1031.6000000238419,
+     "timing": [],
+     "maxTimeMs": 3000,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": true,
+       "agree": 28,
+       "total": 30,
+       "ms": [
+        9479.100000023842,
+        9464.699999928474,
+        9437.899999976158,
+        9403.399999976158,
+        8282.399999976158,
+        9465.400000095367,
+        9460.399999976158,
+        9405.700000047684,
+        9385.300000071526,
+        9457.299999952316,
+        9445.5,
+        9415.299999952316,
+        9463,
+        9520.100000023842,
+        9491.199999928474,
+        9516.200000047684,
+        9572.199999928474,
+        9555,
+        9523.700000047684,
+        9605.100000023842,
+        10183.799999952316,
+        10393.699999928474,
+        8529,
+        12201.799999952316,
+        15101,
+        18361.899999976158,
+        18354.800000071526,
+        15287.5,
+        13758.899999976158,
+        13396
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R15",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "chromium-throttled": {
+   "what": "Timing: Chromium, 4x CPU throttle, WASM on the page main thread (Chromium cannot throttle workers), no time cap, positions 0,2,19,25.",
+   "date": "2026-10-21T17:14:36.771Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 490.7999999523163,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        3046.6999999284744,
+        2946.600000023842,
+        2939.5,
+        2987.7000000476837
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        5539.599999904633,
+        5666.899999976158,
+        5476.600000023842,
+        5397.300000071526
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        10325.5,
+        9919.399999976158,
+        10061.099999904633,
+        9957.800000071526
+       ]
+      },
+      {
+       "visits": 100,
+       "ms": [
+        15759.700000047684,
+        14252.5,
+        15145.299999952316,
+        15180.799999952316
+       ]
+      },
+      {
+       "visits": 200,
+       "ms": [
+        32084.299999952316
+       ]
+      }
+     ],
+     "strength": []
+    },
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "kata1-b10c128-s1141046784-d204142634.bin.gz",
+     "bytes": 11146584,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 531.8000000715256,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        8115,
+        8054.100000023842,
+        8323.199999928474,
+        8367.5
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        14944.399999976158,
+        14778.199999928474,
+        14650.700000047684,
+        14764.299999952316
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        28428.200000047684,
+        28262.600000023842,
+        28051.700000047684,
+        29301.100000023842
+       ]
+      },
+      {
+       "visits": 100,
+       "ms": [
+        44949.5
+       ]
+      }
+     ],
+     "strength": []
+    },
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "kata1-b15c192-s1672170752-d466197061.bin.gz",
+     "bytes": 36977892,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 1402.1000000238419,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        26322.600000023842,
+        28548.100000023842,
+        26343.299999952316,
+        26160.399999976158
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        47391.60000002384
+       ]
+      }
+     ],
+     "strength": []
+    },
+    {
+     "browser": "chromium",
+     "throttle": 4,
+     "where": "main",
+     "model": "kata1-tf2-b10c384-s2941M-d5872M.bin.gz",
+     "bytes": 38245507,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "",
+     "loadMs": null,
+     "timing": [],
+     "strength": [],
+     "error": "page.evaluate: Error: Unsupported modelVersion 17, supported 8..16\n    at parseKataGoModelV8 (http://localhost:5200/go-to-d/src/engine/katago/loadModelV8.ts:14:11)\n    at ensureModel (http://localhost:5200/go-to-d/src/engine/katago/engine.ts:157:18)\n    at async Module.loadKataGoModel (http://localhost:5200/go-to-d/src/engine/katago/engine.ts:182:3)\n    at async Object.load (http://localhost:5200/go-to-d/src/engine/teacher.ts:142:20)"
+    }
+   ]
+  },
+  "strength": {
+   "what": "Strength: all 30 positions, WebKit (WebGPU, worker), no time cap, visits 16/32/64/100/200.",
+   "date": "2026-10-21T17:24:51.425Z",
+   "backendPreference": "webgpu",
+   "results": [
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 219,
+     "timing": [],
+     "strength": [
+      {
+       "visits": 16,
+       "agree": 25,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N16",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "Q15",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "Q13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R14",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R11",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 32,
+       "agree": 25,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "Q13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R13",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R11",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 64,
+       "agree": 25,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N16",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "Q15",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "R13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R13",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R11",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 100,
+       "agree": 24,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "Q15",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W T19, B S19, W R13, B T18",
+         "got": "Q15",
+         "top3": [
+          "Q13",
+          "R10",
+          "Q10"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "P17",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R14",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 200,
+       "agree": 23,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N16",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "Q15",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W T19, B S19, W R13, B T18",
+         "got": "Q15",
+         "top3": [
+          "Q13",
+          "R10",
+          "Q10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "L16",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R13",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "kata1-b10c128-s1141046784-d204142634.bin.gz",
+     "bytes": 11146584,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 175,
+     "timing": [],
+     "strength": [
+      {
+       "visits": 16,
+       "agree": 27,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14, B Q14, W Q13",
+         "got": "R13",
+         "top3": [
+          "P14",
+          "P13",
+          "R15"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "O16",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 32,
+       "agree": 24,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "O17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13",
+         "got": "R13",
+         "top3": [
+          "P14",
+          "P13",
+          "R15"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R13",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 64,
+       "agree": 25,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "Q14",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W R13",
+         "got": "R11",
+         "top3": [
+          "R15",
+          "R10",
+          "Q13"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "M16",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R15",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 100,
+       "agree": 25,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "R15",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13",
+         "got": "R13",
+         "top3": [
+          "P14",
+          "P13",
+          "R15"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 200,
+       "agree": 26,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14, B Q14, W Q13",
+         "got": "R13",
+         "top3": [
+          "P14",
+          "P13",
+          "R15"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W R13",
+         "got": "R11",
+         "top3": [
+          "R15",
+          "R10",
+          "Q13"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R15",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "kata1-b15c192-s1672170752-d466197061.bin.gz",
+     "bytes": 36977892,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 254,
+     "timing": [],
+     "strength": [
+      {
+       "visits": 16,
+       "agree": 29,
+       "total": 30,
+       "misses": [
+        {
+         "id": "even: W R14",
+         "got": "R15",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 32,
+       "agree": 27,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "Q11",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R15",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 64,
+       "agree": 27,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "O16",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R15",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 100,
+       "agree": 29,
+       "total": 30,
+       "misses": [
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      },
+      {
+       "visits": 200,
+       "agree": 28,
+       "total": 30,
+       "misses": [
+        {
+         "id": "handicap4: W R14, B Q14, W R13",
+         "got": "R11",
+         "top3": [
+          "R15",
+          "R10",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R15",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "kata1-tf2-b10c384-s2941M-d5872M.bin.gz",
+     "bytes": 38245507,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "",
+     "loadMs": null,
+     "timing": [],
+     "strength": [],
+     "error": "page.evaluate: Error: Unsupported modelVersion 17, supported 8..16"
+    }
+   ]
+  },
+  "webkit-wasm-capped-2500": {
+   "what": "Strength + time: WebKit WASM worker, 100 visits, 2500 ms budget.",
+   "date": "2026-10-21T17:58:42.856Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 209,
+     "timing": [],
+     "maxTimeMs": 2500,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": false,
+       "agree": 23,
+       "total": 30,
+       "ms": [
+        2478,
+        2482,
+        2536,
+        2519,
+        2476,
+        2503,
+        2479,
+        2451,
+        2536,
+        2529,
+        2464,
+        2519,
+        2542,
+        2466,
+        2479,
+        2542,
+        2456,
+        2486,
+        2544,
+        2502,
+        2449,
+        2499,
+        2516,
+        2528,
+        2532,
+        2484,
+        2554,
+        2534,
+        2477,
+        2413
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "S14",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W T19, B S19, W R13, B T18",
+         "got": "S17",
+         "top3": [
+          "Q13",
+          "R10",
+          "Q10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W tenuki, B R13",
+         "got": "R15",
+         "top3": [
+          "K17",
+          "Q13",
+          "K16"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "R13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "handicap4: W O16",
+         "got": "R14",
+         "top3": [
+          "Q14",
+          "M17",
+          "Q13"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "webkit-wasm": {
+   "what": "Timing: WebKit, WASM (single thread) in the worker, no time cap, positions 0,2,19,25.",
+   "date": "2026-10-21T17:37:41.558Z",
+   "backendPreference": "wasm",
+   "results": [
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 151,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        711,
+        762,
+        788,
+        818
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        1568,
+        1639,
+        1581,
+        1508
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        2961,
+        2928,
+        3061,
+        3202
+       ]
+      },
+      {
+       "visits": 100,
+       "ms": [
+        4855,
+        4861,
+        5160,
+        4898
+       ]
+      },
+      {
+       "visits": 200,
+       "ms": [
+        9586,
+        9524,
+        9559,
+        9732
+       ]
+      },
+      {
+       "visits": 400,
+       "ms": [
+        18724,
+        18136,
+        19929,
+        19348
+       ]
+      }
+     ],
+     "strength": []
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "kata1-b10c128-s1141046784-d204142634.bin.gz",
+     "bytes": 11146584,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 253,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        2668,
+        2654,
+        2623,
+        2798
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        4950,
+        4944,
+        4687,
+        4796
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        9205,
+        8844,
+        9264,
+        8879
+       ]
+      },
+      {
+       "visits": 100,
+       "ms": [
+        12549,
+        10409,
+        13260,
+        13063
+       ]
+      },
+      {
+       "visits": 200,
+       "ms": [
+        25609,
+        26770,
+        27260,
+        29190
+       ]
+      },
+      {
+       "visits": 400,
+       "ms": [
+        52897
+       ]
+      }
+     ],
+     "strength": []
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "kata1-b15c192-s1672170752-d466197061.bin.gz",
+     "bytes": 36977892,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "wasm",
+     "loadMs": 558,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        8265,
+        8368,
+        8246,
+        8320
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        15184,
+        15221,
+        15235,
+        17534
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        30053
+       ]
+      }
+     ],
+     "strength": []
+    }
+   ]
+  },
+  "webkit-webgpu-capped-2500": {
+   "what": "Strength + time: WebKit WebGPU, 100 visits, 2500 ms budget. GPU shared with a native KataGo run from another session (slower than results-webkit-webgpu).",
+   "date": "2026-10-21T17:57:24.764Z",
+   "backendPreference": "webgpu",
+   "results": [
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 288,
+     "timing": [],
+     "maxTimeMs": 2500,
+     "strength": [
+      {
+       "visits": 100,
+       "throttled": false,
+       "agree": 25,
+       "total": 30,
+       "ms": [
+        1872,
+        1739,
+        1483,
+        1135,
+        1474,
+        1419,
+        1370,
+        1376,
+        1365,
+        1335,
+        1310,
+        1386,
+        1352,
+        1614,
+        1599,
+        1346,
+        1310,
+        1332,
+        1299,
+        1297,
+        1346,
+        1340,
+        1263,
+        1359,
+        1252,
+        1257,
+        1248,
+        1210,
+        1218,
+        1234
+       ],
+       "misses": [
+        {
+         "id": "handicap4: W R14",
+         "got": "N17",
+         "top3": [
+          "R12",
+          "R11",
+          "R10"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W Q13, B R13, W R12, B S13",
+         "got": "Q15",
+         "top3": [
+          "S12",
+          "S15",
+          "Q12"
+         ]
+        },
+        {
+         "id": "handicap4: W R14, B Q14, W T19, B S19, W R13, B T18",
+         "got": "Q15",
+         "top3": [
+          "Q13",
+          "R10",
+          "Q10"
+         ]
+        },
+        {
+         "id": "handicap4: W O17",
+         "got": "R13",
+         "top3": [
+          "M17",
+          "L17",
+          "K17"
+         ]
+        },
+        {
+         "id": "even: W R14",
+         "got": "R12",
+         "top3": [
+          "O17",
+          "O16",
+          "Q10"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "webkit-webgpu": {
+   "what": "Timing: WebKit, WebGPU in the worker, no time cap, positions 0,2,19,25. GPU otherwise idle.",
+   "date": "2026-10-21T17:28:01.525Z",
+   "backendPreference": "webgpu",
+   "results": [
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "g170-b6c96-s175395328-d26788732.bin.gz",
+     "bytes": 3827339,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 125,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        88,
+        97,
+        86,
+        92
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        151,
+        148,
+        143,
+        147
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        269,
+        268,
+        267,
+        262
+       ]
+      },
+      {
+       "visits": 100,
+       "ms": [
+        396,
+        372,
+        397,
+        402
+       ]
+      },
+      {
+       "visits": 200,
+       "ms": [
+        780,
+        702,
+        762,
+        769
+       ]
+      },
+      {
+       "visits": 400,
+       "ms": [
+        1531,
+        1350,
+        1533,
+        1536
+       ]
+      }
+     ],
+     "strength": []
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "kata1-b10c128-s1141046784-d204142634.bin.gz",
+     "bytes": 11146584,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 123,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        213,
+        229,
+        210,
+        210
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        357,
+        374,
+        362,
+        354
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        652,
+        677,
+        666,
+        662
+       ]
+      },
+      {
+       "visits": 100,
+       "ms": [
+        997,
+        964,
+        1023,
+        1006
+       ]
+      },
+      {
+       "visits": 200,
+       "ms": [
+        1948,
+        1798,
+        1904,
+        2055
+       ]
+      },
+      {
+       "visits": 400,
+       "ms": [
+        4303,
+        4341,
+        5092,
+        5250
+       ]
+      }
+     ],
+     "strength": []
+    },
+    {
+     "browser": "webkit",
+     "throttle": 1,
+     "where": "worker",
+     "model": "kata1-b15c192-s1672170752-d466197061.bin.gz",
+     "bytes": 36977892,
+     "env": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "webgpu": true,
+      "crossOriginIsolated": false,
+      "cores": 8
+     },
+     "backend": "webgpu",
+     "loadMs": 221,
+     "timing": [
+      {
+       "visits": 16,
+       "ms": [
+        917,
+        985,
+        995,
+        1009
+       ]
+      },
+      {
+       "visits": 32,
+       "ms": [
+        1728,
+        1738,
+        1680,
+        1634
+       ]
+      },
+      {
+       "visits": 64,
+       "ms": [
+        2938,
+        2884,
+        2870,
+        2845
+       ]
+      },
+      {
+       "visits": 100,
+       "ms": [
+        4201,
+        4134,
+        4167,
+        4020
+       ]
+      },
+      {
+       "visits": 200,
+       "ms": [
+        7483,
+        7010,
+        7282,
+        7007
+       ]
+      },
+      {
+       "visits": 400,
+       "ms": [
+        13500,
+        14222,
+        14213,
+        13870
+       ]
+      }
+     ],
+     "strength": []
+    }
+   ]
+  }
+ }
+}

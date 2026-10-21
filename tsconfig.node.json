@@ -19,5 +19,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts", "tools"]
+  "include": ["vite.config.ts", "tools"],
+  "exclude": ["tools/engine-bench/page"]
 }

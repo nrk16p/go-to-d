@@ -6,21 +6,24 @@
 // turned by `sym`. Engine calls go through engineAccess.ts, what a session counts for through result.ts.
 
 import { startPosition } from '../book/setups'
-import type { Book, BookNode, FamilyId } from '../book/types'
+import type { Book, BookNode } from '../book/types'
 import type { TeacherEngine } from '../engine/teacher'
-import { BOARD_SIZE, inRegion, type Move, type Pt, type Region, type Sym } from '../go/coords'
+import { BOARD_SIZE, inRegion, type Pt } from '../go/coords'
 import { otherColor, play, type Color, type Position } from '../go/rules'
 import { EngineAccess, legal } from './engineAccess'
 import { analysisToBook, lineKey, noteOn, toBoardPt, toBookPt, verdictToBoard } from './frame'
-import { bookChild, isSound, judgeMove, type Thresholds, type Verdict } from './judge'
+import { bookChild, isSound, judgeMove, type Verdict } from './judge'
 import { mulberry32, pickTeacherMove } from './pick'
 import { countOwnerMove, newTally, sessionResult, switchablePatterns, type SessionResult, type Tally } from './result'
-import { drillableSides, ownerColor, type Side } from './sides'
+import { drillableSides, ownerColor } from './sides'
+import { MESSAGES } from './messages'
+import { startState, type SparConfig, type SparState } from './types'
 
 export { ENGINE_TIMEOUT_MS } from './engineAccess'
 export { DEFAULT_THRESHOLDS, type Thresholds, type Verdict } from './judge'
 export type { SessionResult } from './result'
 export type { Side } from './sides'
+export type { LogEntry, SparConfig, SparState } from './types'
 
 /** Moves played off the book, by either side, before the session ends. */
 const MAX_OFF_BOOK = 6
@@ -31,52 +34,13 @@ const NEAR_BEST = 0.5
 /** The book was checked with KataGo's Chinese rules, which give White +4 in the 4-stone setup (R9). */
 const HANDICAP_BONUS = 4
 
-const MESSAGES = {
-  occupied: 'There’s already a stone there.',
-  suicide: 'That stone would have no liberties. Try another point.',
-  ko: 'Ko: you can’t take back right away. Play somewhere else first.',
-  engineLoading: 'The engine is still loading, so the teacher can’t answer off the book yet. The session stops here.',
-  engineFailed: 'The engine couldn’t answer this position, so the session stops here.',
-  noMove: 'The teacher has no move to play, so the session stops here.',
-}
-
-export type LogEntry = { move: Move | { tenuki: Color }; by: 'owner' | 'teacher'; verdict?: Verdict }
-
-export interface SparState {
-  /** While an owner move is being judged, this already shows its stone; the log gets it with its verdict. */
-  pos: Position
-  /** The setup's komi (the engine is asked with the R9 bonus on top). */
-  komi: number
-  region: Region
-  /** The book node of the last move; null once off book. Its own `note` is in the book's frame: show `note` below. */
-  node: BookNode | null
-  offBookMoves: number
-  status: 'teacher-thinking' | 'owner-to-move' | 'stopped' | 'done'
-  lastVerdict: Verdict | null
-  log: LogEntry[]
-  result: SessionResult | null
-  message: string | null
-  /** The note on `node`'s move with its coordinates turned to the board; null off book. */
-  note: string | null
-}
-
-export interface SparConfig {
-  mode: 'drill' | 'free'
-  family: FamilyId
-  patternId?: string
-  side: Side
-  sym: Sym
-  seed: number
-  thresholds: Thresholds
-  /** Node keys the owner missed before; free sparring steers toward them. */
-  missed: Set<string>
-}
-
 type Undo = Pick<SparState, 'pos' | 'node' | 'offBookMoves' | 'log' | 'note'> & { lastBook: BookNode | null }
 
 function onBoard(p: Pt): boolean {
   return [p.x, p.y].every((v) => Number.isInteger(v) && v >= 0 && v < BOARD_SIZE)
 }
+
+const lastMove = (pos: Position) => pos.history[pos.history.length - 1]
 
 export class SparController {
   private readonly book: Book
@@ -160,7 +124,7 @@ export class SparController {
     this.set({
       node: child,
       offBookMoves: offBookMoves + (child ? 0 : 1),
-      log: [...log, { move: played === 'tenuki' ? { tenuki: this.owner } : after.history[after.history.length - 1], by: 'owner', verdict }],
+      log: [...log, { move: played === 'tenuki' ? { tenuki: this.owner } : lastMove(after), by: 'owner', verdict }],
       lastVerdict: verdict,
       note: noteOn(child, sym),
       ...(stop ? { status: 'stopped' as const } : {}),
@@ -190,14 +154,15 @@ export class SparController {
   }
 
   /**
-   * Starts over as a drill of `patternId`, same side and symmetry, and returns the abandoned session's
-   * result for the UI to record: null if the owner hadn't moved (or the session had already ended and
-   * reported its result). Throws, changing nothing, if the pattern is unknown or can't be drilled from this side.
+   * Starts over as a drill of `patternId`, same side and symmetry. Returns the abandoned session's result
+   * for the UI to record only if it had a mistake (then `clean: false`): switching after another joseki
+   * carries no penalty (spec 1b, R27). Null too if the session had already ended and reported its result.
+   * Throws, changing nothing, if the pattern is unknown or can't be drilled from this side.
    */
   switchTo(patternId: string): SessionResult | null {
     const entry = Object.hasOwn(this.book.patterns, patternId) ? this.book.patterns[patternId] : undefined
     if (!entry) throw new Error(`Unknown pattern "${patternId}"`)
-    const abandoned = this.s.status !== 'done' && this.tally.ownerMoves > 0 ? this.result() : null
+    const abandoned = this.s.status !== 'done' && this.tally.mistakes.size > 0 ? this.result() : null
     this.reset({ ...this.cfg, mode: 'drill', patternId, family: entry.family })
     this.started = true
     this.next(this.gen).catch((err: unknown) => {
@@ -233,19 +198,7 @@ export class SparController {
     this.undo = null
     this.lastBook = null
     this.leftDrill = false
-    this.s = {
-      pos: start.pos,
-      komi: start.komi,
-      region: start.region,
-      node: fam.root,
-      offBookMoves: 0,
-      status: 'teacher-thinking',
-      lastVerdict: null,
-      log: [],
-      result: null,
-      message: null,
-      note: null,
-    }
+    this.s = startState(start, fam.root)
     this.emit()
   }
 
@@ -332,20 +285,13 @@ export class SparController {
     const child = node ? this.pickBook(node) : null
     if (!child) return this.engineReply(gen)
 
-    const { pos, log } = this.s
+    const pos = this.s.pos
     const color = otherColor(this.owner)
     const at = child.move!.at
     const pt = at === 'tenuki' ? this.eng.tenukiPoint(pos, await this.eng.analysis(pos), color) : toBoardPt(at, this.cfg.sym)
     if (gen !== this.gen) return
     if (!legal(pos, pt, color)) return this.finish(MESSAGES.noMove)
-    const after = this.place(pos, pt, color)
-    this.lastBook = child
-    this.set({
-      pos: after,
-      node: child,
-      log: [...log, { move: at === 'tenuki' ? { tenuki: color } : after.history[after.history.length - 1], by: 'teacher' }],
-      note: noteOn(child, this.cfg.sym),
-    })
+    this.teacherPlays(pt, at === 'tenuki', child)
     await this.next(gen)
   }
 
@@ -360,35 +306,36 @@ export class SparController {
   private async engineReply(gen: number): Promise<void> {
     const status = this.engine.status()
     if (status !== 'ready') return this.finish(status === 'loading' ? MESSAGES.engineLoading : MESSAGES.engineFailed)
-    const { pos, region } = this.s
+    const { pos, region, node } = this.s
     const a = await this.eng.analysis(pos)
     if (gen !== this.gen) return
     if (!a) return this.finish(MESSAGES.engineFailed)
     const color = otherColor(this.owner)
     const { cornerBest, tenukiBest } = a
     if (tenukiBest && tenukiBest.scoreLead > cornerBest.scoreLead + TENUKI_MARGIN && legal(pos, tenukiBest.pt, color)) {
-      this.playEngineMove(tenukiBest.pt, color, true)
+      this.teacherPlays(tenukiBest.pt, true, node && bookChild(node, 'tenuki'))
       return this.finish()
     }
     const near = a.candidates.filter((c) => c.scoreLead >= cornerBest.scoreLead - NEAR_BEST)
     const pick = near.length > 0 ? near[Math.floor(this.rng() * near.length)].pt : cornerBest.pt
     const pt = [pick, cornerBest.pt, ...a.candidates.map((c) => c.pt)].find((p) => inRegion(p, region) && legal(pos, p, color))
     if (!pt) return this.finish(MESSAGES.noMove)
-    this.playEngineMove(pt, color, false)
+    // The engine's answer may still be a book move.
+    this.teacherPlays(pt, false, node && bookChild(node, toBookPt(pt, this.cfg.sym)))
     await this.next(gen)
   }
 
-  /** Plays the engine's choice for the teacher, following the book if the move happens to be in it. */
-  private playEngineMove(pt: Pt, color: Color, tenuki: boolean): void {
-    const { pos, node, log, offBookMoves } = this.s
+  /** Puts the teacher's stone on `pt`; `child` is the book move it is, or null off book. */
+  private teacherPlays(pt: Pt, tenuki: boolean, child: BookNode | null): void {
+    const { pos, log, offBookMoves } = this.s
+    const color = otherColor(this.owner)
     const after = this.place(pos, pt, color)
-    const child = node ? bookChild(node, tenuki ? 'tenuki' : toBookPt(pt, this.cfg.sym)) : null
     if (child) this.lastBook = child
     this.set({
       pos: after,
       node: child,
       offBookMoves: offBookMoves + (child ? 0 : 1),
-      log: [...log, { move: tenuki ? { tenuki: color } : after.history[after.history.length - 1], by: 'teacher' }],
+      log: [...log, { move: tenuki ? { tenuki: color } : lastMove(after), by: 'teacher' }],
       note: noteOn(child, this.cfg.sym),
     })
   }

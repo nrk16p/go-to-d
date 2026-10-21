@@ -226,15 +226,8 @@ describe('SparController: other joseki in a drill', () => {
     expect(c.state.log).toBe(before.log)
 
     await c.ownerPlay(at('R13', 5))
-    // The abandoned drill is reported: played, but its leaf never reached, so not clean (R25, R26).
-    expect(c.switchTo('fixture-crawl')).toEqual({
-      patternIds: ['fixture-hane'],
-      side: 'attack',
-      clean: false,
-      mistakes: 0,
-      pointsLost: 0,
-      missedKeys: [],
-    })
+    // Switching after another joseki carries no penalty: nothing to record (spec 1b, R27).
+    expect(c.switchTo('fixture-crawl')).toBeNull()
     await vi.waitFor(() => expect(c.state.status).toBe('owner-to-move'))
     expect(c.state.log).toEqual([])
     expect(c.state.lastVerdict).toBeNull()
@@ -1022,10 +1015,17 @@ describe('SparController: what a session counts for (R25, R26)', () => {
     expect(c.state.result).toEqual({ patternIds: [], side: 'defend', clean: true, mistakes: 0, pointsLost: 0, missedKeys: [] })
   })
 
-  it('switchTo reports nothing when the owner hadn’t moved, or when the session had already ended', async () => {
+  it('switchTo reports nothing when the owner hadn’t moved, made no mistake, or the session had already ended', async () => {
     const fresh = make()
     await fresh.start()
     expect(fresh.switchTo('fixture-crawl')).toBeNull()
+
+    // Off the book with fine moves, no mistake: no penalty for switching either.
+    const fine = make()
+    await fine.start()
+    await fine.ownerPlay(at('R17'))
+    expect(fine.state.lastVerdict?.type).toBe('fine-offbook')
+    expect(fine.switchTo('fixture-crawl')).toBeNull()
 
     const done = make()
     await done.start()

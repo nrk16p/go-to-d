@@ -2,25 +2,26 @@
 // engine once off book), the owner plays the other side, and every owner move is judged. The Spar
 // screen subscribes to the state and calls ownerPlay / retry / playOn / switchTo.
 //
-// Frames: the book is canonical (studied corner upper right); the board is that frame turned by `sym`.
-// Book moves are turned by `sym` before they are played, the owner's taps turned back before they are
-// matched against the book, and notes have their coordinates turned with orientNote.
+// Frames (frame.ts): the book is canonical (studied corner upper right); the board is that frame
+// turned by `sym`. Engine calls go through engineAccess.ts, what a session counts for through result.ts.
 
 import { startPosition } from '../book/setups'
 import type { Book, BookNode, FamilyId } from '../book/types'
-import type { CornerAnalysis, TeacherEngine } from '../engine/teacher'
-import { BOARD_SIZE, inRegion, inverse, parseGtp, transform, type Move, type Pt, type Region, type Sym } from '../go/coords'
+import type { TeacherEngine } from '../engine/teacher'
+import { BOARD_SIZE, inRegion, type Move, type Pt, type Region, type Sym } from '../go/coords'
 import { otherColor, play, type Color, type Position } from '../go/rules'
+import { EngineAccess, legal } from './engineAccess'
+import { analysisToBook, lineKey, noteOn, toBoardPt, toBookPt, verdictToBoard } from './frame'
 import { bookChild, isSound, judgeMove, type Thresholds, type Verdict } from './judge'
-import { orientNote } from './orient'
 import { mulberry32, pickTeacherMove } from './pick'
+import { countOwnerMove, newTally, sessionResult, switchablePatterns, type SessionResult, type Tally } from './result'
 import { drillableSides, ownerColor, type Side } from './sides'
 
+export { ENGINE_TIMEOUT_MS } from './engineAccess'
 export { DEFAULT_THRESHOLDS, type Thresholds, type Verdict } from './judge'
+export type { SessionResult } from './result'
 export type { Side } from './sides'
 
-/** The longest any engine call is waited for; after that the move is unjudged (or the teacher stops). */
-export const ENGINE_TIMEOUT_MS = 8000
 /** Moves played off the book, by either side, before the session ends. */
 const MAX_OFF_BOOK = 6
 /** Off book, the teacher leaves the corner (and ends the session) when elsewhere is this much bigger. */
@@ -29,32 +30,20 @@ const TENUKI_MARGIN = 1.0
 const NEAR_BEST = 0.5
 /** The book was checked with KataGo's Chinese rules, which give White +4 in the 4-stone setup (R9). */
 const HANDICAP_BONUS = 4
-/** Big points away from the studied corner (canonical frame): where a tenuki goes when the engine has none. */
-const BIG_POINTS: Pt[] = ['D10', 'K4', 'C14', 'N3', 'C6', 'F3', 'F17', 'R7', 'G10', 'K7'].map(parseGtp)
 
 const MESSAGES = {
   occupied: 'There’s already a stone there.',
   suicide: 'That stone would have no liberties. Try another point.',
   ko: 'Ko: you can’t take back right away. Play somewhere else first.',
-  engineLoading: 'The engine is still loading, so the teacher can’t answer off the book yet. This session ends here.',
-  engineFailed: 'The engine couldn’t answer this position, so this session ends here.',
-  noMove: 'The teacher has no move here, so this session ends here.',
-}
-
-export interface SessionResult {
-  /** The drilled pattern, or in free sparring the one pattern whose line was reached. */
-  patternIds: string[]
-  side: Side
-  clean: boolean
-  mistakes: number
-  pointsLost: number
-  /** Book positions (node keys) where the owner went wrong. */
-  missedKeys: string[]
+  engineLoading: 'The engine is still loading, so the teacher can’t answer off the book yet. The session stops here.',
+  engineFailed: 'The engine couldn’t answer this position, so the session stops here.',
+  noMove: 'The teacher has no move to play, so the session stops here.',
 }
 
 export type LogEntry = { move: Move | { tenuki: Color }; by: 'owner' | 'teacher'; verdict?: Verdict }
 
 export interface SparState {
+  /** While an owner move is being judged, this already shows its stone; the log gets it with its verdict. */
   pos: Position
   /** The setup's komi (the engine is asked with the R9 bonus on top). */
   komi: number
@@ -83,39 +72,10 @@ export interface SparConfig {
   missed: Set<string>
 }
 
-type Cached = { pos: Position; analysis: Promise<CornerAnalysis> }
-type Undo = Pick<SparState, 'pos' | 'node' | 'offBookMoves' | 'log' | 'note'> & { lastBook: BookNode | null; cached: Cached | null }
+type Undo = Pick<SparState, 'pos' | 'node' | 'offBookMoves' | 'log' | 'note'> & { lastBook: BookNode | null }
 
-/** The value, or null if the call rejects or takes longer than ENGINE_TIMEOUT_MS. */
-function timed<T>(p: Promise<T>): Promise<T | null> {
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(null), ENGINE_TIMEOUT_MS)
-    const done = (v: T | null) => {
-      clearTimeout(timer)
-      resolve(v)
-    }
-    p.then(done, () => done(null))
-  })
-}
-
-/** Starts an engine call. A throw becomes a rejection, and a rejection nobody awaits is never unhandled. */
-function ask<T>(call: () => Promise<T>): Promise<T> {
-  let p: Promise<T>
-  try {
-    p = call()
-  } catch (err) {
-    p = Promise.reject(err)
-  }
-  p.catch(() => {})
-  return p
-}
-
-function legal(pos: Position, p: Pt, color: Color): boolean {
-  return !('illegal' in play(pos, p, color))
-}
-
-function round1(x: number): number {
-  return Math.round(x * 10) / 10
+function onBoard(p: Pt): boolean {
+  return [p.x, p.y].every((v) => Number.isInteger(v) && v >= 0 && v < BOARD_SIZE)
 }
 
 export class SparController {
@@ -125,19 +85,18 @@ export class SparController {
   private s!: SparState
   private cfg!: SparConfig
   private owner!: Color
-  private engineKomi!: number
+  private eng!: EngineAccess
   private drillPath: BookNode[] | undefined
   private rng!: () => number
+  private tally!: Tally
   /** Bumped on every restart, so an engine answer for an old session is dropped. */
   private gen = 0
   private started = false
-  private cached: Cached | null = null
   private undo: Undo | null = null
   /** The last book node on the line actually played (free sparring credits its pattern). */
   private lastBook: BookNode | null = null
-  private mistakes = 0
-  private lost = 0
-  private misses = new Set<string>()
+  /** Play went on after a stopped move off the drilled line: book moves are judged as in free sparring. */
+  private leftDrill = false
 
   constructor(book: Book, engine: TeacherEngine, config: SparConfig) {
     this.book = book
@@ -164,78 +123,88 @@ export class SparController {
 
   async ownerPlay(p: Pt | 'tenuki'): Promise<void> {
     if (this.s.status !== 'owner-to-move') return
-    const { pos, node, region, log, offBookMoves } = this.s
+    const { pos, node, region, log, offBookMoves, note } = this.s
+    const { sym } = this.cfg
     const gen = this.gen
-    let tapped: Position | null = null
+    let after: Position | null = null
     if (p !== 'tenuki') {
-      if (![p.x, p.y].every((v) => Number.isInteger(v) && v >= 0 && v < BOARD_SIZE)) return
+      if (!onBoard(p)) return
       const r = play(pos, p, this.owner)
       if ('illegal' in r) {
         this.set({ message: MESSAGES[r.illegal] })
         return
       }
-      tapped = r.pos
+      after = r.pos
     }
     // A tap outside the corner is a tenuki played on that point.
-    const played = p !== 'tenuki' && inRegion(p, region) ? transform(p, inverse(this.cfg.sym)) : 'tenuki'
-    const undo: Undo = { pos, node, offBookMoves, log, note: this.s.note, lastBook: this.lastBook, cached: this.cached }
+    const played = p !== 'tenuki' && inRegion(p, region) ? toBookPt(p, sym) : 'tenuki'
+    const undo: Undo = { pos, node, offBookMoves, log, note, lastBook: this.lastBook }
     const engineState = this.engine.status()
-    this.set({ status: 'teacher-thinking', message: null, lastVerdict: null })
-
-    const after = tapped ?? this.place(pos, this.tenukiPoint(pos, await this.analysisOf(pos), this.owner), this.owner)
-    if (gen !== this.gen) return
+    // The stone shows at once; its verdict follows.
+    this.set({ status: 'teacher-thinking', message: null, lastVerdict: null, ...(after ? { pos: after } : {}) })
+    if (!after) {
+      const a = await this.eng.analysis(pos)
+      if (gen !== this.gen) return
+      after = this.place(pos, this.eng.tenukiPoint(pos, a, this.owner), this.owner)
+      this.set({ pos: after })
+    }
     const child = node ? bookChild(node, played) : null
     const verdict = await this.judge(node, child, played, pos, after, engineState)
     if (gen !== this.gen) return
 
-    if (verdict.type === 'mistake') {
-      this.mistakes++
-      if (node && node.key !== '') this.misses.add(node.key)
-    }
-    if ((verdict.type === 'mistake' || verdict.type === 'fine-offbook') && verdict.pointsLost !== null) this.lost += verdict.pointsLost
+    const where = node ? `book:${node.key}` : `off:${lineKey(pos, sym)}`
+    countOwnerMove(this.tally, { verdict, node, child, where, drill: this.cfg.mode === 'drill' })
     if (child) this.lastBook = child
-    const last = after.history[after.history.length - 1]
     const stop = verdict.type === 'mistake' || verdict.type === 'other-joseki'
     if (stop) this.undo = undo
     this.set({
-      pos: after,
       node: child,
       offBookMoves: offBookMoves + (child ? 0 : 1),
-      log: [...log, { move: played === 'tenuki' ? { tenuki: this.owner } : last, by: 'owner', verdict }],
+      log: [...log, { move: played === 'tenuki' ? { tenuki: this.owner } : after.history[after.history.length - 1], by: 'owner', verdict }],
       lastVerdict: verdict,
-      note: this.noteOf(child),
+      note: noteOn(child, sym),
       ...(stop ? { status: 'stopped' as const } : {}),
     })
     if (!stop) await this.next(gen)
   }
 
-  /** After a stopped move: back to the position before it, as if it was never played. */
+  /**
+   * After a stopped move: back to the position, book node, log and off-book count from before it.
+   * `lastVerdict` is cleared, not restored. The mistake stays counted (once per position).
+   */
   retry(): void {
     if (this.s.status !== 'stopped' || !this.undo) return
-    const { lastBook, cached, ...state } = this.undo
+    const { lastBook, ...state } = this.undo
     this.undo = null
     this.lastBook = lastBook
-    this.cached = cached
     this.ownerTurn({ ...state, lastVerdict: null, message: null })
   }
 
-  /** After a stopped move: keep it, and the teacher answers (the book's punishment line, or the engine). */
+  /** After a mistake: keep it, and the teacher answers (the book's punishment line, or the engine). Not after other-joseki. */
   async playOn(): Promise<void> {
-    if (this.s.status !== 'stopped') return
+    if (this.s.status !== 'stopped' || this.s.lastVerdict?.type !== 'mistake') return
     this.undo = null
+    const node = this.s.node
+    if (this.drillPath && !(node && this.drillPath.includes(node))) this.leftDrill = true
     await this.next(this.gen)
   }
 
-  /** Starts over as a drill of `patternId`, same side and symmetry. Throws if it cannot be drilled from this side. */
-  switchTo(patternId: string): void {
+  /**
+   * Starts over as a drill of `patternId`, same side and symmetry, and returns the abandoned session's
+   * result for the UI to record: null if the owner hadn't moved (or the session had already ended and
+   * reported its result). Throws, changing nothing, if the pattern is unknown or can't be drilled from this side.
+   */
+  switchTo(patternId: string): SessionResult | null {
     const entry = Object.hasOwn(this.book.patterns, patternId) ? this.book.patterns[patternId] : undefined
     if (!entry) throw new Error(`Unknown pattern "${patternId}"`)
+    const abandoned = this.s.status !== 'done' && this.tally.ownerMoves > 0 ? this.result() : null
     this.reset({ ...this.cfg, mode: 'drill', patternId, family: entry.family })
     this.started = true
     this.next(this.gen).catch((err: unknown) => {
       console.error('[spar] restart failed', err)
       this.finish(MESSAGES.noMove)
     })
+    return abandoned
   }
 
   /** Checks the config and sets up a fresh session. Changes nothing if it throws. */
@@ -252,18 +221,18 @@ export class SparController {
     const entry = cfg.patternId === undefined ? undefined : book.patterns[cfg.patternId]
     const setup = entry?.def.setup ?? fam.def.setup
 
-    this.gen++
+    const gen = ++this.gen
     this.cfg = cfg
     this.owner = ownerColor(fam.def, cfg.side)
-    this.engineKomi = start.komi + (setup === 'handicap4' ? HANDICAP_BONUS : 0)
+    const komi = start.komi + (setup === 'handicap4' ? HANDICAP_BONUS : 0)
+    const isCurrent = (pos: Position) => gen === this.gen && this.s.pos === pos && this.s.status === 'owner-to-move'
+    this.eng = new EngineAccess(this.engine, komi, start.region, cfg.sym, isCurrent)
     this.drillPath = cfg.mode === 'drill' ? entry?.path : undefined
     this.rng = mulberry32(cfg.seed)
-    this.cached = null
+    this.tally = newTally()
     this.undo = null
     this.lastBook = null
-    this.mistakes = 0
-    this.lost = 0
-    this.misses = new Set()
+    this.leftDrill = false
     this.s = {
       pos: start.pos,
       komi: start.komi,
@@ -285,8 +254,15 @@ export class SparController {
     this.emit()
   }
 
+  /** A listener that throws must not stop the session (or the other listeners). */
   private emit(): void {
-    for (const fn of [...this.listeners]) fn(this.s)
+    for (const fn of [...this.listeners]) {
+      try {
+        fn(this.s)
+      } catch (err) {
+        console.error('[spar] a state listener threw', err)
+      }
+    }
   }
 
   /** Whoever is to move moves next, unless the session is over. */
@@ -311,31 +287,13 @@ export class SparController {
   }
 
   private result(): SessionResult {
-    const { cfg } = this
-    return {
-      patternIds: cfg.mode === 'drill' && cfg.patternId !== undefined ? [cfg.patternId] : this.reachedPattern(),
-      side: cfg.side,
-      clean: this.mistakes === 0,
-      mistakes: this.mistakes,
-      pointsLost: round1(this.lost),
-      missedKeys: [...this.misses],
-    }
-  }
-
-  /** Free sparring: the pattern whose main line holds the last book node reached (the most basic one if several). */
-  private reachedPattern(): string[] {
-    const n = this.lastBook
-    if (!n || n.patternIds.length === 0) return []
-    const onLine = n.patternIds.filter((id) => this.book.patterns[id]?.path.includes(n))
-    const pool = onLine.length > 0 ? onLine : n.patternIds
-    const order = (id: string) => this.book.patterns[id]?.def.order ?? Infinity
-    return [pool.reduce((a, b) => (order(b) < order(a) ? b : a))]
+    return sessionResult(this.book, this.cfg, this.tally, { lastBook: this.lastBook, node: this.s.node })
   }
 
   /** The owner's turn: start the engine on the position now, so an off-book move is judged sooner. */
   private ownerTurn(patch: Partial<SparState> = {}): void {
     this.set({ ...patch, status: 'owner-to-move' })
-    this.analyze(this.s.pos)
+    this.eng.lookAhead(this.s.pos)
   }
 
   private async judge(
@@ -346,35 +304,26 @@ export class SparController {
     after: Position,
     engineState: ReturnType<TeacherEngine['status']>,
   ): Promise<Verdict> {
-    let before: CornerAnalysis | null = null
-    let scoreAfter: number | null = null
-    // A sound book move needs no engine; a book mistake uses it for the points lost when it can.
-    if (!(child && isSound(child)) && engineState === 'ready') {
-      const score = timed(ask(() => this.engine.scoreFor(after, this.engineKomi, this.owner)))
-      ;[before, scoreAfter] = await Promise.all([this.analysisOf(pos), score])
-    }
     const { cfg } = this
+    // A sound book move needs no engine; a book mistake uses it for the points lost when it can.
+    const needEngine = !(child && isSound(child)) && engineState === 'ready'
+    const [before, scoreAfter] = needEngine
+      ? await Promise.all([this.eng.analysis(pos), this.eng.score(after, this.owner)])
+      : [null, null]
+    const drill = cfg.mode === 'drill' && !this.leftDrill
     let v = judgeMove({
       node,
       played,
-      mode: cfg.mode,
-      drillPatternId: cfg.mode === 'drill' ? cfg.patternId : undefined,
-      drillPath: this.drillPath,
-      before: before && this.toCanonical(before),
+      mode: drill ? 'drill' : 'free',
+      drillPatternId: drill ? cfg.patternId : undefined,
+      drillPath: drill ? this.drillPath : undefined,
+      before: before && analysisToBook(before, cfg.sym),
       scoreAfter,
       thresholds: cfg.thresholds,
     })
     if (v.type === 'unjudged' && engineState === 'loading') v = { type: 'unjudged', reason: 'engine-loading' }
-    if (v.type === 'other-joseki' && child) v = { ...v, patternIds: this.switchable(child, v.patternIds) }
-    return this.toBoard(v)
-  }
-
-  /** The patterns "Switch to that pattern" can offer: the move is on their main line and they drill from this side. */
-  private switchable(child: BookNode, ids: string[]): string[] {
-    const ok = ids.filter(
-      (id) => this.book.patterns[id]?.path.includes(child) && drillableSides(this.book, id).includes(this.cfg.side),
-    )
-    return ok.length > 0 ? ok : ids
+    if (v.type === 'other-joseki' && child) v = { ...v, patternIds: switchablePatterns(this.book, child, cfg.side) }
+    return verdictToBoard(v, cfg.sym)
   }
 
   private async teacherTurn(gen: number): Promise<void> {
@@ -386,7 +335,7 @@ export class SparController {
     const { pos, log } = this.s
     const color = otherColor(this.owner)
     const at = child.move!.at
-    const pt = at === 'tenuki' ? this.tenukiPoint(pos, await this.analysisOf(pos), color) : transform(at, this.cfg.sym)
+    const pt = at === 'tenuki' ? this.eng.tenukiPoint(pos, await this.eng.analysis(pos), color) : toBoardPt(at, this.cfg.sym)
     if (gen !== this.gen) return
     if (!legal(pos, pt, color)) return this.finish(MESSAGES.noMove)
     const after = this.place(pos, pt, color)
@@ -395,7 +344,7 @@ export class SparController {
       pos: after,
       node: child,
       log: [...log, { move: at === 'tenuki' ? { tenuki: color } : after.history[after.history.length - 1], by: 'teacher' }],
-      note: this.noteOf(child),
+      note: noteOn(child, this.cfg.sym),
     })
     await this.next(gen)
   }
@@ -412,7 +361,7 @@ export class SparController {
     const status = this.engine.status()
     if (status !== 'ready') return this.finish(status === 'loading' ? MESSAGES.engineLoading : MESSAGES.engineFailed)
     const { pos, region } = this.s
-    const a = await this.analysisOf(pos)
+    const a = await this.eng.analysis(pos)
     if (gen !== this.gen) return
     if (!a) return this.finish(MESSAGES.engineFailed)
     const color = otherColor(this.owner)
@@ -433,77 +382,20 @@ export class SparController {
   private playEngineMove(pt: Pt, color: Color, tenuki: boolean): void {
     const { pos, node, log, offBookMoves } = this.s
     const after = this.place(pos, pt, color)
-    const child = node ? bookChild(node, tenuki ? 'tenuki' : transform(pt, inverse(this.cfg.sym))) : null
+    const child = node ? bookChild(node, tenuki ? 'tenuki' : toBookPt(pt, this.cfg.sym)) : null
     if (child) this.lastBook = child
     this.set({
       pos: after,
       node: child,
       offBookMoves: offBookMoves + (child ? 0 : 1),
       log: [...log, { move: tenuki ? { tenuki: color } : after.history[after.history.length - 1], by: 'teacher' }],
-      note: this.noteOf(child),
+      note: noteOn(child, this.cfg.sym),
     })
-  }
-
-  /** Starts (or reuses) the engine's analysis of `pos`, if the engine is ready. Nobody waits for it here. */
-  private analyze(pos: Position): Cached | null {
-    if (this.engine.status() !== 'ready') return null
-    if (this.cached?.pos !== pos) {
-      const region = this.s.region
-      this.cached = { pos, analysis: ask(() => this.engine.analyzeCorner(pos, this.engineKomi, region)) }
-    }
-    return this.cached
-  }
-
-  /** The engine's analysis of `pos` (board frame, from the side to move), or null: not ready, failed or too slow. */
-  private analysisOf(pos: Position): Promise<CornerAnalysis | null> {
-    const c = this.analyze(pos)
-    return c ? timed(c.analysis) : Promise.resolve(null)
-  }
-
-  /** Where a tenuki goes: the engine's move elsewhere, else the first free big point, else any free point outside the corner. */
-  private tenukiPoint(pos: Position, a: CornerAnalysis | null, color: Color): Pt {
-    const ok = (p: Pt) => !inRegion(p, this.s.region) && legal(pos, p, color)
-    if (a?.tenukiBest && ok(a.tenukiBest.pt)) return a.tenukiBest.pt
-    const big = BIG_POINTS.map((p) => transform(p, this.cfg.sym)).find(ok)
-    if (big) return big
-    for (let y = 0; y < BOARD_SIZE; y++) for (let x = 0; x < BOARD_SIZE; x++) if (ok({ x, y })) return { x, y }
-    throw new Error('No free point outside the corner')
   }
 
   private place(pos: Position, pt: Pt, color: Color): Position {
     const r = play(pos, pt, color)
     if ('illegal' in r) throw new Error(`Illegal move ${pt.x},${pt.y}: ${r.illegal}`)
     return r.pos
-  }
-
-  private noteOf(node: BookNode | null): string | null {
-    return node && node.note !== '' ? orientNote(node.note, this.cfg.sym) : null
-  }
-
-  private toCanonical(a: CornerAnalysis): CornerAnalysis {
-    const back = (p: Pt) => transform(p, inverse(this.cfg.sym))
-    return {
-      toMove: a.toMove,
-      cornerBest: { ...a.cornerBest, pt: back(a.cornerBest.pt) },
-      tenukiBest: a.tenukiBest && { ...a.tenukiBest, pt: back(a.tenukiBest.pt) },
-      candidates: a.candidates.map((c) => ({ ...c, pt: back(c.pt) })),
-    }
-  }
-
-  /** A canonical verdict on the board: points turned by `sym`, notes oriented. */
-  private toBoard(v: Verdict): Verdict {
-    const sym = this.cfg.sym
-    const turn = (p: Pt | 'tenuki'): Pt | 'tenuki' => (p === 'tenuki' ? p : transform(p, sym))
-    switch (v.type) {
-      case 'good':
-      case 'other-joseki':
-        return { ...v, note: orientNote(v.note, sym) }
-      case 'mistake':
-        return { ...v, better: turn(v.better), ...(v.note === undefined ? {} : { note: orientNote(v.note, sym) }) }
-      case 'fine-offbook':
-        return { ...v, bookMove: v.bookMove === null ? null : turn(v.bookMove) }
-      case 'unjudged':
-        return v
-    }
   }
 }

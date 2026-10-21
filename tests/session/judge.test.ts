@@ -155,6 +155,20 @@ describe('judgeMove: tricks', () => {
     const v = judgeMove({ node, played: P('R13'), ...free, ...noEngine })
     expect(v).toMatchObject({ type: 'mistake', inBook: true, better: P('P17') })
   })
+
+  it('names no better move when neither the book nor the engine has one', () => {
+    // After W R14 this book has only Black's trick: nothing sound to point at.
+    const only = buildBook([
+      { ...TRICKY, patterns: [{ ...TRICKY.patterns[0], line: TRICKY.patterns[0].line.slice(0, 1), branches: [TRICKY.patterns[0].branches![0]] }] },
+    ])
+    const n = find(only.families.star44.root, 'W:R14')
+    expect(n.children.map((c) => c.kind)).toEqual(['trick'])
+    const v = judgeMove({ node: n, played: P('R13'), ...free, ...noEngine })
+    expect(v).toEqual({ type: 'mistake', inBook: true, better: null, pointsLost: null, big: false, note: 'A trick. It fails if White stays calm.' })
+    // With the engine it points at the engine's corner move.
+    const e = judgeMove({ node: n, played: P('R13'), ...free, before: engine('Q14', 1), scoreAfter: -2, thresholds: T })
+    expect(e).toMatchObject({ better: P('Q14'), pointsLost: 3 })
+  })
 })
 
 describe('judgeMove: off book', () => {

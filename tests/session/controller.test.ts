@@ -6,6 +6,7 @@ import { CORNER_REGION, parseGtp, toGtp, transform, transformRegion, type Pt, ty
 import { ENGINE_TIMEOUT_MS, SparController, type SparState } from '../../src/session/controller'
 import { DEFAULT_THRESHOLDS } from '../../src/session/judge'
 import { orientNote } from '../../src/session/orient'
+import { drillableSides } from '../../src/session/sides'
 import { FIXTURE_FAMILY } from '../book/fixture'
 import { analysisOf, defaultAnalysis, FakeEngine } from './fakeEngine'
 
@@ -52,7 +53,7 @@ afterEach(() => {
 })
 
 describe('SparController: a clean drill', () => {
-  it.each([0, 2, 5] as Sym[])('defend side under sym %i: teacher starts, owner follows the book, done at the leaf', async (sym) => {
+  it.each([0, 1, 2, 5] as Sym[])('defend side under sym %i: teacher starts, owner follows the book, done at the leaf', async (sym) => {
     const engine = new FakeEngine()
     const c = make({ sym }, engine)
     expect(c.state.region).toEqual(transformRegion(CORNER_REGION, sym))
@@ -126,7 +127,7 @@ describe('SparController: a clean drill', () => {
 })
 
 describe('SparController: mistakes, retry and play on', () => {
-  it.each([0, 5] as Sym[])('a book mistake stops play; retry restores the position; play on runs the punishment (sym %i)', async (sym) => {
+  it.each([0, 3, 5] as Sym[])('a book mistake stops play; retry restores the position; play on runs the punishment (sym %i)', async (sym) => {
     const c = make({ sym }, new FakeEngine({ score: () => -3 }))
     await c.start()
     await c.ownerPlay(at('Q14', sym))
@@ -168,8 +169,9 @@ describe('SparController: mistakes, retry and play on', () => {
       patternIds: ['fixture-hane'],
       side: 'defend',
       clean: false,
-      mistakes: 2,
-      pointsLost: 6,
+      // The same mistake in the same position, retried: counted once, with the points from the first time.
+      mistakes: 1,
+      pointsLost: 3,
       missedKeys: ['W:R14/B:Q14/W:Q13'],
     })
   })
@@ -214,12 +216,25 @@ describe('SparController: other joseki in a drill', () => {
       note: orientNote('Extend down the side and keep the stones together.', 5),
     })
 
+    // Play on is for mistakes only: here the choice is Retry or Switch.
+    await c.playOn()
+    expect(c.state.status).toBe('stopped')
+    expect(c.state.log).toHaveLength(3)
+
     c.retry()
     expect(c.state.pos).toBe(before.pos)
     expect(c.state.log).toBe(before.log)
 
     await c.ownerPlay(at('R13', 5))
-    c.switchTo('fixture-crawl')
+    // The abandoned drill is reported: played, but its leaf never reached, so not clean (R25, R26).
+    expect(c.switchTo('fixture-crawl')).toEqual({
+      patternIds: ['fixture-hane'],
+      side: 'attack',
+      clean: false,
+      mistakes: 0,
+      pointsLost: 0,
+      missedKeys: [],
+    })
     await vi.waitFor(() => expect(c.state.status).toBe('owner-to-move'))
     expect(c.state.log).toEqual([])
     expect(c.state.lastVerdict).toBeNull()
@@ -405,7 +420,8 @@ describe('SparController: when the engine is missing or slow', () => {
     expect(c.state.lastVerdict).toEqual({ type: 'unjudged', reason: 'engine-failed' })
     expect(c.state.status).toBe('done')
     expect(c.state.message).toEqual(expect.any(String))
-    expect(c.state.result).toMatchObject({ clean: true, mistakes: 0 })
+    // No mistake, but the drill never reached its leaf (R25); the owner left the book after W R14.
+    expect(c.state.result).toMatchObject({ clean: false, mistakes: 0, missedKeys: ['W:R14'] })
   })
 
   it('a book mistake without the engine has no points lost', async () => {
@@ -428,7 +444,8 @@ describe('SparController: when the engine is missing or slow', () => {
     expect(c.state.message).toEqual(expect.any(String))
   })
 
-  it('an engine that rejects every search never surfaces an unhandled rejection', async () => {
+  it('an engine that rejects every search never surfaces an unhandled rejection, and says why in the console', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const engine = new FakeEngine({
       analyze: () => Promise.reject(new Error('no move inside the region')),
       score: () => Promise.reject(new Error('stopped')),
@@ -445,10 +462,13 @@ describe('SparController: when the engine is missing or slow', () => {
     expect(off.state.log[1].verdict).toEqual({ type: 'unjudged', reason: 'engine-failed' })
     expect(off.state.status).toBe('done')
     expect(off.state.message).toEqual(expect.any(String))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('analyzeCorner failed'), expect.any(Error))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('scoreFor failed'), expect.any(Error))
   })
 
   it(`gives up on an engine call after ${ENGINE_TIMEOUT_MS} ms`, async () => {
     vi.useFakeTimers()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const engine = new FakeEngine({ score: () => new Promise<number>(() => {}) })
     const c = make({}, engine)
     await c.start()
@@ -460,6 +480,7 @@ describe('SparController: when the engine is missing or slow', () => {
     expect(c.state.log[1].verdict).toEqual({ type: 'unjudged', reason: 'engine-failed' })
     // The teacher's own reply did not need scoreFor, so play goes on.
     expect(c.state.status).toBe('owner-to-move')
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('scoreFor took longer'))
   })
 
   it('the teacher stops the session when it cannot answer off book', async () => {
@@ -473,25 +494,51 @@ describe('SparController: when the engine is missing or slow', () => {
     expect(c.state.lastVerdict?.type).toBe('fine-offbook')
     expect(c.state.status).toBe('done')
     expect(c.state.message).toEqual(expect.any(String))
-    expect(c.state.result).not.toBeNull()
+    expect(c.state.result).toMatchObject({ clean: false, mistakes: 0 })
   })
 })
 
 describe('SparController: off book', () => {
-  it('ends after 6 moves off book', async () => {
-    const c = make()
+  it.each([0, 3] as Sym[])('ends after 6 moves off book, and a drill that ends that way is not clean (sym %i)', async (sym) => {
+    const c = make({ sym })
     await c.start()
-    await c.ownerPlay(at('R17'))
-    expect(c.state.lastVerdict).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: at('Q14') })
+    await c.ownerPlay(at('R17', sym))
+    expect(c.state.lastVerdict).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: at('Q14', sym) })
     expect(c.state.node).toBeNull()
-    await c.ownerPlay(at('O17'))
+    await c.ownerPlay(at('O17', sym))
     expect(c.state.status).toBe('owner-to-move')
     expect(c.state.offBookMoves).toBe(4)
-    await c.ownerPlay(at('O15'))
+    await c.ownerPlay(at('O15', sym))
     expect(c.state.offBookMoves).toBe(6)
     expect(c.state.status).toBe('done')
     expect(c.state.log).toHaveLength(7)
-    expect(c.state.result).toMatchObject({ clean: true, patternIds: ['fixture-hane'] })
+    expect(c.state.result).toEqual({
+      patternIds: ['fixture-hane'],
+      side: 'defend',
+      clean: false,
+      mistakes: 0,
+      pointsLost: 0,
+      missedKeys: ['W:R14'],
+    })
+  })
+
+  it.each([1, 3] as Sym[])('engine points go back to the board under a rotation (sym %i)', async (sym) => {
+    // The engine answers in the board frame: O17 (turned) is its corner move, with a score that makes R17 cost 5 or 1.
+    const g = (gtp: string) => toGtp(at(gtp, sym))
+    let score = -3
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) =>
+        pos.toMove === 'black' ? analysisOf('black', [[g('O17'), 2]], [g('K4'), -5]) : defaultAnalysis(pos, region),
+      score: () => score,
+    })
+    const c = make({ sym }, engine)
+    await c.start()
+    await c.ownerPlay(at('R17', sym))
+    expect(c.state.lastVerdict).toEqual({ type: 'mistake', inBook: false, better: at('O17', sym), pointsLost: 5, big: true })
+    c.retry()
+    score = 1
+    await c.ownerPlay(at('R17', sym))
+    expect(c.state.lastVerdict).toEqual({ type: 'fine-offbook', pointsLost: 1, bookMove: at('Q14', sym) })
   })
 
   it('a big off-book loss stops play; play on lets the engine answer', async () => {
@@ -736,5 +783,285 @@ describe('SparController: tricks and drillable sides (R14)', () => {
 
   it('needs a pattern to drill', () => {
     expect(() => make({ patternId: undefined })).toThrow(/pattern/)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// Fix round 1: Switch, tap feedback, look-ahead, retry state, result rules (R25, R26)
+
+/** A one-family book from main lines written as "W R14, B Q14, …" (notes are filler). */
+function lines(defs: Array<{ id: string; line: string; branches?: FamilyDef['patterns'][number]['branches'] }>): Book {
+  const fam: FamilyDef = {
+    id: 'star44',
+    name: 'test lines',
+    setup: 'handicap4',
+    start: [{ c: 'B', at: 'Q16', note: 'corner' }],
+    patterns: defs.map((d, i) => ({
+      id: d.id,
+      name: d.id,
+      difficulty: 1,
+      order: i + 1,
+      line: d.line.split(', ').map((m) => {
+        const [c, at, kind] = m.split(' ')
+        return { c: c as 'B' | 'W', at, note: `${c} ${at}.`, ...(kind ? { kind: kind as 'trick' } : {}) }
+      }),
+      branches: d.branches,
+    })),
+  }
+  return buildBook([fam])
+}
+
+const flush = () => new Promise((r) => setTimeout(r, 0))
+
+describe('SparController: Switch only offers patterns this side can drill', () => {
+  it('gives no pattern when the only main line holding the move is drilled from the other side', async () => {
+    // W R13 is on 'trickline'’s main line, but that line has White’s trick, so only Black's side drills it.
+    const book = lines([
+      { id: 'hane', line: 'W R14, B Q14, W Q13' },
+      { id: 'trickline', line: 'W R14, B Q14, W R13, B Q13, W R12 trick' },
+    ])
+    expect(drillableSides(book, 'trickline')).toEqual(['defend'])
+    const c = make({ side: 'attack', patternId: 'hane' }, new FakeEngine(), book)
+    await c.start()
+    await c.ownerPlay(at('R14'))
+    await c.ownerPlay(at('R13'))
+    expect(c.state.status).toBe('stopped')
+    expect(c.state.lastVerdict).toMatchObject({ type: 'other-joseki', patternIds: [] })
+  })
+})
+
+describe('SparController: after play on leaves the drilled line', () => {
+  it('judges later book moves as in free sparring, not as another joseki each time', async () => {
+    // Drilling the hane from White's side, the owner pokes the 1-1 point (the crawl pattern's mistake branch).
+    const c = make({ side: 'attack' })
+    await c.start()
+    await c.ownerPlay(at('R14'))
+    await c.ownerPlay(at('T19'))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'mistake', inBook: true, better: at('Q13') })
+    await c.playOn()
+    await c.ownerPlay(at('R13'))
+    expect(c.state.lastVerdict?.type).toBe('good')
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toMatchObject({ patternIds: ['fixture-hane'], clean: false, mistakes: 1 })
+  })
+})
+
+describe('SparController: the owner’s stone shows while it is judged', () => {
+  it('puts the stone on the board before the verdict comes back', async () => {
+    let release = () => {}
+    const gate = new Promise<void>((r) => (release = r))
+    const engine = new FakeEngine({
+      score: async () => {
+        await gate
+        return 0
+      },
+    })
+    const c = make({}, engine)
+    await c.start()
+    const played = c.ownerPlay(at('R17'))
+    expect(c.state.status).toBe('teacher-thinking')
+    expect(stoneAt(c, 'R17')).toBe('black')
+    expect(c.state.log).toHaveLength(1)
+    expect(c.state.lastVerdict).toBeNull()
+    release()
+    await played
+    expect(c.state.log).toHaveLength(3)
+    expect(c.state.lastVerdict?.type).toBe('fine-offbook')
+  })
+})
+
+describe('SparController: one look-ahead at a time', () => {
+  function slowEngine() {
+    const pending: Array<() => void> = []
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) => new Promise((r) => pending.push(() => r(defaultAnalysis(pos, region)))),
+    })
+    return { engine, pending }
+  }
+
+  it('a newer look-ahead waits for the running one, then runs if its position is still current', async () => {
+    const { engine, pending } = slowEngine()
+    const c = make({}, engine)
+    await c.start()
+    expect(engine.analyzeCalls).toHaveLength(1)
+    await c.ownerPlay(at('Q14'))
+    expect(c.state.status).toBe('owner-to-move')
+    expect(engine.analyzeCalls).toHaveLength(1)
+    pending.shift()!()
+    await vi.waitFor(() => expect(engine.analyzeCalls).toHaveLength(2))
+    expect(engine.analyzeCalls[1].pos).toBe(c.state.pos)
+  })
+
+  it('…and is dropped if the game has moved on by then', async () => {
+    const { engine, pending } = slowEngine()
+    const c = make({}, engine)
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    await c.ownerPlay(at('P13'))
+    expect(c.state.status).toBe('done')
+    pending.shift()!()
+    await flush()
+    expect(engine.analyzeCalls).toHaveLength(1)
+  })
+})
+
+describe('SparController: retry and illegal taps around captures and ko', () => {
+  it('retry after a capturing move puts the captured stone back', async () => {
+    const book = lines([{ id: 'poke', line: 'W T19, B S19, W R14, B Q14' }])
+    const c = make({ patternId: 'poke' }, new FakeEngine({ score: () => -5 }), book)
+    await c.start()
+    await c.ownerPlay(at('S19'))
+    const before = c.state
+    await c.ownerPlay(at('T18'))
+    expect(c.state.status).toBe('stopped')
+    expect(stoneAt(c, 'T19')).toBeNull()
+    c.retry()
+    expect(c.state.pos).toBe(before.pos)
+    expect(stoneAt(c, 'T19')).toBe('white')
+    expect(stoneAt(c, 'T18')).toBeNull()
+  })
+
+  // White O18 sits in Black's mouth: B P18 takes it and starts a ko.
+  const KO_START = 'W P19, B O19, W O18, B N18, W Q18, B O17, W P17'
+  const koBook = lines([
+    { id: 'ko-quiet', line: `${KO_START}, B S17` },
+    { id: 'ko-take', line: `${KO_START}, B P18, W S17` },
+  ])
+
+  it('retry after a ko take restores the stone and lifts the ko', async () => {
+    const c = make({ patternId: 'ko-quiet' }, new FakeEngine(), koBook)
+    await c.start()
+    for (const gtp of ['O19', 'N18', 'O17']) await c.ownerPlay(at(gtp))
+    const before = c.state
+    await c.ownerPlay(at('P18'))
+    expect(c.state.status).toBe('stopped')
+    expect(stoneAt(c, 'O18')).toBeNull()
+    expect(c.state.pos.ko).toEqual(at('O18'))
+    c.retry()
+    expect(c.state.pos).toBe(before.pos)
+    expect(stoneAt(c, 'O18')).toBe('white')
+    expect(c.state.pos.ko).toBeNull()
+  })
+
+  it('an immediate ko retake gets the ko message and changes nothing', async () => {
+    const c = make({ side: 'attack', patternId: 'ko-take' }, new FakeEngine(), koBook)
+    await c.start()
+    for (const gtp of ['P19', 'O18', 'Q18', 'P17']) await c.ownerPlay(at(gtp))
+    expect(stoneAt(c, 'P18')).toBe('black')
+    const before = c.state
+    await c.ownerPlay(at('O18'))
+    expect(c.state.message).toMatch(/^Ko:/)
+    expect(c.state.pos).toBe(before.pos)
+    expect(c.state.log).toBe(before.log)
+    expect(c.state.status).toBe('owner-to-move')
+  })
+
+  it('a suicide tap gets the liberties message', async () => {
+    const book = lines([{ id: 'corner', line: 'W S19, B Q14, W T18, B R14' }])
+    const c = make({ patternId: 'corner' }, new FakeEngine(), book)
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    const before = c.state
+    await c.ownerPlay(at('T19'))
+    expect(c.state.message).toMatch(/no liberties/)
+    expect(c.state.pos).toBe(before.pos)
+    expect(c.state.log).toBe(before.log)
+  })
+
+  it('a subscriber that throws doesn’t stop the session or the other subscribers', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const c = make()
+    const seen: string[] = []
+    c.subscribe(() => {
+      throw new Error('listener bug')
+    })
+    c.subscribe((s) => seen.push(s.status))
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    await c.ownerPlay(at('P13'))
+    expect(c.state.status).toBe('done')
+    expect(seen.at(-1)).toBe('done')
+    expect(error).toHaveBeenCalled()
+  })
+})
+
+describe('SparController: what a session counts for (R25, R26)', () => {
+  it('a drill that ends on one of its own alternatives is clean', async () => {
+    const book = lines([
+      {
+        id: 'alt',
+        line: 'W R14, B Q14, W Q13, B P13',
+        branches: [{ after: 3, move: { c: 'B', at: 'P12', kind: 'alternative', note: 'Also fine.' }, then: [{ c: 'W', at: 'R13', note: 'Connect.' }] }],
+      },
+    ])
+    const c = make({ patternId: 'alt' }, new FakeEngine(), book)
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    await c.ownerPlay(at('P12'))
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toMatchObject({ patternIds: ['alt'], clean: true })
+  })
+
+  it('a drill the teacher ends with a tenuki is not clean', async () => {
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) =>
+        pos.toMove === 'white' ? analysisOf('white', [['J19', 0]], ['K4', 1.5]) : defaultAnalysis(pos, region),
+    })
+    const c = make({}, engine)
+    await c.start()
+    await c.ownerPlay(at('R17'))
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toMatchObject({ clean: false, mistakes: 0, missedKeys: ['W:R14'] })
+  })
+
+  it('free sparring credits no pattern when the owner never played a book move', async () => {
+    const c = make({ mode: 'free', patternId: undefined })
+    await c.start()
+    for (const gtp of ['R17', 'O17', 'O15']) await c.ownerPlay(at(gtp))
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toEqual({ patternIds: [], side: 'defend', clean: true, mistakes: 0, pointsLost: 0, missedKeys: [] })
+  })
+
+  it('switchTo reports nothing when the owner hadn’t moved, or when the session had already ended', async () => {
+    const fresh = make()
+    await fresh.start()
+    expect(fresh.switchTo('fixture-crawl')).toBeNull()
+
+    const done = make()
+    await done.start()
+    await done.ownerPlay(at('Q14'))
+    await done.ownerPlay(at('P13'))
+    expect(done.state.status).toBe('done')
+    expect(done.switchTo('fixture-crawl')).toBeNull()
+  })
+
+  it('switchTo after a mistake reports it against the drilled pattern', async () => {
+    const c = make({}, new FakeEngine({ score: () => -3 }))
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    await c.ownerPlay(at('R13'))
+    expect(c.switchTo('fixture-crawl')).toEqual({
+      patternIds: ['fixture-hane'],
+      side: 'defend',
+      clean: false,
+      mistakes: 1,
+      pointsLost: 3,
+      missedKeys: ['W:R14/B:Q14/W:Q13'],
+    })
+  })
+
+  it('two different mistakes in one position count once, with the first one’s points', async () => {
+    let score = -3
+    const c = make({}, new FakeEngine({ score: () => score }))
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    await c.ownerPlay(at('R13'))
+    c.retry()
+    score = -6
+    await c.ownerPlay(at('S12'))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'mistake', pointsLost: 6 })
+    c.retry()
+    await c.ownerPlay(at('P13'))
+    expect(c.state.result).toMatchObject({ clean: false, mistakes: 1, pointsLost: 3 })
   })
 })

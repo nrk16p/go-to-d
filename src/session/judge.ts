@@ -16,7 +16,15 @@ export const DEFAULT_THRESHOLDS: Thresholds = { fine: 1.5, big: 4.0 }
 export type Verdict =
   | { type: 'good'; note: string; kind: 'joseki' | 'alternative' }
   | { type: 'other-joseki'; note: string; patternIds: string[] }
-  | { type: 'mistake'; better: Pt | 'tenuki'; pointsLost: number | null; big: boolean; note?: string; inBook: boolean }
+  | {
+      type: 'mistake'
+      /** The move to play instead; null when neither the book nor the engine names one. */
+      better: Pt | 'tenuki' | null
+      pointsLost: number | null
+      big: boolean
+      note?: string
+      inBook: boolean
+    }
   | { type: 'fine-offbook'; pointsLost: number; bookMove: Pt | 'tenuki' | null }
   | { type: 'unjudged'; reason: 'engine-failed' | 'engine-loading' }
 
@@ -69,7 +77,8 @@ function bookAnswer(node: BookNode, a: JudgeArgs): BookNode | null {
   return heaviestSound(node)
 }
 
-function round1(x: number): number {
+/** Points are shown, summed and compared with the thresholds at one decimal. */
+export function round1(x: number): number {
   return Math.round(x * 10) / 10
 }
 
@@ -104,7 +113,7 @@ export function judgeMove(args: JudgeArgs): Verdict {
     }
     // A book mistake, or a trick the owner tried: wrong either way, the book says why.
     const loss = engineLoss(args)
-    const better = moveOf(bookAnswer(node, args)) ?? loss?.better ?? 'tenuki'
+    const better = moveOf(bookAnswer(node, args)) ?? loss?.better ?? null
     const pointsLost = loss ? loss.loss : null
     return { type: 'mistake', better, pointsLost, big: pointsLost !== null && pointsLost > thresholds.big, note: child.note, inBook: true }
   }

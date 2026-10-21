@@ -2,7 +2,9 @@
 // Black also has D16 and Q4, so the two sides of the corner are the same width; where the direction of a
 // block matters, a pattern puts other stones on the board first (an approach, an enclosure).
 //
-// Notes name the players ("Black", "White") instead of saying "you", because the owner drills both sides.
+// Copy rules for notes (R13, R16): name the players and describe the move (no "you", no imperatives), and no
+// absolute directions. Name points instead ("toward Q4", "on the D16 side"); the UI maps them through the
+// board symmetry. "Under" in the Go sense (between the stones and the edge) is fine.
 
 import type { FamilyDef } from '../types'
 
@@ -22,17 +24,21 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'Q17',
-          note: 'Block from above so White has to crawl down the right side. With star points on both sides, either block works here.',
+          note: 'Black blocks on the D16 side, so White has to crawl toward Q4 and Black’s wall works toward D16. With star points on both sides, either block works here.',
         },
-        { c: 'W', at: 'R16', note: 'White crawls along the side to make room for eyes.' },
-        { c: 'B', at: 'R15', note: 'Hane in front of White to keep its space small.' },
+        { c: 'W', at: 'R16', note: 'White crawls along the edge to make room for eyes.' },
+        { c: 'B', at: 'R15', note: 'Black hanes in front of White to keep its space small.' },
         { c: 'W', at: 'S15', note: 'White hanes back underneath.' },
-        { c: 'B', at: 'R14', note: 'Extend instead of a second hane. That leaves no cutting point behind.' },
+        {
+          c: 'B',
+          at: 'R14',
+          note: 'Black extends instead of playing a second hane. A second hane would leave a cut at R14.',
+        },
         { c: 'W', at: 'S14', note: 'White crawls one more step on the second line.' },
         {
           c: 'B',
           at: 'R13',
-          note: 'Keep blocking. White lives small, and Black’s wall faces the whole board.',
+          note: 'Black keeps blocking. White’s corner stays small, and Black’s wall faces the center and D16.',
         },
       ],
     },
@@ -46,19 +52,23 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'R16',
-          note: 'Block from the right this time. White will crawl along the top, and Black’s wall faces D16.',
+          note: 'This time Black blocks on the Q4 side. White has to crawl toward D16, and Black’s wall faces Q4.',
         },
-        { c: 'W', at: 'Q17', note: 'White crawls along the top.' },
+        { c: 'W', at: 'Q17', note: 'White crawls along the edge toward D16.' },
         {
           c: 'B',
           at: 'O17',
-          note: 'Jump ahead of White instead of playing a hane. It’s the modern move, and White’s crawl stays short.',
+          note: 'Black jumps ahead of White instead of playing a hane. It’s the modern move, and White’s crawl stays short.',
         },
-        { c: 'W', at: 'P17', note: 'White crawls one more step, right up to O17.' },
-        { c: 'B', at: 'P16', note: 'Block on top. White is boxed in along the edge.' },
+        { c: 'W', at: 'P17', note: 'White crawls one more step and touches O17.' },
+        { c: 'B', at: 'P16', note: 'Black blocks on the center side. White is boxed in along the edge.' },
         { c: 'W', at: 'O18', note: 'White hanes under O17 on the second line for eye space.' },
-        { c: 'B', at: 'S17', note: 'Now hane on the other side. White’s corner shrinks from both ends.' },
-        { c: 'W', at: 'S18', note: 'White blocks and lives. Black has sente, so play elsewhere.' },
+        {
+          c: 'B',
+          at: 'S17',
+          note: 'Black hanes at the other end, so White’s corner shrinks from both sides.',
+        },
+        { c: 'W', at: 'S18', note: 'White blocks and lives. Black has sente to play elsewhere.' },
       ],
     },
     {
@@ -73,13 +83,13 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'Q15',
-          note: 'The simple way: stand at Q15. Black’s stones are solid and leave White nothing to cut.',
+          note: 'The simple way: Black stands at Q15. The stones are solid and leave White nothing to cut.',
         },
-        { c: 'W', at: 'S14', note: 'White slides down the side on the second line to make eye space.' },
+        { c: 'W', at: 'S14', note: 'White slides along the edge on the second line to make eye space.' },
         {
           c: 'B',
           at: 'R13',
-          note: 'Stop the slide at R13. White lives small, and Black’s wall has no weak points.',
+          note: 'Black stops the slide at R13. White’s corner stays small, and Black’s wall has no weak points.',
         },
       ],
     },
@@ -93,29 +103,29 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'O17',
-          note: 'Knight’s move answer. The corner looks safe, but the 3-3 point is still open.',
+          note: 'Black answers with a knight’s move. The corner looks safe, but the 3-3 point is still open.',
         },
-        { c: 'W', at: 'R11', note: 'White extends down the side and leaves the corner for later.' },
-        { c: 'B', at: 'tenuki', note: 'Play elsewhere. The corner is fine for now.' },
+        { c: 'W', at: 'R11', note: 'White extends along the edge and leaves the corner for later.' },
+        { c: 'B', at: 'tenuki', note: 'Black plays elsewhere. The corner is fine for now.' },
         { c: 'W', at: 'R17', note: 'Now White slips into the 3-3 point, hoping to link up with R14.' },
         {
           c: 'B',
           at: 'R16',
-          note: 'Block from the side of White’s stones. The 3-3 stone can’t reach R14, so it has to live on its own.',
+          note: 'Black blocks on the side of White’s stones. The 3-3 stone can’t reach R14, so it has to live on its own.',
         },
         { c: 'W', at: 'S16', note: 'White crawls under the block to make room.' },
-        { c: 'B', at: 'Q17', note: 'Block the top as well. White has very little space left.' },
+        { c: 'B', at: 'Q17', note: 'Black blocks the D16 side as well. White has very little room now.' },
         { c: 'W', at: 'S18', note: 'White makes eye shape on the edge.' },
         {
           c: 'B',
           at: 'R18',
-          note: 'Atari from the edge. R17 is down to one liberty, so White has to connect.',
+          note: 'Black ataris from the edge. R17 is down to one liberty, so White has to connect.',
         },
         { c: 'W', at: 'S17', note: 'White connects and lives small in the corner.', confidence: 'low' },
         {
           c: 'B',
           at: 'Q12',
-          note: 'Now lean on R14 and R11. Black’s wall is right above them, so the fight goes Black’s way.',
+          note: 'Black leans on R14 and R11 from the center side. Black’s wall is close by, so this fight favours Black.',
         },
       ],
       branches: [
@@ -125,11 +135,15 @@ export const INVADE33: FamilyDef = {
             c: 'B',
             at: 'Q17',
             kind: 'mistake',
-            note: 'Blocking from the top lets the 3-3 stone crawl down to R14. White gets one big group on the side.',
+            note: 'Blocking on the D16 side lets the 3-3 stone crawl along the edge to R14. White gets one big group.',
           },
           then: [
-            { c: 'W', at: 'R16', note: 'White heads down the side. The corner and R14 are about to join.' },
-            { c: 'B', at: 'Q15', note: 'Black stands firm and keeps White low, but the damage is done.' },
+            { c: 'W', at: 'R16', note: 'White heads along the edge. The corner and R14 are about to join.' },
+            {
+              c: 'B',
+              at: 'Q15',
+              note: 'Black stands firm and keeps White low, but White’s group is already safe.',
+            },
             {
               c: 'W',
               at: 'S13',
@@ -156,7 +170,7 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'R16',
-          note: 'Block from the open side. White has to crawl toward O17, and there’s no room there for eyes.',
+          note: 'Black blocks on the open side. White has to crawl toward O17, and there’s no room there for eyes.',
           confidence: 'low',
         },
       ],
@@ -167,12 +181,12 @@ export const INVADE33: FamilyDef = {
             c: 'B',
             at: 'Q17',
             kind: 'mistake',
-            note: 'Wrong side. White crawls down the open right side and lives easily. Block so White has to crawl toward O17.',
+            note: 'Wrong side. White crawls along the open edge toward Q4 and lives easily. The block belongs on the open side, so White has to crawl toward O17.',
           },
           then: [
-            { c: 'W', at: 'R16', note: 'White pushes down the open side.' },
+            { c: 'W', at: 'R16', note: 'White pushes along the open edge.' },
             { c: 'B', at: 'R14', note: 'Black stops White here, but White already has room.' },
-            { c: 'W', at: 'R15', note: 'White connects and has a base along the edge.' },
+            { c: 'W', at: 'R15', note: 'White extends to R15 and blocks Black. Now it has a base along the edge.' },
             {
               c: 'B',
               at: 'Q14',
@@ -201,15 +215,15 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'R14',
-          note: 'The calm answer: extend the hane stone. R15 is safe, and the cutting stone has only two liberties.',
+          note: 'The calm answer: Black extends the hane stone. R15 is safe, and the cutting stone has only two liberties.',
         },
-        { c: 'W', at: 'Q18', note: 'White hanes on the top edge to grab what corner space it can.' },
-        { c: 'B', at: 'P18', note: 'Block. Don’t let White crawl along the top.' },
+        { c: 'W', at: 'Q18', note: 'White hanes at Q18 to grab what corner space it can.' },
+        { c: 'B', at: 'P18', note: 'Black blocks, so White can’t crawl toward D16.' },
         { c: 'W', at: 'R18', note: 'White connects. A Black stone on R18 would put Q18 in atari.' },
         {
           c: 'B',
           at: 'O17',
-          note: 'Guard P17 from a distance. A White cut there is in atari at once, and O17 helps chase Q15.',
+          note: 'Black guards P17 from a distance. A White cut there is in atari at once, and O17 helps chase Q15.',
         },
       ],
     },

@@ -1,9 +1,13 @@
 // 4-4 point (star point), Black's corner stone on Q16. Setup: four handicap stones, White to move.
-// Black also has D16 (top side) and Q4 (right side), so both sides of the corner are Black's
-// and look the same: a pattern that goes one way works the same way mirrored.
+// Black also has D16 and Q4, so both sides of the corner are Black's and look the same:
+// a pattern that goes one way works the same way mirrored.
 //
-// Notes name the players ("Black", "White") instead of saying "you", because the owner drills
-// both sides: Black when defending, White when attacking.
+// Copy rules for notes (R13, R16):
+// - Name the players ("Black", "White") and describe the move; no "you", no imperatives. The owner
+//   drills both sides, and in attack mode the teacher plays Black.
+// - Drills run under all 8 board symmetries, so no absolute directions ("right side", "top", "above").
+//   Name points instead (the UI maps GTP coordinates through the symmetry): "toward Q4", "on the D16 side",
+//   "along the edge", "toward the center". "Under" in the Go sense (between the stones and the edge) is fine.
 
 import type { FamilyDef } from '../types'
 
@@ -22,12 +26,12 @@ export const STAR44: FamilyDef = {
         {
           c: 'W',
           at: 'R14',
-          note: 'The low approach. White sits a knight’s move from the 4-4 stone and starts a base on the right side.',
+          note: 'The low approach. White sits a knight’s move from Q16 and starts a base on the Q4 side.',
         },
         {
           c: 'B',
           at: 'O17',
-          note: 'Knight’s move on the top. Black keeps the corner and the top and lets White settle on the right.',
+          note: 'Black answers with a knight’s move on the D16 side. Black keeps the corner and that side, and White settles toward Q4.',
         },
         {
           c: 'W',
@@ -37,12 +41,12 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R17',
-          note: 'Block at the 3-3 point. White can’t get any further into the corner.',
+          note: 'Black blocks at the 3-3 point. White can’t get any further into the corner.',
         },
         {
           c: 'W',
           at: 'R11',
-          note: 'White extends two spaces down the side, enough room to live. Both groups are settled now.',
+          note: 'White extends two spaces along the edge, enough room to live. Both groups are settled.',
         },
       ],
       branches: [
@@ -57,7 +61,7 @@ export const STAR44: FamilyDef = {
           then: [
             { c: 'W', at: 'R17', note: 'White cuts at the 3-3 point. S17 can’t reach the corner stone any more.' },
             { c: 'B', at: 'R16', note: 'Black has to block here, or White’s corner stones join up with R14.' },
-            { c: 'W', at: 'S18', note: 'Atari on S17. White takes it next and lives in Black’s corner.' },
+            { c: 'W', at: 'S18', note: 'White ataris S17, takes it next and lives in Black’s corner.' },
           ],
         },
       ],
@@ -72,15 +76,19 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'Q14',
-          note: 'Attach on top of R14. White has to answer, and Black’s stones grow toward the center.',
+          note: 'Black attaches to R14 from the center side. White has to answer, and Black’s stones grow toward the center.',
         },
-        { c: 'W', at: 'Q13', note: 'White hanes under the attached stone to make room down the right side.' },
-        { c: 'B', at: 'P14', note: 'Extend. If White gets P14 first, Q14 is in atari.' },
+        {
+          c: 'W',
+          at: 'Q13',
+          note: 'White hanes at Q13 to make room along the edge toward Q4.',
+        },
+        { c: 'B', at: 'P14', note: 'Black extends. If White got P14 first, Q14 would be in atari.' },
         { c: 'W', at: 'S15', note: 'White slips in on the second line to make eye space under the corner.' },
         {
           c: 'B',
           at: 'R17',
-          note: 'Block at the 3-3 point. The corner is Black’s, and White’s stones still need another move.',
+          note: 'Black blocks at the 3-3 point. The corner is Black’s, and White’s stones still need another move.',
         },
       ],
     },
@@ -94,11 +102,11 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'O16',
-          note: 'Jump one space along the top. A bit looser than the knight’s move, but it faces the center better.',
+          note: 'Black jumps one space toward D16. It’s a bit looser than the knight’s move but faces the center better.',
         },
         { c: 'W', at: 'S16', note: 'White slides under the corner on the second line to get a base.' },
-        { c: 'B', at: 'R17', note: 'Block at the 3-3 point and keep the corner.' },
-        { c: 'W', at: 'R11', note: 'White extends down the side to finish its base. The corner is settled.' },
+        { c: 'B', at: 'R17', note: 'Black blocks at the 3-3 point and keeps the corner.' },
+        { c: 'W', at: 'R11', note: 'White extends along the edge to finish its base. The corner is settled.' },
       ],
     },
     {
@@ -108,7 +116,11 @@ export const STAR44: FamilyDef = {
       order: 4,
       line: [
         { c: 'W', at: 'R14', note: '' },
-        { c: 'B', at: 'R12', note: 'Pinch R14 from below. Now White has no easy base on the right side.' },
+        {
+          c: 'B',
+          at: 'R12',
+          note: 'Black pincers R14 from the Q4 side. Now White has no easy base along that edge.',
+        },
         {
           c: 'W',
           at: 'R17',
@@ -117,26 +129,26 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R16',
-          note: 'Block from the side of the pincer. Black’s wall then works with R12, and R14 is cut off from the corner.',
+          note: 'Black blocks on the pincer side. The wall works with R12, and R14 is cut off from the corner.',
         },
-        { c: 'W', at: 'Q17', note: 'White pushes along the top to make the corner bigger.' },
+        { c: 'W', at: 'Q17', note: 'White pushes toward D16 to make the corner bigger.' },
         {
           c: 'B',
           at: 'P16',
-          note: 'Stay on the fourth line. White gets a small corner, Black gets a wall facing the center.',
+          note: 'Black stays on the fourth line. White gets a small corner and Black gets a wall facing the center.',
         },
-        { c: 'W', at: 'S16', note: 'White pushes down the side, trying to reach R14.' },
-        { c: 'B', at: 'S15', note: 'Block. R14 stays cut off.' },
+        { c: 'W', at: 'S16', note: 'White pushes along the edge, trying to reach R14.' },
+        { c: 'B', at: 'S15', note: 'Black blocks, and R14 stays cut off.' },
         { c: 'W', at: 'S17', note: 'White connects. A Black stone here would put S16 in atari.' },
         {
           c: 'B',
           at: 'S14',
-          note: 'Shore up S15 before White comes at it from both sides. R14 is a lonely stone now.',
+          note: 'Black shores up S15 before White comes at it from both sides. R14 is a lonely stone now.',
         },
         {
           c: 'W',
           at: 'O17',
-          note: 'White stretches along the top so the corner has room for two eyes. Black can play elsewhere.',
+          note: 'White stretches toward D16 so the corner has room for two eyes. Black can play elsewhere.',
         },
       ],
     },
@@ -154,19 +166,19 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R14',
-          note: 'Attach underneath. Black takes the edge and the corner, and White gets the outside.',
+          note: 'Black attaches underneath, between Q14 and the edge. Black takes the edge and the corner, White gets the outside.',
         },
-        { c: 'W', at: 'R13', note: 'White hanes so the R14 stone can’t slide down the side.' },
-        { c: 'B', at: 'R15', note: 'Draw back and connect. The corner is solid now.' },
+        { c: 'W', at: 'R13', note: 'White hanes so R14 can’t slide along the edge toward Q4.' },
+        { c: 'B', at: 'R15', note: 'Black draws back and connects. The corner is solid now.' },
         {
           c: 'W',
           at: 'Q13',
-          note: 'White fixes the cut at Q13. Without it, Black cuts there and Q14 is in trouble.',
+          note: 'White fixes the cut at Q13. If Black cut there, Q14 would be in trouble.',
         },
         {
           c: 'B',
           at: 'O16',
-          note: 'Jump along the top. White’s wall faces down the side, so the top is where Black builds.',
+          note: 'Black jumps toward D16. White’s wall points toward Q4, so the D16 side is where Black builds.',
         },
       ],
     },
@@ -180,19 +192,19 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'O17',
-          note: 'The calm answer: a knight’s move on the top. The corner and the top stay Black’s.',
+          note: 'The calm answer: Black plays a knight’s move on the D16 side. The corner and that side stay Black’s.',
         },
-        { c: 'W', at: 'Q11', note: 'White extends down the side to make a base under the high stone.' },
+        { c: 'W', at: 'Q11', note: 'White extends toward Q4 to make a base for the high stone.' },
         {
           c: 'B',
           at: 'R14',
-          note: 'Slide under White’s stones. It takes away White’s base and makes the corner bigger.',
+          note: 'Black attaches underneath Q14. It takes away White’s base and makes the corner bigger.',
         },
-        { c: 'W', at: 'R13', note: 'White blocks so the slide stops here.' },
+        { c: 'W', at: 'R13', note: 'White hanes at R13, so Black gets no further along the edge.' },
         {
           c: 'B',
           at: 'R15',
-          note: 'Connect. If White gets R15, the R14 stone is in atari.',
+          note: 'Black connects. If White got R15, the R14 stone would be in atari.',
         },
       ],
     },
@@ -206,26 +218,25 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'tenuki',
-          note: 'Play elsewhere. One approach stone doesn’t threaten the corner yet, and a big point elsewhere is worth more.',
+          note: 'Black plays elsewhere. One approach stone doesn’t threaten the corner yet, and a big point elsewhere is worth more.',
         },
-        { c: 'W', at: 'O17', note: 'White approaches from the top too. Now Black should answer.' },
+        { c: 'W', at: 'O17', note: 'White approaches from the D16 side too. Now Black should answer.' },
         {
           c: 'B',
           at: 'Q14',
-          note: 'Attach to one of them, on the side where Black is stronger. Here both sides are the same, so R14 is fine.',
-          confidence: 'low',
+          note: 'Black attaches to one of the two stones. Which one depends on the stones nearby; here both sides look the same, so R14 is fine.',
         },
-        { c: 'W', at: 'Q13', note: 'White hanes under the stone and heads down the right side.' },
+        { c: 'W', at: 'Q13', note: 'White hanes at Q13 and heads along the edge toward Q4.' },
         {
           c: 'B',
           at: 'P14',
-          note: 'Extend, just like with a single approach. Black’s wall now faces the O17 stone.',
+          note: 'Black extends, the same as against a single approach. The wall now faces the O17 stone.',
         },
-        { c: 'W', at: 'R15', note: 'White pushes toward the corner for eye space on the right side.' },
+        { c: 'W', at: 'R15', note: 'White pushes toward the corner for eye space on the Q4 side.' },
         {
           c: 'B',
           at: 'R16',
-          note: 'Block. The corner stays Black’s and White has two groups to look after. O17 is the one to chase.',
+          note: 'Black blocks. The corner stays Black’s and White has two groups to look after. O17 is the one to chase.',
         },
       ],
     },
@@ -245,17 +256,21 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R16',
-          note: 'Block from the R14 side. The two White stones can’t meet, and R14 ends up alone.',
+          note: 'Black blocks on the R14 side. The two White stones can’t meet, and R14 ends up alone.',
         },
-        { c: 'W', at: 'Q17', note: 'White pushes along the top to make the corner as big as it can.' },
-        { c: 'B', at: 'P16', note: 'Stay on the fourth line. Black’s wall faces the center and the R14 stone.' },
-        { c: 'W', at: 'S16', note: 'White pushes down the side toward R14.' },
-        { c: 'B', at: 'S15', note: 'Block. Keep the corner and R14 apart.' },
+        { c: 'W', at: 'Q17', note: 'White pushes toward D16 to make the corner as big as it can.' },
+        {
+          c: 'B',
+          at: 'P16',
+          note: 'Black stays on the fourth line. The wall faces the center and the R14 stone.',
+        },
+        { c: 'W', at: 'S16', note: 'White pushes along the edge toward R14.' },
+        { c: 'B', at: 'S15', note: 'Black blocks and keeps the corner and R14 apart.' },
         { c: 'W', at: 'S17', note: 'White has to connect, or a Black stone here puts S16 in atari.' },
         {
           c: 'B',
           at: 'S14',
-          note: 'Seal it. White lives small in the corner, and R14 has to run on its own.',
+          note: 'Black seals it. White’s corner still needs one more move for two eyes, and R14 is alone.',
         },
       ],
     },

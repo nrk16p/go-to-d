@@ -1,0 +1,760 @@
+/* Go-to-D. Calm and flat: a celadon board on cool paper, stones in plain black and white, and one
+   accent with a job: the teacher's red pen, which circles the better point and crosses the mistake.
+   Everything else stays quiet. Light by default, dark when the system asks. */
+
+:root {
+  color-scheme: light dark;
+
+  --page: #f1f4f0;
+  --surface: #fbfcfa;
+  --ink: #1b2420;
+  --muted: #56645e;
+  --rule: #d3dbd5;
+  --rule-strong: #9aa7a1;
+
+  --board: #cfdacf;
+  --board-line: #3b4943;
+  --board-edge: #1f2a25;
+  --label: #56645e;
+
+  --stone-black: #161a18;
+  --stone-black-rim: #161a18;
+  --stone-white: #fdfefc;
+  --stone-white-rim: #46524c;
+
+  --pen: #b9301b;
+  --good: #2e6b52;
+  --hint: #2b4c8c;
+  --focus: #2b4c8c;
+
+  --btn-ink: #fbfcfa;
+  --btn-bg: #1b2420;
+
+  --font: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --gutter: 16px;
+  --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --page: #111715;
+    --surface: #18201d;
+    --ink: #e3eae6;
+    --muted: #9eaba5;
+    --rule: #2a3531;
+    --rule-strong: #5d6b65;
+
+    /* A mid-tone board, so black stones and white stones both stand out from it. */
+    --board: #4a5b53;
+    --board-line: #1c2622;
+    --board-edge: #0f1513;
+    --label: #a9b6b0;
+
+    --stone-black: #0b0e0d;
+    --stone-black-rim: #93a39b;
+    --stone-white: #e9efeb;
+    --stone-white-rim: #e9efeb;
+
+    --pen: #ff8c72;
+    --good: #86d3b2;
+    --hint: #a8c2ff;
+    --focus: #a8c2ff;
+
+    --btn-ink: #111715;
+    --btn-bg: #e3eae6;
+  }
+}
+
+:root[data-theme='dark'] {
+  --page: #111715;
+  --surface: #18201d;
+  --ink: #e3eae6;
+  --muted: #9eaba5;
+  --rule: #2a3531;
+  --rule-strong: #5d6b65;
+  --board: #4a5b53;
+  --board-line: #1c2622;
+  --board-edge: #0f1513;
+  --label: #a9b6b0;
+  --stone-black: #0b0e0d;
+  --stone-black-rim: #93a39b;
+  --stone-white: #e9efeb;
+  --stone-white-rim: #e9efeb;
+  --pen: #ff8c72;
+  --good: #86d3b2;
+  --hint: #a8c2ff;
+  --focus: #a8c2ff;
+  --btn-ink: #111715;
+  --btn-bg: #e3eae6;
+}
+
+/* ---------- base ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2 {
+  line-height: 1.25;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 1.1875rem;
+}
+
+h2 {
+  font-size: 1rem;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ---------- shell ---------- */
+
+.app {
+  min-height: 100dvh;
+}
+
+.shell,
+.screen {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
+}
+
+.shell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 52px;
+  padding-top: env(safe-area-inset-top);
+}
+
+.wordmark {
+  font-weight: 700;
+  font-size: 1.0625rem;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.shell nav {
+  display: flex;
+  margin-right: -10px;
+}
+
+.shell nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+
+.shell nav a[aria-current='page'] {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
+
+.screen {
+  padding-bottom: calc(32px + env(safe-area-inset-bottom));
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--rule-strong);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+  color: var(--btn-ink);
+}
+
+/* Text-only: no left padding, so its words line up with the column wherever the row wraps. */
+.btn-quiet {
+  border-color: transparent;
+  color: var(--muted);
+  padding: 0 12px 0 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+
+/* ---------- the board ---------- */
+
+.board {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
+}
+
+.board:focus-visible {
+  outline-offset: 6px;
+}
+
+/* A tap focuses the board too; only keyboard focus gets a ring. */
+.board:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.board-surface {
+  fill: var(--board);
+}
+
+.grid line {
+  stroke: var(--board-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: square;
+}
+
+.grid line.edge {
+  stroke: var(--board-edge);
+  stroke-width: 1.75;
+}
+
+.grid .star {
+  fill: var(--board-edge);
+}
+
+.labels text {
+  fill: var(--label);
+  font-family: var(--font);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.stone.black {
+  fill: var(--stone-black);
+  stroke: var(--stone-black-rim);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.stone.white {
+  fill: var(--stone-white);
+  stroke: var(--stone-white-rim);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The last move: a dot in the other stone's colour, so it reads on either stone in either theme. */
+.last.on-black {
+  fill: var(--stone-white);
+}
+
+.last.on-white {
+  fill: var(--stone-black);
+}
+
+.ghost,
+.hits .hover {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ghost.black,
+.hits .hover.black {
+  fill: var(--stone-black);
+  stroke: var(--stone-black-rim);
+}
+
+.ghost.white,
+.hits .hover.white {
+  fill: var(--stone-white);
+  stroke: var(--stone-white-rim);
+}
+
+.ghost {
+  opacity: 0.55;
+}
+
+.ghost.neutral {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+/* `fill`, not `all`: `all` also hit-tests the (unpainted) stroke, which spreads each target half a
+   line into its neighbour's, so a tap lands one point off. */
+.hits rect {
+  fill: transparent;
+  stroke: none;
+  pointer-events: fill;
+}
+
+.hits .hover {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.board.playable .hit {
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .board.playable .hit:hover .hover {
+    opacity: 0.3;
+  }
+}
+
+.board .cursor {
+  fill: none;
+  stroke: var(--focus);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  display: none;
+}
+
+.board:focus-visible .cursor {
+  display: block;
+}
+
+/* The teacher's red pen. It draws itself once, when the mistake is shown. */
+.pen,
+.pen-halo {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pen {
+  stroke: var(--pen);
+  stroke-width: 0.085;
+}
+
+.pen-halo {
+  stroke: var(--stone-white);
+  stroke-width: 0.17;
+}
+
+.drawn {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: pen-draw 480ms cubic-bezier(0.4, 0.1, 0.2, 1) 60ms forwards;
+}
+
+.hint {
+  fill: none;
+  stroke: var(--hint);
+  stroke-width: 0.07;
+  stroke-dasharray: 0.17 0.12;
+}
+
+@keyframes pen-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawn {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------- spar ---------- */
+
+.spar {
+  display: grid;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.spar-head .who,
+.report-head .who {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  margin-top: 2px;
+}
+
+.spar-board,
+.report-board {
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+}
+
+.spar-panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.status:empty {
+  display: none;
+}
+
+.talk {
+  display: grid;
+  gap: 12px;
+}
+
+.talk:empty {
+  display: none;
+}
+
+.notice {
+  font-size: 0.9375rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+}
+
+.verdict,
+.move-line {
+  display: grid;
+  gap: 6px;
+}
+
+.verdict strong {
+  font-weight: 700;
+}
+
+.verdict-good strong {
+  color: var(--good);
+}
+
+.verdict-mistake strong {
+  color: var(--pen);
+}
+
+.verdict-fine strong,
+.verdict-other strong {
+  color: var(--hint);
+}
+
+.verdict-unjudged {
+  color: var(--muted);
+}
+
+.verdict .actions {
+  margin-top: 6px;
+}
+
+.move-line {
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+
+.glyph {
+  width: 0.85em;
+  height: 0.85em;
+  vertical-align: -0.08em;
+  margin-right: 0.4em;
+  overflow: visible;
+}
+
+.move-line strong,
+.feed strong {
+  margin-right: 0.3em;
+}
+
+.low {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.engine {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.engine-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.engine-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rule-strong);
+  flex: none;
+}
+
+.engine-ready .engine-dot {
+  background: var(--good);
+}
+
+.engine-loading .engine-dot {
+  background: transparent;
+  border: 1.5px solid var(--muted);
+}
+
+.feed summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  list-style: none;
+}
+
+.feed summary::-webkit-details-marker {
+  display: none;
+}
+
+.feed summary::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 150ms ease;
+}
+
+.feed[open] summary::before {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed summary::before {
+    transition: none;
+  }
+}
+
+.feed ol {
+  margin: 0;
+  padding: 0 0 0 1.6em;
+  display: grid;
+  gap: 8px;
+  font-size: 0.9375rem;
+}
+
+.feed em {
+  font-style: normal;
+  color: var(--muted);
+}
+
+@media (min-width: 900px) {
+  .spar {
+    grid-template-columns: minmax(0, 640px) minmax(300px, 380px);
+    grid-template-areas:
+      'board head'
+      'board panel';
+    grid-template-rows: auto 1fr;
+    column-gap: 40px;
+    row-gap: 16px;
+    justify-content: center;
+    padding-top: 12px;
+  }
+
+  .spar-head {
+    grid-area: head;
+  }
+
+  .spar-board {
+    grid-area: board;
+  }
+
+  .spar-panel {
+    grid-area: panel;
+  }
+
+  h1 {
+    font-size: 1.375rem;
+  }
+}
+
+/* ---------- report ---------- */
+
+.report {
+  display: grid;
+  gap: 18px;
+  padding-top: 4px;
+}
+
+.report-board {
+  max-width: 360px;
+  display: grid;
+  gap: 8px;
+}
+
+.report-note {
+  font-size: 0.9375rem;
+}
+
+.report-body {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 0;
+}
+
+.stats dt {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.stats dd {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.due {
+  display: grid;
+  gap: 6px;
+}
+
+@media (min-width: 900px) {
+  .report {
+    grid-template-columns: minmax(0, 360px) minmax(0, 480px);
+    grid-template-areas:
+      'head head'
+      'board body';
+    column-gap: 48px;
+    justify-content: start;
+    padding-top: 12px;
+  }
+
+  .report-head {
+    grid-area: head;
+  }
+
+  .report-board {
+    grid-area: board;
+  }
+
+  .report-body {
+    grid-area: body;
+  }
+}
+
+/* ---------- pages ---------- */
+
+.page,
+.screen-msg {
+  display: grid;
+  gap: 14px;
+  padding-top: 8px;
+  max-width: 640px;
+}
+
+.screen-msg {
+  justify-items: start;
+}
+
+.family {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.link-list a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+}
+
+.link-list a:hover {
+  text-decoration: underline;
+}

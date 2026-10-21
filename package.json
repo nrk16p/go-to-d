@@ -17,6 +17,7 @@
     "bench-engine": "tsx tools/engine-bench/run.ts"
   },
   "dependencies": {
+    "@fontsource/atkinson-hyperlegible-next": "^5.3.0",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@tensorflow/tfjs-backend-wasm": "^4.22.0",
     "@tensorflow/tfjs-backend-webgpu": "^4.22.0",
@@ -27,6 +28,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.19.2",
     "@types/pako": "^2.0.4",
     "@types/react": "^19.3.0",
@@ -36,6 +39,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^16.5.0",
+    "jsdom": "^29.1.1",
     "playwright": "^1.64.1",
     "tsx": "^4.23.15",
     "typescript": "~5.9.3",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseGtp, type Move, type Pt } from '../../src/go/coords'
-import { emptyPosition, otherColor, placeSetup, play, type Position } from '../../src/go/rules'
+import { emptyPosition, otherColor, pass, placeSetup, play, type Position } from '../../src/go/rules'
 
 const B = 'black' as const
 const W = 'white' as const
@@ -293,5 +293,60 @@ describe('play: snapback', () => {
     expect(snapback.pos.board[0][2]).toBeNull()
     expect(snapback.pos.board[0][3]).toBeNull()
     expect(snapback.pos.ko).toBeNull()
+  })
+})
+
+describe('pass', () => {
+  it('flips the colour to move and adds no stone and no history', () => {
+    const start = placeSetup(emptyPosition(), stones(B, [[3, 3]]), W)
+    const after = pass(start)
+    expect(after.toMove).toBe(B)
+    expect(after.board).toEqual(start.board)
+    expect(after.history).toEqual([])
+    expect(pass(after).toMove).toBe(W)
+  })
+
+  it('keeps the previous board for the engine, newest last', () => {
+    const first = ok(placeSetup(emptyPosition(), [], B), 3, 3, B).pos
+    const after = pass(first)
+    expect(after.boards).toHaveLength(2)
+    expect(after.boards[1]).toEqual(first.board)
+    expect(after.history).toEqual(first.history)
+  })
+
+  it('caps the stored boards at 8', () => {
+    let pos = placeSetup(emptyPosition(), [], B)
+    for (let i = 0; i < 12; i++) pos = pass(pos)
+    expect(pos.boards).toHaveLength(8)
+  })
+
+  it('clears the ko point, so a later retake is not wrongly blocked', () => {
+    const koStart = placeSetup(
+      emptyPosition(),
+      [...stones(B, [[1, 0], [0, 1], [1, 2]]), ...stones(W, [[1, 1], [2, 0], [3, 1], [2, 2]])],
+      B,
+    )
+    const { pos } = ok(koStart, 2, 1, B)
+    expect(pos.ko).toEqual({ x: 1, y: 1 })
+    // White to move after Black's capture; White plays tenuki, Black plays elsewhere, White retakes
+    const passed = pass(pos)
+    expect(passed.ko).toBeNull()
+    expect(passed.toMove).toBe(B)
+    const afterBlack = ok(passed, 10, 10, B).pos
+    expect('illegal' in play(afterBlack, { x: 1, y: 1 }, W)).toBe(false)
+  })
+
+  it('does not change the position it was given', () => {
+    const koStart = placeSetup(
+      emptyPosition(),
+      [...stones(B, [[1, 0], [0, 1], [1, 2]]), ...stones(W, [[1, 1], [2, 0], [3, 1], [2, 2]])],
+      B,
+    )
+    const { pos } = ok(koStart, 2, 1, B)
+    const boardsBefore = pos.boards.length
+    pass(pos)
+    expect(pos.toMove).toBe(W)
+    expect(pos.ko).toEqual({ x: 1, y: 1 })
+    expect(pos.boards).toHaveLength(boardsBefore)
   })
 })

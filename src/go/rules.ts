@@ -131,3 +131,18 @@ export function play(
   }
   return { pos: next, captured }
 }
+
+/**
+ * A pass, or a `tenuki` in the book: nobody places a stone, the other colour is to move,
+ * and any ko ban is lifted (a stale ko point would wrongly block a later retake).
+ * The board is stored in `boards` like after a move, but nothing is added to `history`.
+ */
+export function pass(pos: Position): Position {
+  return {
+    board: pos.board,
+    toMove: otherColor(pos.toMove),
+    ko: null,
+    history: pos.history,
+    boards: [...pos.boards, pos.board].slice(-MAX_PREVIOUS_BOARDS),
+  }
+}

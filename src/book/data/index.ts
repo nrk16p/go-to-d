@@ -2,8 +2,9 @@
 
 import { buildBook } from '../build'
 import type { FamilyDef } from '../types'
+import { STAR44 } from './star44'
 
-/** Families of the book. Empty until the content tasks add theirs. */
-export const ALL_FAMILIES: FamilyDef[] = []
+/** Families of the book, in course order. */
+export const ALL_FAMILIES: FamilyDef[] = [STAR44]
 
 export const BOOK = buildBook(ALL_FAMILIES)

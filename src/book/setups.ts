@@ -11,7 +11,7 @@ import {
   type Sym,
 } from '../go/coords'
 import { emptyPosition, placeSetup, type Position } from '../go/rules'
-import { colorOf } from './build'
+import { colorOf } from './color'
 import type { Book, FamilyDef, FamilyId, PatternDef, SetupId } from './types'
 
 export interface SetupResult {

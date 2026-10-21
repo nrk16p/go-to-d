@@ -1,13 +1,11 @@
 // Turns authored FamilyDefs into merged trees. Patterns that start the same way share nodes.
 
 import { parseGtp, toGtp, type Color, type Pt } from '../go/coords'
-import type { Book, BookNode, FamilyDef, MoveSpec, PatternDef } from './types'
+import { colorOf } from './color'
+import { SETUPS } from './setups'
+import type { Book, BookNode, FamilyDef, FamilyId, MoveSpec, PatternDef, SetupId } from './types'
 
-export function colorOf(c: 'B' | 'W'): Color {
-  if (c === 'B') return 'black'
-  if (c === 'W') return 'white'
-  throw new Error(`Bad colour "${String(c)}", use 'B' or 'W'`)
-}
+export { colorOf }
 
 /** A book `at`: a GTP point or 'tenuki'. Throws like parseGtp for anything else. */
 export function parseAt(at: string): Pt | 'tenuki' {
@@ -165,4 +163,75 @@ export function buildBook(defs: FamilyDef[]): Book {
     for (const pattern of def.patterns) addPattern(book, def, root, pattern, prov)
   }
   return book
+}
+
+/**
+ * The setups a node is played under: one entry per distinct setup, with the first pattern
+ * (in `node.patternIds` order) that uses it. Nearly always one entry; a node that two patterns
+ * with different setup overrides share has two, and the engine has to judge it under both.
+ */
+export function nodeSetups(book: Book, family: FamilyId, node: BookNode): Array<{ setup: SetupId; patternId: string }> {
+  const fam = book.families[family]
+  if (!fam) throw new Error(`Unknown family "${family}"`)
+  const byId = new Map<string, PatternDef>()
+  for (const p of fam.def.patterns) if (!byId.has(p.id)) byId.set(p.id, p)
+  const out: Array<{ setup: SetupId; patternId: string }> = []
+  for (const patternId of node.patternIds) {
+    const setup = byId.get(patternId)?.setup ?? fam.def.setup
+    if (!out.some((o) => o.setup === setup)) out.push({ setup, patternId })
+  }
+  return out
+}
+
+/** 53-bit string hash (cyrb53). Plenty for telling two versions of a family apart; no crypto needed in the browser bundle. */
+function hash53(text: string): number {
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 2654435761)
+    h2 = Math.imul(h2 ^ ch, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0)
+}
+
+function describeSetup(id: string): string {
+  if (!Object.hasOwn(SETUPS, id)) return `${id}=unknown`
+  const { stones, toMove, komi } = SETUPS[id as SetupId]([])
+  const list = stones.map((s) => `${s.player === 'black' ? 'B' : 'W'}${s.x},${s.y}`).sort()
+  return `${id}=${toMove}/${komi}/${list.join(' ')}`
+}
+
+function collectNodes(node: BookNode, out: BookNode[]): BookNode[] {
+  for (const child of node.children) {
+    out.push(child)
+    collectNodes(child, out)
+  }
+  return out
+}
+
+/**
+ * Fingerprint of everything the engine check depends on for one family: the corner stones, every node
+ * (its path and kind), the setup each node is played under and what those setups contain (stones, komi).
+ * Note text, confidence, weights, names, pattern ids and pattern order are left out on purpose, so
+ * copy-editing a note never forces a new engine run.
+ */
+export function familyHash(book: Book, family: FamilyId): string {
+  const fam = book.families[family]
+  if (!fam) throw new Error(`Unknown family "${family}"`)
+  const used = new Set<string>([fam.def.setup])
+  const nodes = collectNodes(fam.root, []).map((node) => {
+    const setups = nodeSetups(book, family, node).map((s) => s.setup)
+    for (const s of setups) used.add(s)
+    return `${node.key}|${node.kind}|${setups.sort().join(',')}`
+  })
+  const text = [
+    `setup:${fam.def.setup}`,
+    `start:${fam.def.start.map((s) => `${s.c}${s.at}`).sort().join(' ')}`,
+    ...[...used].sort().map(describeSetup),
+    ...nodes.sort(),
+  ].join('\n')
+  return hash53(text).toString(16).padStart(14, '0')
 }

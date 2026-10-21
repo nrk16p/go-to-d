@@ -1,0 +1,97 @@
+{
+  "familyHash": "1bc4b9f06818c6",
+  "model": "kata1-b18c384nbt-s9996604416-d4316597426",
+  "visits": 400,
+  "nodes": {
+    "star44:W:R14": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14": {
+      "loss": 1.61,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:Q13": {
+      "loss": 0,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:Q13/B:P13": {
+      "loss": 0.43,
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:Q13/B:P13/W:R13": {
+      "loss": 2.04,
+      "bestAt": "P12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:Q13/B:R13": {
+      "loss": 2.43,
+      "bestAt": "P14",
+      "kind": "mistake"
+    },
+    "star44:W:R14/B:Q14/W:Q13/B:R13/W:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:Q13/B:R13/W:R12/B:S13": {
+      "loss": 0,
+      "bestAt": "S13",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:R13": {
+      "loss": 2.57,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:R13/B:Q13": {
+      "loss": 2.46,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:R13/B:Q13/W:R12": {
+      "loss": 4.58,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:T19": {
+      "loss": 16.59,
+      "bestAt": "Q13",
+      "kind": "mistake"
+    },
+    "star44:W:R14/B:Q14/W:T19/B:S19": {
+      "loss": 12.32,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:T19/B:S19/W:R13": {
+      "loss": 1.74,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:T19/B:S19/W:R13/B:T18": {
+      "loss": 7.37,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:tenuki": {
+      "loss": 0.67,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:tenuki/B:R13": {
+      "loss": 0.44,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q14/W:tenuki/B:R13/W:R15": {
+      "loss": 0.66,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    }
+  }
+}

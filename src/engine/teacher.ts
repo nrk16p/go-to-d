@@ -19,9 +19,10 @@ import { inRegion, type Board, type Color, type Pt, type Region } from '../go/co
 import type { Position } from '../go/rules'
 import type { KataGoAnalyzeRequest } from './katago/types'
 import { DEFAULT_MAX_TIME_MS, DEFAULT_VISITS, MODEL_URL } from './model'
-import { compactSearch, type Backend, type EngineSearch, type WorkerRequest, type WorkerResponse } from './search'
+import { compactSearch, type Backend, type EngineSearch, type SearchRunner } from './search'
+import { workerRunner } from './workerRunner'
 
-export type { Backend, EngineSearch } from './search'
+export type { Backend, EngineSearch, SearchRunner } from './search'
 
 export interface CornerAnalysis {
   toMove: Color
@@ -31,10 +32,27 @@ export interface CornerAnalysis {
 }
 
 export interface TeacherEngine {
+  /** 'failed' is for good: the engine could not load, crashed, missed a deadline, or was disposed. */
   status(): 'loading' | 'ready' | 'failed'
+  /** Resolves once the network is loaded; rejects if it never will be. */
   ready(): Promise<{ backend: string; model: string }>
+  /**
+   * The best moves inside `region` for the side to move (`pos.toMove`), and the best move outside it.
+   * Every `scoreLead` is from the side to move's point of view (positive = the side to move leads).
+   * `visits` is per search (two searches); `maxTimeMs` is the budget for both together.
+   *
+   * Rejects when the engine has failed or stopped (status 'failed'), when the worker missed its
+   * deadline (the engine then goes to 'failed'), or when there is no legal move inside the region.
+   * Callers should treat any rejection as "no engine judgement" (an unjudged verdict).
+   */
   analyzeCorner(pos: Position, komi: number, region: Region, opts?: { visits?: number; maxTimeMs?: number }): Promise<CornerAnalysis>
+  /**
+   * How many points `color` leads by in `pos` (negative = behind), whoever is to move.
+   * Rejects like analyzeCorner (engine failed or stopped, deadline missed); treat it as unjudged.
+   */
   scoreFor(pos: Position, komi: number, color: Color, opts?: { visits?: number }): Promise<number>
+  /** Stops the engine (terminates the worker) and sets status to 'failed'. Safe to call twice. */
+  dispose(): void
 }
 
 type PositionRequest = Pick<
@@ -125,13 +143,6 @@ const MIN_SEARCH_MS = 100
 /** How many whole-board searches are kept, so scoreFor and a following analyzeCorner share one. */
 const CACHE_SIZE = 8
 
-/** Loads a network and runs one search at a time. A worker or the calling thread provides it. */
-export interface SearchRunner {
-  /** `onCrash` is called if the engine dies after loading. */
-  load(onCrash: (err: Error) => void): Promise<{ backend: string; model: string }>
-  search(req: KataGoAnalyzeRequest): Promise<EngineSearch>
-}
-
 function now(): number {
   return globalThis.performance?.now() ?? Date.now()
 }
@@ -139,11 +150,12 @@ function now(): number {
 /** The TeacherEngine logic on top of any SearchRunner. */
 export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
   let state: 'loading' | 'ready' | 'failed' = 'loading'
+  let disposed = false
   let loaded: Promise<{ backend: string; model: string }>
   try {
     loaded = runner.load((err) => {
       state = 'failed'
-      console.warn(`[teacher] engine stopped: ${err.message}`)
+      if (!disposed) console.warn(`[teacher] engine stopped: ${err.message}`)
     })
   } catch (err) {
     loaded = Promise.reject(err instanceof Error ? err : new Error(String(err)))
@@ -165,6 +177,7 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
   /** Queues one search. `onStart` is called when it leaves the queue. */
   const search = (req: KataGoAnalyzeRequest, onStart?: () => void): Promise<EngineSearch> => {
     const run = async () => {
+      if (disposed) throw new Error('The engine was shut down')
       await loaded
       if (state === 'failed') throw new Error('The engine has stopped')
       onStart?.()
@@ -175,17 +188,35 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
     return p
   }
 
-  const cache = new Map<string, Promise<EngineSearch>>()
+  // Whole-board searches by position, komi and visits. The time cap is not in the key; each entry
+  // keeps the cap it ran with. analyzeCorner takes any entry: a scoreFor on the same position just
+  // spent its half of the budget on it, and the pair is meant to fit one budget. scoreFor takes an
+  // entry only if its cap was at least scoreFor's own, or if the search finished all its visits
+  // before any cap bit; otherwise (analyzeCorner's whole-board search squeezed to the floor on a
+  // slow device) it searches again.
+  const cache = new Map<string, { search: Promise<EngineSearch>; maxTimeMs: number }>()
   const keyOf = (req: PositionRequest, komi: number, visits: number) => JSON.stringify([req, komi, visits])
-  const wholeBoard = (req: PositionRequest, komi: number, visits: number, maxTimeMs: number): Promise<EngineSearch> => {
+  const runWholeBoard = (req: PositionRequest, komi: number, visits: number, maxTimeMs: number): Promise<EngineSearch> => {
     const key = keyOf(req, komi, visits)
-    const hit = cache.get(key)
-    if (hit) return hit
     const p = search({ ...req, ...SEARCH_SETTINGS, komi, visits, maxTimeMs, regionOfInterest: null })
-    cache.set(key, p)
-    p.catch(() => cache.delete(key))
+    const entry = { search: p, maxTimeMs }
+    cache.delete(key)
+    cache.set(key, entry)
+    p.catch(() => {
+      if (cache.get(key) === entry) cache.delete(key)
+    })
     while (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!)
     return p
+  }
+  const wholeBoardFor = async (req: PositionRequest, komi: number, visits: number, maxTimeMs: number): Promise<EngineSearch> => {
+    const hit = cache.get(keyOf(req, komi, visits))
+    if (hit) {
+      if (hit.maxTimeMs >= maxTimeMs) return hit.search
+      const done = await hit.search.catch(() => null)
+      // rootVisits counts the root, so a search that used all its visits ends at `visits` or more.
+      if (done && done.rootVisits >= visits) return done
+    }
+    return runWholeBoard(req, komi, visits, maxTimeMs)
   }
 
   return {
@@ -196,7 +227,7 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
       const req = engineRequestFor(pos)
       const visits = opts.visits ?? DEFAULT_VISITS
       const budget = opts.maxTimeMs ?? DEFAULT_MAX_TIME_MS
-      const cached = cache.get(keyOf(req, komi, visits))
+      const cached = cache.get(keyOf(req, komi, visits))?.search
       // Each search gets half the budget. With the whole-board search cached, a scoreFor on this
       // position already spent the other half (the controller's off-book move: scoreFor, then
       // analyzeCorner for the reply), so the pair still fits one budget.
@@ -213,13 +244,20 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
       const cornerMs = now() - started
       const overrun = Math.max(0, cornerMs - cornerCap)
       const left = budget - cornerMs - overrun
-      const anywhere = await (cached ?? wholeBoard(req, komi, visits, Math.max(MIN_SEARCH_MS, left)))
+      const anywhere = await (cached ?? runWholeBoard(req, komi, visits, Math.max(MIN_SEARCH_MS, left)))
       return cornerAnalysisFrom(corner, anywhere, pos.toMove, region)
     },
 
     async scoreFor(pos, komi, color, opts = {}) {
-      const s = await wholeBoard(engineRequestFor(pos), komi, opts.visits ?? DEFAULT_VISITS, DEFAULT_MAX_TIME_MS / 2)
+      const s = await wholeBoardFor(engineRequestFor(pos), komi, opts.visits ?? DEFAULT_VISITS, DEFAULT_MAX_TIME_MS / 2)
       return (color === 'black' ? s.rootScoreLead : -s.rootScoreLead) + 0
+    },
+
+    dispose() {
+      if (disposed) return
+      disposed = true
+      state = 'failed'
+      runner.dispose?.()
     },
   }
 }
@@ -246,90 +284,10 @@ export function createInProcessEngine(model: string | Uint8Array, opts: { backen
   })
 }
 
-/** The app's engine: KataGo in a Web Worker. Loading starts right away. */
+/**
+ * The app's engine: KataGo in a Web Worker. Loading starts right away. Loading has a ceiling and
+ * every search a deadline (src/engine/workerRunner.ts); missing one stops the worker for good.
+ */
 export function createTeacherEngine(modelUrl: string = MODEL_URL, opts: { backend?: Backend } = {}): TeacherEngine {
   return createTeacherFromRunner(workerRunner(modelUrl, opts.backend))
-}
-
-function workerRunner(modelUrl: string, backend: Backend | undefined): SearchRunner {
-  let worker: Worker | null = null
-  let nextId = 1
-  let dead: Error | null = null
-  let pendingLoad: { resolve: (v: { backend: string; model: string }) => void; reject: (e: Error) => void } | null = null
-  const pending = new Map<number, { resolve: (s: EngineSearch) => void; reject: (e: Error) => void }>()
-  let crashed: (err: Error) => void = () => {}
-
-  const failAll = (err: Error) => {
-    dead ??= err
-    pendingLoad?.reject(err)
-    pendingLoad = null
-    for (const p of pending.values()) p.reject(err)
-    pending.clear()
-    crashed(err)
-  }
-
-  const post = (msg: WorkerRequest) => {
-    if (!worker || dead) throw dead ?? new Error('The engine worker is not running')
-    worker.postMessage(msg)
-  }
-
-  return {
-    load(onCrash) {
-      crashed = onCrash
-      return new Promise((resolve, reject) => {
-        if (typeof Worker !== 'function') {
-          reject(new Error('This browser cannot run Web Workers'))
-          return
-        }
-        pendingLoad = { resolve, reject }
-        try {
-          worker = new Worker(new URL('./teacher.worker.ts', import.meta.url), { type: 'module' })
-        } catch (err) {
-          pendingLoad = null
-          reject(new Error(`The engine worker did not start: ${err instanceof Error ? err.message : String(err)}`))
-          return
-        }
-        worker.onmessage = (ev: MessageEvent<WorkerResponse>) => {
-          const msg = ev.data
-          if (msg.type === 'loaded') {
-            const p = pendingLoad
-            pendingLoad = null
-            if (!p) return
-            if (msg.ok) {
-              if (msg.note) console.warn(`[teacher] ${msg.note}`)
-              p.resolve({ backend: msg.backend, model: msg.model })
-            } else {
-              p.reject(new Error(msg.error))
-            }
-            return
-          }
-          const p = pending.get(msg.id)
-          if (!p) return
-          pending.delete(msg.id)
-          if (msg.ok) p.resolve(msg.search)
-          else p.reject(new Error(msg.error))
-        }
-        worker.onerror = (ev) => {
-          ev.preventDefault?.()
-          failAll(new Error(`The engine worker crashed: ${ev.message || 'unknown error'}`))
-        }
-        worker.onmessageerror = () => failAll(new Error('The engine worker sent a message that could not be read'))
-        // A relative URL would be read against the worker's own URL.
-        const absolute = new URL(modelUrl, globalThis.location?.href).href
-        post({ type: 'load', modelUrl: absolute, backend })
-      })
-    },
-    search(req) {
-      return new Promise((resolve, reject) => {
-        const id = nextId++
-        pending.set(id, { resolve, reject })
-        try {
-          post({ type: 'search', id, req })
-        } catch (err) {
-          pending.delete(id)
-          reject(err instanceof Error ? err : new Error(String(err)))
-        }
-      })
-    },
-  }
 }

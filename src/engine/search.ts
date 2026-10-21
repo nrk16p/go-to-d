@@ -33,6 +33,15 @@ export function compactSearch(p: KataGoAnalysisPayload): EngineSearch {
 
 export type Backend = 'webgpu' | 'wasm' | 'cpu'
 
+/** Loads a network and runs searches. A worker (workerRunner.ts) or the calling thread provides it. */
+export interface SearchRunner {
+  /** `onCrash` is called if the engine dies after loading. */
+  load(onCrash: (err: Error) => void): Promise<{ backend: string; model: string }>
+  search(req: KataGoAnalyzeRequest): Promise<EngineSearch>
+  /** Stops the engine for good (the worker). Optional: the in-process engine has nothing to stop. */
+  dispose?(): void
+}
+
 export type WorkerRequest =
   | { type: 'load'; modelUrl: string; backend?: Backend }
   | { type: 'search'; id: number; req: KataGoAnalyzeRequest }

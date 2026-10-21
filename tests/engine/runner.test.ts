@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { buildBook } from '../../src/book/build'
 import { startPosition } from '../../src/book/setups'
 import { parseGtp } from '../../src/go/coords'
@@ -28,7 +28,14 @@ function fakeSearch(req: KataGoAnalyzeRequest): EngineSearch {
   }
 }
 
-function fakeRunner(opts: { load?: Promise<{ backend: string; model: string }>; searchMs?: number } = {}) {
+function fakeRunner(
+  opts: {
+    load?: Promise<{ backend: string; model: string }>
+    searchMs?: number
+    /** Visits a search ends with; default: all it was asked for. Fewer means the time cap stopped it. */
+    rootVisits?: number
+  } = {},
+) {
   const calls: KataGoAnalyzeRequest[] = []
   let running = 0
   let maxRunning = 0
@@ -44,7 +51,8 @@ function fakeRunner(opts: { load?: Promise<{ backend: string; model: string }>; 
       maxRunning = Math.max(maxRunning, running)
       await new Promise((r) => setTimeout(r, opts.searchMs ?? 5))
       running--
-      return fakeSearch(req)
+      const s = fakeSearch(req)
+      return opts.rootVisits === undefined ? s : { ...s, rootVisits: opts.rootVisits }
     },
   }
   return { runner, calls, maxRunning: () => maxRunning, crash: (e: Error) => crash(e) }
@@ -158,5 +166,46 @@ describe('createTeacherFromRunner', () => {
     await engine.scoreFor(pos, komi + 1, 'black', { visits: 64 })
     await engine.scoreFor(pos, komi, 'black', { visits: 65 })
     expect(f.calls).toHaveLength(4)
+  })
+
+  it('scoreFor does not reuse a whole-board search that a smaller time cap cut short', async () => {
+    // analyzeCorner first: its whole-board search got only what was left (the floor, 100 ms) and
+    // stopped at 5 of 50 visits. scoreFor wants half the default budget, so it searches again.
+    const f = fakeRunner({ searchMs: 300, rootVisits: 5 })
+    const engine = createTeacherFromRunner(f.runner)
+    const { pos, komi, region } = start()
+    await engine.analyzeCorner(pos, komi, region, { visits: 50, maxTimeMs: 400 })
+    expect(f.calls[1].maxTimeMs).toBe(100)
+    await engine.scoreFor(pos, komi, 'black', { visits: 50 })
+    expect(f.calls).toHaveLength(3)
+    expect(f.calls[2].maxTimeMs).toBe(DEFAULT_MAX_TIME_MS / 2)
+  })
+
+  it('scoreFor reuses a whole-board search with a smaller cap when it finished all its visits', async () => {
+    const f = fakeRunner()
+    const engine = createTeacherFromRunner(f.runner)
+    const { pos, komi, region } = start()
+    await engine.analyzeCorner(pos, komi, region, { visits: 50, maxTimeMs: 400 })
+    await engine.scoreFor(pos, komi, 'black', { visits: 50 })
+    expect(f.calls).toHaveLength(2)
+  })
+
+  it('dispose stops the runner and fails the engine; calls reject after it', async () => {
+    const f = fakeRunner()
+    const stop = vi.fn()
+    const engine = createTeacherFromRunner({ ...f.runner, dispose: stop })
+    await engine.ready()
+    engine.dispose()
+    expect(stop).toHaveBeenCalledOnce()
+    expect(engine.status()).toBe('failed')
+    const { pos, komi, region } = start()
+    await expect(engine.analyzeCorner(pos, komi, region)).rejects.toThrow()
+    expect(f.calls).toHaveLength(0)
+  })
+
+  it('dispose is fine on a runner with nothing to stop (the in-process engine)', async () => {
+    const engine = createTeacherFromRunner(fakeRunner().runner)
+    await engine.ready()
+    expect(() => engine.dispose()).not.toThrow()
   })
 })

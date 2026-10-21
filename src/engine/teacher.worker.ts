@@ -29,10 +29,28 @@ async function handle(msg: WorkerRequest): Promise<WorkerResponse> {
   }
 }
 
+/** The error answer for a request whose real answer could not be posted. */
+function failure(msg: WorkerRequest, err: unknown): WorkerResponse {
+  const error = `The engine could not send its answer: ${message(err)}`
+  return msg.type === 'load' ? { type: 'loaded', ok: false, error } : { type: 'searched', id: msg.id, ok: false, error }
+}
+
 // One request at a time: a search must not start while the model is still loading.
+// The chain must never reject, or every later request would be skipped.
 let queue: Promise<void> = Promise.resolve()
 
 scope.onmessage = (ev) => {
   const msg = ev.data
-  queue = queue.then(async () => scope.postMessage(await handle(msg)))
+  queue = queue
+    .then(async () => {
+      const answer = await handle(msg)
+      try {
+        scope.postMessage(answer)
+      } catch (err) {
+        scope.postMessage(failure(msg, err))
+      }
+    })
+    .catch(() => {
+      // Even the error answer could not be posted; the caller's deadline will give up on it.
+    })
 }

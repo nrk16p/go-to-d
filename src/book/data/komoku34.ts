@@ -97,7 +97,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'P17',
-          note: 'Black attaches underneath, between P16 and the edge. Black takes the edge and the corner, White gets the outside.',
+          note: 'Black attaches underneath, between P16 and the edge. Black takes the edge and the corner. White gets the outside.',
         },
         { c: 'W', at: 'O17', note: 'White hanes so Black can’t slide along the edge toward D16.' },
         {

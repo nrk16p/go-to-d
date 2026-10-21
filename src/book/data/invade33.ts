@@ -142,7 +142,7 @@ export const INVADE33: FamilyDef = {
             {
               c: 'B',
               at: 'Q15',
-              note: 'Black stands firm and keeps White low, but White’s group is already safe.',
+              note: 'Black stands firm and keeps White low. White’s corner and R14 are as good as joined.',
             },
             {
               c: 'W',

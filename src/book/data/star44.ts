@@ -119,7 +119,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R12',
-          note: 'Black pincers R14 from the Q4 side. Now White has no easy base along that edge.',
+          note: 'Black pincers R14 from the Q4 side. Now White has no easy base on that side.',
         },
         {
           c: 'W',
@@ -166,7 +166,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R14',
-          note: 'Black attaches underneath, between Q14 and the edge. Black takes the edge and the corner, White gets the outside.',
+          note: 'Black attaches underneath, between Q14 and the edge. Black takes the edge and the corner. White gets the outside.',
         },
         { c: 'W', at: 'R13', note: 'White hanes so R14 can’t slide along the edge toward Q4.' },
         { c: 'B', at: 'R15', note: 'Black draws back and connects. The corner is solid now.' },
@@ -224,7 +224,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'Q14',
-          note: 'Black attaches to one of the two stones. Which one depends on the stones nearby; here both sides look the same, so R14 is fine.',
+          note: 'Black attaches to one of the two stones. Which one depends on the stones nearby. Here both sides look the same, so attaching to R14 is fine.',
         },
         { c: 'W', at: 'Q13', note: 'White hanes at Q13 and heads along the edge toward Q4.' },
         {
@@ -270,7 +270,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'S14',
-          note: 'Black seals it. White’s corner still needs one more move for two eyes, and R14 is alone.',
+          note: 'Black seals it. White still has to look after both the small corner and the lone R14 stone.',
         },
       ],
     },

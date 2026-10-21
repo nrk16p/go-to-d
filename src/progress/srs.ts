@@ -70,25 +70,28 @@ export function addDays(day: string, n: number): string {
 }
 
 /**
- * The review state after one more run. Clean: up a box, due in that box's days. Missed: back to box 1,
- * due tomorrow, with the missed positions added (newest last, the last 20 kept). A clean run keeps the
- * missed keys it had, so the positions that went wrong stay on the list until they are pushed out.
+ * The review state after one more run on `today`.
+ * - Clean, on or after the due day: up a box, due in that box's days (a first run counts as box 0).
+ * - Clean, before the due day: box and due stay as they are, so doing the same pattern three times in
+ *   one evening doesn't climb the ladder. The run still counts.
+ * - Missed: back to box 1, due tomorrow, with the missed positions added (newest last, the last 20 kept).
+ * A clean run keeps the missed keys it had, so the positions that went wrong stay on the list until
+ * newer ones push them out.
  */
 export function applyResult(prev: ReviewState | undefined, clean: boolean, missedKeys: string[], today: string): ReviewState {
   const before: ReviewState = prev ?? { box: 0, due: today, runs: 0, cleanRuns: 0, missedKeys: [] }
-  const box = (clean ? Math.min(before.box + 1, TOP_BOX) : MISS_BOX) as ReviewState['box']
-  let kept = before.missedKeys
+  const runs = before.runs + 1
+  const cleanRuns = before.cleanRuns + (clean ? 1 : 0)
   if (!clean) {
     const added = new Set(missedKeys)
-    kept = [...before.missedKeys.filter((k) => !added.has(k)), ...added].slice(-MAX_MISSED_KEYS)
+    const kept = [...before.missedKeys.filter((k) => !added.has(k)), ...added].slice(-MAX_MISSED_KEYS)
+    return { box: MISS_BOX, due: addDays(today, BOX_DAYS[MISS_BOX]), runs, cleanRuns, missedKeys: kept }
   }
-  return {
-    box,
-    due: addDays(today, BOX_DAYS[box]),
-    runs: before.runs + 1,
-    cleanRuns: before.cleanRuns + (clean ? 1 : 0),
-    missedKeys: [...kept],
+  if (prev && today < prev.due) {
+    return { box: prev.box, due: prev.due, runs, cleanRuns, missedKeys: [...prev.missedKeys] }
   }
+  const box = Math.min(before.box + 1, TOP_BOX) as ReviewState['box']
+  return { box, due: addDays(today, BOX_DAYS[box]), runs, cleanRuns, missedKeys: [...before.missedKeys] }
 }
 
 export function isMastered(r: ReviewState): boolean {

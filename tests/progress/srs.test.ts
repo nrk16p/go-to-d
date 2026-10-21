@@ -112,27 +112,76 @@ describe('applyResult', () => {
     expect(r).toEqual({ box: 1, due: '2026-03-11', runs: 1, cleanRuns: 0, missedKeys: ['k1', 'k2'] })
   })
 
-  it('clean runs climb the ladder: due is today plus the new box’s days', () => {
+  it('clean runs on their due days climb the ladder: due is the run day plus the new box’s days', () => {
     let r = applyResult(undefined, true, [], today)
     const seen: Array<[number, string]> = [[r.box, r.due]]
     for (let i = 0; i < 5; i++) {
-      r = applyResult(r, true, [], today)
+      r = applyResult(r, true, [], r.due)
       seen.push([r.box, r.due])
     }
     expect(seen).toEqual([
       [1, '2026-03-11'],
-      [2, '2026-03-13'],
-      [3, '2026-03-17'],
-      [4, '2026-03-24'],
-      [5, '2026-04-09'],
-      [5, '2026-04-09'], // box 5 is the top: it stays there
+      [2, '2026-03-14'],
+      [3, '2026-03-21'],
+      [4, '2026-04-04'],
+      [5, '2026-05-04'],
+      [5, '2026-06-03'], // box 5 is the top: it stays there
     ])
   })
 
+  it('a clean run after the due day promotes from the day it was done', () => {
+    const r = applyResult(review({ box: 2, due: '2026-03-01' }), true, [], today)
+    expect(r.box).toBe(3)
+    expect(r.due).toBe('2026-03-17')
+  })
+
+  describe('a clean run before the due day', () => {
+    const early = review({ box: 3, due: '2026-03-17', runs: 4, cleanRuns: 3, missedKeys: ['a'] })
+
+    it('keeps the box and the due day', () => {
+      const r = applyResult(early, true, [], today)
+      expect(r.box).toBe(3)
+      expect(r.due).toBe('2026-03-17')
+    })
+
+    it('still counts the run and leaves the missed keys', () => {
+      const r = applyResult(early, true, ['ignored'], today)
+      expect(r.runs).toBe(5)
+      expect(r.cleanRuns).toBe(4)
+      expect(r.missedKeys).toEqual(['a'])
+      expect(r.missedKeys).not.toBe(early.missedKeys)
+    })
+
+    it('holds at the top box too', () => {
+      const r = applyResult(review({ box: 5, due: '2026-04-09' }), true, [], today)
+      expect(r.box).toBe(5)
+      expect(r.due).toBe('2026-04-09')
+    })
+
+    it('does not change what it was given', () => {
+      const snapshot = structuredClone(early)
+      applyResult(early, true, [], today)
+      expect(early).toEqual(snapshot)
+    })
+
+    it('promotes once the due day comes', () => {
+      expect(applyResult(early, true, [], '2026-03-16').box).toBe(3)
+      const r = applyResult(early, true, [], '2026-03-17')
+      expect(r.box).toBe(4)
+      expect(r.due).toBe('2026-03-31')
+    })
+
+    it('does not save a miss: a miss is always box 1, due tomorrow', () => {
+      const r = applyResult(early, false, ['k'], today)
+      expect(r.box).toBe(1)
+      expect(r.due).toBe('2026-03-11')
+    })
+  })
+
   it('due dates cross month and year ends', () => {
-    expect(applyResult(review({ box: 4 }), true, [], '2026-03-10').due).toBe('2026-04-09')
-    expect(applyResult(review({ box: 3 }), true, [], '2026-12-25').due).toBe('2027-01-08')
-    expect(applyResult(review({ box: 1 }), true, [], '2026-02-27').due).toBe('2026-03-02')
+    expect(applyResult(review({ box: 4, due: '2026-03-10' }), true, [], '2026-03-10').due).toBe('2026-04-09')
+    expect(applyResult(review({ box: 3, due: '2026-12-25' }), true, [], '2026-12-25').due).toBe('2027-01-08')
+    expect(applyResult(review({ box: 1, due: '2026-02-27' }), true, [], '2026-02-27').due).toBe('2026-03-02')
     expect(applyResult(undefined, true, [], '2026-12-31').due).toBe('2027-01-01')
     expect(applyResult(undefined, false, ['k'], '2028-02-28').due).toBe('2028-02-29')
   })
@@ -201,12 +250,22 @@ describe('isMastered', () => {
     expect(isMastered(review({ box: 5 }))).toBe(true)
   })
 
-  it('is reached after four clean runs in a row and lost on a miss', () => {
+  it('is reached after four clean runs, each on its due day, and lost on a miss', () => {
     let r = applyResult(undefined, true, [], '2026-03-10')
-    for (let i = 0; i < 3; i++) r = applyResult(r, true, [], '2026-03-10')
+    for (let i = 0; i < 3; i++) r = applyResult(r, true, [], r.due)
     expect(r.box).toBe(4)
     expect(isMastered(r)).toBe(true)
-    expect(isMastered(applyResult(r, false, ['k'], '2026-03-10'))).toBe(false)
+    expect(isMastered(applyResult(r, false, ['k'], r.due))).toBe(false)
+  })
+
+  it('is not reached by four clean runs in one day', () => {
+    let r = applyResult(undefined, true, [], '2026-03-10')
+    for (let i = 0; i < 3; i++) r = applyResult(r, true, [], '2026-03-10')
+    expect(r.runs).toBe(4)
+    expect(r.cleanRuns).toBe(4)
+    expect(r.box).toBe(1)
+    expect(r.due).toBe('2026-03-11')
+    expect(isMastered(r)).toBe(false)
   })
 })
 

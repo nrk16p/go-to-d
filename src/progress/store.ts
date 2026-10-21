@@ -7,6 +7,8 @@ import { DEFAULT_THRESHOLDS } from '../session/judge'
 import { addDays, applyResult, isDay, reviewKey, type Progress, type ReviewState, type Settings } from './srs'
 
 export const STORAGE_KEY = 'go-to-d:progress'
+/** Where loadProgress parks saved text it can't read, so a later save can't destroy it. */
+export const UNREADABLE_BACKUP_KEY = 'go-to-d:progress:unreadable'
 
 const NOT_A_PROGRESS_FILE = 'Not a Go-to-D progress file'
 
@@ -76,24 +78,31 @@ function settingsFrom(raw: Obj): Settings {
   }
 }
 
-/** A clean Progress from parsed JSON, or null when it isn't a version 1 progress file. Copies, never aliases. */
+/**
+ * A clean Progress from parsed JSON, or null when it isn't a version 1 Go-to-D file (not an object, another
+ * version, or no `reviews` object). Past that point it repairs piece by piece instead of giving up: a review
+ * that can't be read is dropped and the rest kept, a bad streak starts over, and settings fall back to the
+ * defaults field by field. Copies, never aliases. Load and import both use it.
+ */
 function progressFrom(raw: unknown): Progress | null {
-  if (!isObj(raw) || raw.version !== 1) return null
-  if (!isObj(raw.reviews) || !isObj(raw.streak) || !isObj(raw.settings)) return null
-  const { count, lastDay } = raw.streak
-  if (!isCount(count) || !(lastDay === null || isDay(lastDay))) return null
+  if (!isObj(raw) || raw.version !== 1 || !isObj(raw.reviews)) return null
 
   const entries: Array<[string, ReviewState]> = []
   for (const [key, r] of Object.entries(raw.reviews)) {
-    if (!isReview(r)) return null
+    if (!isReview(r)) continue
     entries.push([key, { box: r.box, due: r.due, runs: r.runs, cleanRuns: r.cleanRuns, missedKeys: [...r.missedKeys] }])
   }
+  const s = raw.streak
+  const streak =
+    isObj(s) && isCount(s.count) && (s.lastDay === null || isDay(s.lastDay))
+      ? { count: s.count, lastDay: s.lastDay }
+      : { count: 0, lastDay: null }
   return {
     version: 1,
     // fromEntries defines own properties, so a key called "__proto__" stays plain data.
     reviews: Object.fromEntries(entries),
-    streak: { count, lastDay },
-    settings: settingsFrom(raw.settings),
+    streak,
+    settings: settingsFrom(isObj(raw.settings) ? raw.settings : {}),
   }
 }
 
@@ -108,23 +117,50 @@ function storage(): Storage | null {
   }
 }
 
-/** The saved progress; defaults when nothing usable is saved. Never writes. */
+/**
+ * The saved progress; defaults when nothing usable is saved. It never writes the progress key. Text it
+ * can't use (corrupt JSON, another version) is copied once to UNREADABLE_BACKUP_KEY first, because the
+ * next save will replace it; an earlier backup is kept.
+ */
 export function loadProgress(): Progress {
   try {
-    const raw = storage()?.getItem(STORAGE_KEY)
-    if (raw == null) return defaultProgress()
-    return progressFrom(JSON.parse(raw)) ?? defaultProgress()
+    const s = storage()
+    const raw = s?.getItem(STORAGE_KEY)
+    if (s === null || raw == null) return defaultProgress()
+    let p: Progress | null = null
+    try {
+      p = progressFrom(JSON.parse(raw))
+    } catch {
+      // Not JSON.
+    }
+    if (p) return p
+    backUpUnreadable(s, raw)
   } catch {
-    return defaultProgress()
+    // Storage wouldn't answer: carry on with defaults.
+  }
+  return defaultProgress()
+}
+
+function backUpUnreadable(s: Storage, raw: string): void {
+  try {
+    if (s.getItem(UNREADABLE_BACKUP_KEY) == null) s.setItem(UNREADABLE_BACKUP_KEY, raw)
+  } catch {
+    // Nowhere to put it: nothing more to do.
   }
 }
 
-/** Saves `p`. Fails quietly when storage is missing, blocked or full: the app keeps going on what it has in memory. */
-export function saveProgress(p: Progress): void {
+/**
+ * Saves `p`. Returns false when storage is missing, blocked or full (the app keeps going on what it
+ * has in memory); the caller decides whether to tell the owner.
+ */
+export function saveProgress(p: Progress): boolean {
   try {
-    storage()?.setItem(STORAGE_KEY, JSON.stringify(p))
+    const s = storage()
+    if (!s) return false
+    s.setItem(STORAGE_KEY, JSON.stringify(p))
+    return true
   } catch {
-    // Private window, blocked storage or quota: nothing to do.
+    return false
   }
 }
 
@@ -132,7 +168,10 @@ export function exportProgress(p: Progress): string {
   return JSON.stringify(p, null, 2)
 }
 
-/** Reads an exported file. Throws on anything that isn't one. Never touches storage: the caller saves. */
+/**
+ * Reads an exported file. Throws on anything that isn't a Go-to-D progress file; a real one with a few
+ * odd pieces is repaired the same way load does. Never touches storage: the caller saves.
+ */
 export function importProgress(json: string): Progress {
   let raw: unknown
   try {
@@ -147,13 +186,15 @@ export function importProgress(json: string): Progress {
 
 // ---------- recording ----------
 
-/** The streak after a session on `today`: same day unchanged, next day +1, a gap back to 1. */
+/**
+ * The streak after a session on `today`: same day unchanged, next day +1, a gap back to 1. A last day
+ * after today (clock set back, or flying west) counts as today, so the streak can't freeze.
+ */
 function nextStreak(streak: Progress['streak'], today: string): Progress['streak'] {
   const last = streak.lastDay
-  if (last === today) return { ...streak }
-  // A last day after today means the clock moved back (or the owner flew west). Don't punish that.
-  if (last !== null && last > today) return { ...streak }
-  if (last !== null && last === addDays(today, -1)) return { count: streak.count + 1, lastDay: today }
+  if (last === null) return { count: 1, lastDay: today }
+  if (last >= today) return { count: streak.count, lastDay: today }
+  if (last === addDays(today, -1)) return { count: streak.count + 1, lastDay: today }
   return { count: 1, lastDay: today }
 }
 

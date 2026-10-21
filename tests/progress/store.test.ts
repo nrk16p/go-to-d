@@ -12,6 +12,7 @@ import {
   saveProgress,
   STORAGE_KEY,
   todayLocal,
+  UNREADABLE_BACKUP_KEY,
 } from '../../src/progress/store'
 
 class MemoryStorage {
@@ -115,25 +116,153 @@ describe('loadProgress', () => {
     storage.data.set(STORAGE_KEY, '{not json')
     expect(loadProgress()).toEqual(defaultProgress())
     expect(storage.data.get(STORAGE_KEY)).toBe('{not json')
-    expect(storage.setItem).not.toHaveBeenCalled()
+    expect(storage.setItem).not.toHaveBeenCalledWith(STORAGE_KEY, expect.anything())
   })
 
   it.each([
     ['null', 'null'],
     ['a number', '7'],
+    ['a string', '"progress"'],
     ['an array', '[]'],
     ['an empty object', '{}'],
     ['another version', JSON.stringify({ ...defaultProgress(), version: 2 })],
     ['no version', JSON.stringify({ reviews: {}, streak: { count: 0, lastDay: null }, settings: defaultProgress().settings })],
     ['no reviews', JSON.stringify({ version: 1, streak: { count: 0, lastDay: null }, settings: defaultProgress().settings })],
-    ['no streak', JSON.stringify({ version: 1, reviews: {}, settings: defaultProgress().settings })],
-    ['no settings', JSON.stringify({ version: 1, reviews: {}, streak: { count: 0, lastDay: null } })],
     ['reviews as an array', JSON.stringify({ ...defaultProgress(), reviews: [] })],
-    ['a review of the wrong shape', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': { box: 9 } } })],
-    ['a streak of the wrong shape', JSON.stringify({ ...defaultProgress(), streak: { count: 'x', lastDay: 3 } })],
-  ])('returns defaults for valid JSON of the wrong shape (%s)', (_name, text) => {
+  ])('returns defaults when the saved text is not a version 1 file (%s)', (_name, text) => {
     storage.data.set(STORAGE_KEY, text)
     expect(loadProgress()).toEqual(defaultProgress())
+    expect(storage.data.get(STORAGE_KEY)).toBe(text)
+  })
+
+  describe('repair: one bad piece does not cost the rest', () => {
+    const good = (box: number, due = '2026-03-12') => ({ box, due, runs: 2, cleanRuns: 1, missedKeys: ['k'] })
+
+    function saved(over: Record<string, unknown>): void {
+      const p = recordSession(defaultProgress(), result({ patternIds: ['p1', 'p2'] }), '2026-03-10')
+      storage.data.set(STORAGE_KEY, JSON.stringify({ ...p, ...over }))
+    }
+
+    it('keeps the good reviews and drops only the bad ones', () => {
+      saved({
+        reviews: {
+          'a:defend': good(2),
+          'b:defend': { box: 9, due: '2026-03-12', runs: 1, cleanRuns: 1, missedKeys: [] },
+          'c:attack': good(3, '2026-04-01'),
+          'd:attack': 'junk',
+          'e:attack': { ...good(1), due: '2026-02-31' },
+          'f:attack': { ...good(1), missedKeys: [1] },
+          'g:attack': null,
+        },
+      })
+      const p = loadProgress()
+      expect(Object.keys(p.reviews).sort()).toEqual(['a:defend', 'c:attack'])
+      expect(p.reviews['a:defend']).toEqual(good(2))
+      expect(p.reviews['c:attack']).toEqual(good(3, '2026-04-01'))
+      expect(p.streak).toEqual({ count: 1, lastDay: '2026-03-10' })
+    })
+
+    it.each([
+      ['a streak of the wrong shape', { count: 'x', lastDay: 3 }],
+      ['a streak with a bad day', { count: 4, lastDay: 'yesterday' }],
+      ['a negative streak', { count: -1, lastDay: null }],
+      ['streak as null', null],
+      ['streak as text', 'long'],
+    ])('keeps the reviews when it has %s, and the streak starts over', (_name, streak) => {
+      saved({ streak })
+      const p = loadProgress()
+      expect(Object.keys(p.reviews).sort()).toEqual(['p1:defend', 'p2:defend'])
+      expect(p.streak).toEqual({ count: 0, lastDay: null })
+      expect(p.settings).toEqual(defaultProgress().settings)
+    })
+
+    it('keeps the reviews when there is no streak at all', () => {
+      saved({ streak: undefined })
+      const p = loadProgress()
+      expect(Object.keys(p.reviews)).toHaveLength(2)
+      expect(p.streak).toEqual({ count: 0, lastDay: null })
+    })
+
+    it.each([
+      ['missing', undefined],
+      ['null', null],
+      ['text', 'dark'],
+      ['an array', []],
+    ])('keeps the reviews and the streak when settings are %s, and settings are the defaults', (_name, settings) => {
+      saved({ settings })
+      const p = loadProgress()
+      expect(Object.keys(p.reviews)).toHaveLength(2)
+      expect(p.streak).toEqual({ count: 1, lastDay: '2026-03-10' })
+      expect(p.settings).toEqual(defaultProgress().settings)
+    })
+
+    it('does not back up a save it could use, and does not write', () => {
+      saved({ streak: null })
+      loadProgress()
+      expect(storage.setItem).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('text it cannot use is backed up', () => {
+    it('copies corrupt text to the backup key once, and leaves the main key untouched', () => {
+      storage.data.set(STORAGE_KEY, '{not json')
+      expect(loadProgress()).toEqual(defaultProgress())
+      expect(storage.data.get(UNREADABLE_BACKUP_KEY)).toBe('{not json')
+      expect(storage.data.get(STORAGE_KEY)).toBe('{not json')
+      expect(storage.setItem).toHaveBeenCalledTimes(1)
+      expect(storage.setItem).toHaveBeenCalledWith(UNREADABLE_BACKUP_KEY, '{not json')
+      expect(UNREADABLE_BACKUP_KEY).toBe('go-to-d:progress:unreadable')
+    })
+
+    it('copies a save from a newer version, and a later save does not destroy that copy', () => {
+      const future = JSON.stringify({ version: 2, reviews: { 'x:defend': { rank: 'gold' } }, streak: 9 })
+      storage.data.set(STORAGE_KEY, future)
+      const p = loadProgress()
+      expect(p).toEqual(defaultProgress())
+      expect(storage.data.get(UNREADABLE_BACKUP_KEY)).toBe(future)
+      expect(storage.data.get(STORAGE_KEY)).toBe(future) // still untouched until a save
+      saveProgress(p)
+      expect(storage.data.get(STORAGE_KEY)).not.toBe(future)
+      expect(storage.data.get(UNREADABLE_BACKUP_KEY)).toBe(future)
+    })
+
+    it('does not replace a backup that is already there', () => {
+      storage.data.set(UNREADABLE_BACKUP_KEY, 'first')
+      storage.data.set(STORAGE_KEY, 'second')
+      loadProgress()
+      expect(storage.data.get(UNREADABLE_BACKUP_KEY)).toBe('first')
+      expect(storage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('does not back up when nothing is saved', () => {
+      loadProgress()
+      expect(storage.setItem).not.toHaveBeenCalled()
+      expect(storage.data.size).toBe(0)
+    })
+
+    it('does not back up a good save', () => {
+      saveProgress(defaultProgress())
+      storage.setItem.mockClear()
+      loadProgress()
+      expect(storage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('still returns defaults when the backup can’t be written', () => {
+      storage.data.set(STORAGE_KEY, '{not json')
+      storage.setItem.mockImplementation(() => {
+        throw new Error('QuotaExceededError')
+      })
+      expect(loadProgress()).toEqual(defaultProgress())
+    })
+
+    it('still returns defaults when reading the backup key throws', () => {
+      storage.data.set(STORAGE_KEY, '{not json')
+      storage.getItem.mockImplementation((k: string) => {
+        if (k === UNREADABLE_BACKUP_KEY) throw new Error('SecurityError')
+        return storage.data.get(k) ?? null
+      })
+      expect(loadProgress()).toEqual(defaultProgress())
+    })
   })
 
   it('fills settings fields an old save does not have', () => {
@@ -171,21 +300,40 @@ describe('loadProgress', () => {
 })
 
 describe('saveProgress', () => {
-  it('does not throw when setItem throws (quota, private window)', () => {
+  it('returns false and does not throw when setItem throws (quota, private window)', () => {
     storage.setItem.mockImplementation(() => {
       throw new Error('QuotaExceededError')
     })
-    expect(() => saveProgress(defaultProgress())).not.toThrow()
+    let ok: boolean | undefined
+    expect(() => {
+      ok = saveProgress(defaultProgress())
+    }).not.toThrow()
+    expect(ok).toBe(false)
   })
 
-  it('does not throw without localStorage', () => {
+  it('returns false without localStorage', () => {
     vi.stubGlobal('localStorage', undefined)
-    expect(() => saveProgress(defaultProgress())).not.toThrow()
+    expect(saveProgress(defaultProgress())).toBe(false)
   })
 
-  it('writes JSON under the storage key', () => {
+  it('returns false when even reading the localStorage property throws', () => {
+    const before = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')!
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('SecurityError')
+      },
+    })
+    try {
+      expect(saveProgress(defaultProgress())).toBe(false)
+    } finally {
+      Object.defineProperty(globalThis, 'localStorage', before)
+    }
+  })
+
+  it('writes JSON under the storage key and returns true', () => {
     const p = defaultProgress()
-    saveProgress(p)
+    expect(saveProgress(p)).toBe(true)
     expect(JSON.parse(storage.data.get(STORAGE_KEY)!)).toEqual(p)
   })
 })
@@ -281,10 +429,20 @@ describe('recordSession', () => {
       expect(p.streak).toEqual({ count: 1, lastDay: '2026-03-13' })
     })
 
-    it('is left alone when the clock says a day before the last one', () => {
+    it('counts a last day after today as today, so the streak is not frozen', () => {
       let p = recordSession(defaultProgress(), result(), day1)
       p = recordSession(p, result(), '2026-03-11')
+      p = recordSession(p, result(), day1) // the clock went back a day
+      expect(p.streak).toEqual({ count: 2, lastDay: day1 })
+      p = recordSession(p, result(), '2026-03-11')
+      expect(p.streak).toEqual({ count: 3, lastDay: '2026-03-11' })
+    })
+
+    it('recovers from a last day far in the future', () => {
+      let p = recordSession(defaultProgress(), result(), '2031-01-01')
       p = recordSession(p, result(), day1)
+      expect(p.streak).toEqual({ count: 1, lastDay: day1 })
+      p = recordSession(p, result(), '2026-03-11')
       expect(p.streak).toEqual({ count: 2, lastDay: '2026-03-11' })
     })
   })
@@ -357,25 +515,52 @@ describe('exportProgress and importProgress', () => {
     ['a string', '"progress"'],
     ['an array', '[]'],
     ['an empty object', '{}'],
+    ['a different file', '{"name":"notes","items":[1,2]}'],
     ['version 2', JSON.stringify({ ...defaultProgress(), version: 2 })],
     ['version as text', JSON.stringify({ ...defaultProgress(), version: '1' })],
+    ['no version', JSON.stringify({ reviews: {}, streak: { count: 0, lastDay: null }, settings: defaultProgress().settings })],
     ['no reviews', JSON.stringify({ version: 1, streak: { count: 0, lastDay: null }, settings: defaultProgress().settings })],
     ['reviews as an array', JSON.stringify({ ...defaultProgress(), reviews: [] })],
     ['reviews as null', JSON.stringify({ ...defaultProgress(), reviews: null })],
-    ['no streak', JSON.stringify({ version: 1, reviews: {}, settings: defaultProgress().settings })],
-    ['no settings', JSON.stringify({ version: 1, reviews: {}, streak: { count: 0, lastDay: null } })],
-    ['settings as null', JSON.stringify({ ...defaultProgress(), settings: null })],
-    ['streak count as text', JSON.stringify({ ...defaultProgress(), streak: { count: '3', lastDay: null } })],
-    ['a bad streak day', JSON.stringify({ ...defaultProgress(), streak: { count: 3, lastDay: 'yesterday' } })],
-    ['a review that is not an object', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': 5 } })],
-    ['a box out of range', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': { box: 6, due: '2026-03-10', runs: 1, cleanRuns: 1, missedKeys: [] } } })],
-    ['a half box', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': { box: 1.5, due: '2026-03-10', runs: 1, cleanRuns: 1, missedKeys: [] } } })],
-    ['a bad due day', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': { box: 1, due: '2026-02-31', runs: 1, cleanRuns: 1, missedKeys: [] } } })],
-    ['negative runs', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': { box: 1, due: '2026-03-10', runs: -1, cleanRuns: 1, missedKeys: [] } } })],
-    ['missed keys that are not text', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': { box: 1, due: '2026-03-10', runs: 1, cleanRuns: 1, missedKeys: [1] } } })],
-    ['no missed keys', JSON.stringify({ ...defaultProgress(), reviews: { 'a:defend': { box: 1, due: '2026-03-10', runs: 1, cleanRuns: 1 } } })],
   ])('rejects %s', (_name, text) => {
     expect(() => importProgress(text)).toThrow(new Error('Not a Go-to-D progress file'))
+  })
+
+  describe('a Go-to-D file with odd pieces is repaired, not rejected', () => {
+    const odd = { box: 9, due: '2026-03-12', runs: 1, cleanRuns: 1, missedKeys: [] }
+
+    it('restores an export that has one odd record', () => {
+      const p = busy()
+      const exported = JSON.parse(exportProgress(p))
+      exported.reviews['odd:defend'] = odd
+      const restored = importProgress(JSON.stringify(exported))
+      expect(restored).toEqual(p)
+    })
+
+    it('keeps the reviews of a file with a bad streak or settings', () => {
+      const p = busy()
+      const exported = JSON.parse(exportProgress(p))
+      const restored = importProgress(JSON.stringify({ ...exported, streak: 'x', settings: null }))
+      expect(restored.reviews).toEqual(p.reviews)
+      expect(restored.streak).toEqual({ count: 0, lastDay: null })
+      expect(restored.settings).toEqual(defaultProgress().settings)
+    })
+
+    it('keeps the reviews of a file with no streak and no settings', () => {
+      const p = busy()
+      const restored = importProgress(JSON.stringify({ version: 1, reviews: p.reviews }))
+      expect(restored.reviews).toEqual(p.reviews)
+      expect(restored.streak).toEqual({ count: 0, lastDay: null })
+      expect(restored.settings).toEqual(defaultProgress().settings)
+    })
+
+    it('does not touch storage while repairing', () => {
+      saveProgress(busy())
+      storage.setItem.mockClear()
+      importProgress(JSON.stringify({ version: 1, reviews: { 'odd:defend': odd } }))
+      expect(storage.setItem).not.toHaveBeenCalled()
+      expect(storage.removeItem).not.toHaveBeenCalled()
+    })
   })
 
   it('fills settings fields a file does not have', () => {

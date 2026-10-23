@@ -46,6 +46,7 @@ export function resolveSpar(
   let side: Side = params.side === 'attack' ? 'attack' : 'defend'
   if (mode === 'drill') {
     const sides = drillableSides(book, patternId!)
+    if (sides.length === 0) return { ok: false, error: COPY.spar.noSide }
     if (!sides.includes(side)) side = sides[0]
   }
   const sym = (intIn(params.sym, 0, 7) ?? Math.floor(random() * 8)) as Sym

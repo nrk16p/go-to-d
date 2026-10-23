@@ -3,8 +3,10 @@
 // verdict panels and their buttons, saving when a session ends or is switched away, and the report.
 
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { parseGtp } from '../../src/go/coords'
+import { SparController } from '../../src/session/controller'
 import { STORAGE_KEY } from '../../src/progress/store'
 import { COPY } from '../../src/ui/copy'
 import { EngineHub } from '../../src/ui/engine'
@@ -62,6 +64,16 @@ async function tap(container: HTMLElement, gtp: string): Promise<void> {
   await settle()
 }
 
+/** A finger tap: pointerdown says touch, then the click. */
+async function touchTap(container: HTMLElement, gtp: string): Promise<void> {
+  const p = parseGtp(gtp)
+  const el = container.querySelector(`[data-x="${p.x}"][data-y="${p.y}"]`)
+  if (!el) throw new Error(`${gtp} is not on the board`)
+  fireEvent.pointerDown(el, { pointerType: 'touch' })
+  fireEvent.click(el)
+  await settle()
+}
+
 async function press(name: string): Promise<void> {
   fireEvent.click(screen.getByRole('button', { name }))
   await settle()
@@ -83,8 +95,10 @@ beforeEach(() => {
   window.location.hash = '#/spar'
 })
 
-afterEach(() => {
+afterEach(async () => {
   cleanup()
+  // An unmounted session disposes its controller on the next tick: let that happen here.
+  await new Promise((r) => setTimeout(r, 0))
   for (const h of hubs) h.dispose()
   hubs = []
   vi.restoreAllMocks()
@@ -125,8 +139,9 @@ describe('Spar', () => {
     await tap(container, 'O17')
     await tap(container, 'S17')
 
-    expect(verdict()).toContain(COPY.verdict.mistake)
-    expect(verdict()).toContain(COPY.verdict.better('R17', null))
+    // R29: the book check's loss for S17 (5.12), even with the engine still loading.
+    expect(verdict()).toContain(COPY.verdict.bigMistake)
+    expect(verdict()).toContain(COPY.verdict.better('R17', 5.1))
     const r17 = parseGtp('R17')
     const s17 = parseGtp('S17')
     expect(container.querySelector(`[data-marker="better"][data-at="${r17.x},${r17.y}"]`)).not.toBeNull()
@@ -147,7 +162,7 @@ describe('Spar', () => {
     await tap(container, 'R16')
 
     expect(window.location.hash).toBe('#/report')
-    expect(getLastReport()?.result).toMatchObject({ clean: false, mistakes: 1 })
+    expect(getLastReport()?.result).toMatchObject({ clean: false, mistakes: 1, pointsLost: 5.1 })
     expect(saved()?.reviews['star44-low-knight-slide:defend']).toMatchObject({ box: 1 })
   })
 
@@ -222,6 +237,7 @@ describe('Spar', () => {
     const dispose = vi.spyOn(made[0], 'dispose')
     await startKnight(engine)
     expect(screen.getByText(COPY.engine.off)).toBeTruthy()
+    expect(screen.getByText(COPY.engine.offHelp)).toBeTruthy() // as text: phones show no tooltips
     expect(dispose).toHaveBeenCalled()
 
     await press(COPY.engine.retry)
@@ -252,6 +268,89 @@ describe('Spar', () => {
     render(<Spar params={{ family: 'star44', side: 'defend', sym: '0', seed: '3' }} engine={hub()} gapMs={0} />)
     await settle()
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(COPY.spar.freeTitle('4-4 point'))
+    expect(screen.getByText(COPY.spar.yourMove)).toBeTruthy()
+  })
+})
+
+describe('Spar on touch', () => {
+  it('Play O17 confirms the ghost; after a mistake and Retry no ghost comes back', async () => {
+    const { container } = await startKnight()
+    await touchTap(container, 'O17')
+    expect(screen.getByText(COPY.spar.tapAgain('O17'))).toBeTruthy()
+    await press(COPY.spar.playPoint('O17'))
+    expect(verdict()).toContain(COPY.verdict.good)
+
+    await touchTap(container, 'S17')
+    await press(COPY.spar.playPoint('S17'))
+    expect(verdict()).toContain(COPY.verdict.bigMistake)
+    await press(COPY.verdict.retry)
+
+    expect(container.querySelector('[data-ghost]')).toBeNull()
+    expect(screen.queryByRole('button', { name: COPY.spar.playPoint('S17') })).toBeNull()
+    // One tap on S17 is a fresh first tap, not a replay of the mistake.
+    await touchTap(container, 'S17')
+    expect(screen.getByText(COPY.spar.tapAgain('S17'))).toBeTruthy()
+    expect(container.querySelector('.verdict')).toBeNull()
+  })
+
+  it('the confirm button sits in the bar right under the board', async () => {
+    const { container } = await startKnight()
+    await touchTap(container, 'O17')
+    const panel = container.querySelector('.spar-panel')!
+    expect(panel.firstElementChild?.classList.contains('bar')).toBe(true)
+    expect(panel.firstElementChild?.textContent).toContain(COPY.spar.playPoint('O17'))
+  })
+})
+
+describe('Spar lifecycle', () => {
+  it('under StrictMode starts one session, and disposes it only when the screen really goes', async () => {
+    const start = vi.spyOn(SparController.prototype, 'start')
+    const dispose = vi.spyOn(SparController.prototype, 'dispose')
+    const { container, unmount } = render(
+      <StrictMode>
+        <Spar params={KNIGHT} engine={hub()} gapMs={0} />
+      </StrictMode>,
+    )
+    await settle()
+    expect(new Set(start.mock.contexts).size).toBe(1)
+    const session = start.mock.contexts[0]
+    const disposals = () => dispose.mock.contexts.filter((c) => c === session).length
+    expect(disposals()).toBe(0)
+    expect(container.querySelectorAll('[data-stone="white"]')).toHaveLength(1) // one teacher move, R14
+
+    await tap(container, 'O17')
+    expect(verdict()).toContain(COPY.verdict.good)
+
+    unmount()
+    await settle()
+    expect(disposals()).toBe(1)
+  })
+
+  it('a move that fails shows an error with Start again, which starts a fresh session', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(SparController.prototype, 'ownerPlay').mockRejectedValueOnce(new Error('boom'))
+    const { container } = await startKnight()
+    await tap(container, 'O17')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(COPY.spar.failed)
+
+    await press(COPY.spar.startAgain)
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Low approach, knight's move, slide, block, extend")
+    expect(screen.getByText(COPY.spar.yourMove)).toBeTruthy()
+  })
+
+  it('a screen that throws while drawing shows the error instead of a blank app', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const real = Object.getOwnPropertyDescriptor(SparController.prototype, 'state')!.get!
+    let broken = true
+    vi.spyOn(SparController.prototype, 'state', 'get').mockImplementation(function (this: SparController) {
+      if (broken) throw new Error('boom')
+      return real.call(this)
+    })
+    await startKnight()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(COPY.spar.failed)
+
+    broken = false
+    await press(COPY.spar.startAgain)
     expect(screen.getByText(COPY.spar.yourMove)).toBeTruthy()
   })
 })

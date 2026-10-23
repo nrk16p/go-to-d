@@ -27,8 +27,6 @@ export interface SessionReport {
   message: string | null
   right: number
   unchecked: number
-  /** The local day it was saved on (YYYY-MM-DD). */
-  day: string
 }
 
 const KEY = 'go-to-d:last-report'

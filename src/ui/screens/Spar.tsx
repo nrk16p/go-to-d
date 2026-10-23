@@ -1,12 +1,17 @@
 // The sparring screen: the board, what the teacher says about the last moves, and the buttons that
 // go with each verdict. The session itself is a SparController; this screen only shows it and passes
 // taps on. When the session ends it is saved and the Report screen takes over.
+//
+// Phone layout, top to bottom: the board, then a bar with what's happening now and the button for it
+// (the touch confirm "Play O17", or Play elsewhere), then the teacher's words. The bar sits right under
+// the board so its button is on screen on a small phone.
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Component, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { checkedLoss } from '../../book/checkedLoss'
 import { BOOK } from '../../book/data'
 import { toGtp, type Board as Grid, type Color, type Pt } from '../../go/coords'
 import { otherColor } from '../../go/rules'
-import { loadProgress, todayLocal } from '../../progress/store'
+import { loadProgress } from '../../progress/store'
 import { SparController, type SparConfig, type SparState, type Verdict } from '../../session/controller'
 import { ownerColor } from '../../session/sides'
 import { Board, type BoardMarker } from '../Board'
@@ -28,6 +33,8 @@ export interface SparProps {
 
 export function Spar({ params, engine, gapMs }: SparProps) {
   const [setup] = useState(() => resolveSpar(params, BOOK, loadProgress()))
+  // "Start again" after an error mounts a fresh session with the same setup.
+  const [run, setRun] = useState(0)
   if (!setup.ok) {
     return (
       <section className="screen-msg">
@@ -38,7 +45,45 @@ export function Spar({ params, engine, gapMs }: SparProps) {
       </section>
     )
   }
-  return <Session config={setup.config} engine={engine} gapMs={gapMs} />
+  const restart = () => setRun((r) => r + 1)
+  return (
+    <SessionBoundary key={run} onRestart={restart}>
+      <Session config={setup.config} engine={engine} gapMs={gapMs} onRestart={restart} />
+    </SessionBoundary>
+  )
+}
+
+function SessionError({ onRestart }: { onRestart: () => void }) {
+  return (
+    <section className="screen-msg" role="alert">
+      <h1>{COPY.spar.failed}</h1>
+      <div className="actions">
+        <button type="button" className="btn btn-primary" onClick={onRestart}>
+          {COPY.spar.startAgain}
+        </button>
+        <a className="btn" href={href.today}>
+          {COPY.spar.backToToday}
+        </a>
+      </div>
+    </section>
+  )
+}
+
+/** A session that throws while drawing shows SessionError instead of blanking the app. */
+class SessionBoundary extends Component<{ onRestart: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true }
+  }
+
+  componentDidCatch(err: unknown): void {
+    console.error('[spar] the session screen failed', err)
+  }
+
+  render(): ReactNode {
+    return this.state.failed ? <SessionError onRestart={this.props.onRestart} /> : this.props.children
+  }
 }
 
 const FULL_BOARD_KEY = 'go-to-d:full-board'
@@ -59,22 +104,47 @@ function writeFullBoard(on: boolean): void {
   }
 }
 
-function Session({ config, engine, gapMs }: { config: SparConfig; engine: EngineHub; gapMs?: number }) {
+interface SessionProps {
+  config: SparConfig
+  engine: EngineHub
+  gapMs?: number
+  onRestart: () => void
+}
+
+function Session({ config, engine, gapMs, onRestart }: SessionProps) {
   const [{ controller, view }] = useState(() => {
-    const c = new SparController(BOOK, engine, config)
+    const c = new SparController(BOOK, engine, config, { bookLoss: checkedLoss })
     return { controller: c, view: new SessionView(c, { gapMs }) }
   })
   const { state, feed, lastMove } = useSyncExternalStore(view.subscribe, view.snapshot)
   const [drill, setDrill] = useState({ mode: config.mode, family: config.family, patternId: config.patternId })
   const [saveFailed, setSaveFailed] = useState(false)
+  const [failed, setFailed] = useState(false)
   const [full, setFull] = useState(readFullBoard)
-  const [preview, setPreview] = useState<{ pt: Pt; board: Grid } | null>(null)
+  // The touch ghost, owned here so the "Play O17" button can clear it. Any new position drops it,
+  // including the one Retry brings back.
+  const [ghost, setGhost] = useState<Pt | null>(null)
+  const [ghostBoard, setGhostBoard] = useState<Grid>(state.pos.board)
+  if (ghostBoard !== state.pos.board) {
+    setGhostBoard(state.pos.board)
+    setGhost(null)
+  }
   const reported = useRef(false)
+  const pendingDispose = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
+    // StrictMode unmounts and remounts once in development: a dispose still pending means this is that
+    // remount, so the same session carries on (start() runs once). A real unmount disposes it.
+    clearTimeout(pendingDispose.current)
     const detach = view.attach()
-    controller.start().catch((err: unknown) => console.error('[spar] the session could not start', err))
-    return detach
+    controller.start().catch((err: unknown) => {
+      console.error('[spar] the session could not start', err)
+      setFailed(true)
+    })
+    return () => {
+      detach()
+      pendingDispose.current = setTimeout(() => controller.dispose(), 0)
+    }
   }, [controller, view])
 
   const side = config.side
@@ -104,21 +174,24 @@ function Session({ config, engine, gapMs }: { config: SparConfig; engine: Engine
       message: state.message,
       right: owned.filter((e) => e.verdict?.type === 'good' || e.verdict?.type === 'fine-offbook').length,
       unchecked: owned.filter((e) => e.verdict?.type === 'unjudged').length,
-      day: todayLocal(),
     })
     navigate(href.report)
   }, [state, lastMove, title, drill, side])
 
-  const canPlay = state.status === 'owner-to-move'
-  const previewPt = canPlay && preview && preview.board === state.pos.board ? preview.pt : null
+  if (failed) return <SessionError onRestart={onRestart} />
 
-  function play(p: Pt | 'tenuki') {
-    setPreview(null)
-    controller.ownerPlay(p).catch((err: unknown) => console.error('[spar] move failed', err))
+  /** A move promise that rejects stops the session with a way to start again, not a frozen "thinking". */
+  function fail(err: unknown) {
+    console.error('[spar] the session failed', err)
+    setFailed(true)
   }
 
-  function playOn() {
-    controller.playOn().catch((err: unknown) => console.error('[spar] play on failed', err))
+  const canPlay = state.status === 'owner-to-move'
+  const shownGhost = canPlay ? ghost : null
+
+  function play(p: Pt | 'tenuki') {
+    setGhost(null)
+    controller.ownerPlay(p).catch(fail)
   }
 
   function switchTo(id: string) {
@@ -137,10 +210,9 @@ function Session({ config, engine, gapMs }: { config: SparConfig; engine: Engine
   }
 
   function toggleFull() {
-    setFull((f) => {
-      writeFullBoard(!f)
-      return !f
-    })
+    const next = !full
+    setFull(next)
+    writeFullBoard(next)
   }
 
   const v = state.lastVerdict
@@ -154,8 +226,8 @@ function Session({ config, engine, gapMs }: { config: SparConfig; engine: Engine
     state.status === 'teacher-thinking'
       ? COPY.spar.teacherThinking
       : canPlay
-        ? previewPt
-          ? COPY.spar.tapAgain(toGtp(previewPt))
+        ? shownGhost
+          ? COPY.spar.tapAgain(toGtp(shownGhost))
           : COPY.spar.yourMove
         : state.status === 'done'
           ? COPY.spar.done
@@ -177,14 +249,32 @@ function Session({ config, engine, gapMs }: { config: SparConfig; engine: Engine
           onPlay={play}
           disabled={!canPlay}
           toPlay={owner}
-          onPreview={(p) => setPreview({ pt: p, board: state.pos.board })}
+          ghost={shownGhost}
+          onGhost={setGhost}
         />
       </div>
 
       <div className="spar-panel">
-        <p className="status" role="status">
-          {status}
-        </p>
+        <div className={`bar${status || canPlay ? '' : ' bar-empty'}`}>
+          <p className="status" role="status">
+            {status}
+          </p>
+          {canPlay &&
+            (shownGhost ? (
+              <button type="button" className="btn btn-primary" onClick={() => play(shownGhost)}>
+                {COPY.spar.playPoint(toGtp(shownGhost))}
+              </button>
+            ) : (
+              <button type="button" className="btn" onClick={() => play('tenuki')}>
+                {COPY.spar.playElsewhere}
+              </button>
+            ))}
+          {state.status === 'done' && (
+            <a className="btn btn-primary" href={href.report}>
+              {COPY.spar.seeReport}
+            </a>
+          )}
+        </div>
         {state.message && <p className="notice">{state.message}</p>}
         {saveFailed && <p className="notice">{COPY.spar.saveFailed}</p>}
 
@@ -195,7 +285,7 @@ function Session({ config, engine, gapMs }: { config: SparConfig; engine: Engine
               low={ownerLine.low}
               stopped={stopped}
               onRetry={() => controller.retry()}
-              onPlayOn={playOn}
+              onPlayOn={() => controller.playOn().catch(fail)}
               onSwitch={switchTo}
             />
           )}
@@ -204,32 +294,12 @@ function Session({ config, engine, gapMs }: { config: SparConfig; engine: Engine
           ))}
         </div>
 
-        {state.status === 'done' && (
-          <div className="actions">
-            <a className="btn btn-primary" href={href.report}>
-              {COPY.spar.seeReport}
-            </a>
-          </div>
-        )}
-
-        <div className="actions">
-          {previewPt && (
-            <button type="button" className="btn btn-primary" onClick={() => play(previewPt)}>
-              {COPY.spar.playPoint(toGtp(previewPt))}
-            </button>
-          )}
-          {/* While stopped, the verdict's own buttons are the way on. */}
-          {!stopped && (
-            <button type="button" className="btn" disabled={!canPlay} onClick={() => play('tenuki')}>
-              {COPY.spar.playElsewhere}
-            </button>
-          )}
+        <div className="tools">
           <button type="button" className="btn btn-quiet" aria-pressed={full} onClick={toggleFull}>
             {full ? COPY.spar.cornerView : COPY.spar.fullBoard}
           </button>
+          <EngineChip engine={engine} />
         </div>
-
-        <EngineChip engine={engine} />
 
         {feed.length > 0 && <Feed feed={feed} owner={owner} />}
       </div>
@@ -307,8 +377,7 @@ function VerdictView({ v, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictPr
           <p>
             <strong>{v.big ? C.bigMistake : C.mistake}</strong> {better}
           </p>
-          {v.note && <p>{v.note}</p>}
-          {low && <Low />}
+          {/* The buttons come before the note, so they stay near the board on a small phone. */}
           {stopped && (
             <div className="actions">
               <button type="button" className="btn btn-primary" onClick={onRetry}>
@@ -319,6 +388,8 @@ function VerdictView({ v, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictPr
               </button>
             </div>
           )}
+          {v.note && <p>{v.note}</p>}
+          {low && <Low />}
         </div>
       )
     }

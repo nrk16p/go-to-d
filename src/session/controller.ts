@@ -5,6 +5,7 @@
 // Frames (frame.ts): the book is canonical (studied corner upper right); the board is that frame
 // turned by `sym`. Engine calls go through engineAccess.ts, what a session counts for through result.ts.
 
+import type { CheckedLoss } from '../book/checkedLoss'
 import { startPosition } from '../book/setups'
 import type { Book, BookNode } from '../book/types'
 import type { TeacherEngine } from '../engine/teacher'
@@ -36,6 +37,14 @@ const HANDICAP_BONUS = 4
 
 type Undo = Pick<SparState, 'pos' | 'node' | 'offBookMoves' | 'log' | 'note'> & { lastBook: BookNode | null }
 
+export interface SparOptions {
+  /**
+   * R29: the book check's points lost for a book node. An in-book mistake reports it instead of asking
+   * the engine. The app passes `checkedLoss` (src/book/checkedLoss.ts); without it the engine decides.
+   */
+  bookLoss?: CheckedLoss
+}
+
 function onBoard(p: Pt): boolean {
   return [p.x, p.y].every((v) => Number.isInteger(v) && v >= 0 && v < BOARD_SIZE)
 }
@@ -45,6 +54,8 @@ const lastMove = (pos: Position) => pos.history[pos.history.length - 1]
 export class SparController {
   private readonly book: Book
   private readonly engine: TeacherEngine
+  private readonly bookLoss: CheckedLoss | undefined
+  private disposed = false
   private readonly listeners = new Set<(s: SparState) => void>()
   private s!: SparState
   private cfg!: SparConfig
@@ -62,10 +73,23 @@ export class SparController {
   /** Play went on after a stopped move off the drilled line: book moves are judged as in free sparring. */
   private leftDrill = false
 
-  constructor(book: Book, engine: TeacherEngine, config: SparConfig) {
+  constructor(book: Book, engine: TeacherEngine, config: SparConfig, options: SparOptions = {}) {
     this.book = book
     this.engine = engine
+    this.bookLoss = options.bookLoss
     this.reset({ ...config })
+  }
+
+  /**
+   * Ends the session for good (the screen went away): engine answers still on their way are dropped,
+   * a queued look-ahead never runs, nothing more is asked of the engine, and every call after this does
+   * nothing. The state stays as it was. Safe to call twice.
+   */
+  dispose(): void {
+    if (this.disposed) return
+    this.disposed = true
+    this.gen++
+    this.listeners.clear()
   }
 
   get state(): SparState {
@@ -80,13 +104,13 @@ export class SparController {
   }
 
   async start(): Promise<void> {
-    if (this.started) return
+    if (this.started || this.disposed) return
     this.started = true
     await this.next(this.gen)
   }
 
   async ownerPlay(p: Pt | 'tenuki'): Promise<void> {
-    if (this.s.status !== 'owner-to-move') return
+    if (this.s.status !== 'owner-to-move' || this.disposed) return
     const { pos, node, region, log, offBookMoves, note } = this.s
     const { sym } = this.cfg
     const gen = this.gen
@@ -137,7 +161,7 @@ export class SparController {
    * `lastVerdict` is cleared, not restored. The mistake stays counted (once per position).
    */
   retry(): void {
-    if (this.s.status !== 'stopped' || !this.undo) return
+    if (this.s.status !== 'stopped' || !this.undo || this.disposed) return
     const { lastBook, ...state } = this.undo
     this.undo = null
     this.lastBook = lastBook
@@ -146,7 +170,7 @@ export class SparController {
 
   /** After a mistake: keep it, and the teacher answers (the book's punishment line, or the engine). Not after other-joseki. */
   async playOn(): Promise<void> {
-    if (this.s.status !== 'stopped' || this.s.lastVerdict?.type !== 'mistake') return
+    if (this.s.status !== 'stopped' || this.s.lastVerdict?.type !== 'mistake' || this.disposed) return
     this.undo = null
     const node = this.s.node
     if (this.drillPath && !(node && this.drillPath.includes(node))) this.leftDrill = true
@@ -160,6 +184,7 @@ export class SparController {
    * Throws, changing nothing, if the pattern is unknown or can't be drilled from this side.
    */
   switchTo(patternId: string): SessionResult | null {
+    if (this.disposed) return null
     const entry = Object.hasOwn(this.book.patterns, patternId) ? this.book.patterns[patternId] : undefined
     if (!entry) throw new Error(`Unknown pattern "${patternId}"`)
     const abandoned = this.s.status !== 'done' && this.tally.mistakes.size > 0 ? this.result() : null
@@ -258,8 +283,10 @@ export class SparController {
     engineState: ReturnType<TeacherEngine['status']>,
   ): Promise<Verdict> {
     const { cfg } = this
-    // A sound book move needs no engine; a book mistake uses it for the points lost when it can.
-    const needEngine = !(child && isSound(child)) && engineState === 'ready'
+    // A sound book move needs no engine. A book mistake takes its points from the book check (R29), or
+    // from the engine when the check has none for it.
+    const checked = child && !isSound(child) && this.bookLoss ? this.bookLoss(cfg.family, child.key) : null
+    const needEngine = !(child && isSound(child)) && checked === null && engineState === 'ready'
     const [before, scoreAfter] = needEngine
       ? await Promise.all([this.eng.analysis(pos), this.eng.score(after, this.owner)])
       : [null, null]
@@ -273,6 +300,7 @@ export class SparController {
       before: before && analysisToBook(before, cfg.sym),
       scoreAfter,
       thresholds: cfg.thresholds,
+      checkedLoss: checked,
     })
     if (v.type === 'unjudged' && engineState === 'loading') v = { type: 'unjudged', reason: 'engine-loading' }
     if (v.type === 'other-joseki' && child) v = { ...v, patternIds: switchablePatterns(this.book, child, cfg.side) }

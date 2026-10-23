@@ -68,9 +68,7 @@ export function Report() {
     <div className="report">
       <header className="report-head">
         <h1>{headline(report)}</h1>
-        <p className="who">
-          {report.title}, {R.side(report.side)}.
-        </p>
+        <p className="who">{R.subtitle(report.title, report.side)}</p>
       </header>
 
       <div className="report-board">
@@ -118,7 +116,7 @@ export function Report() {
                 <li key={d.key}>
                   <a href={sparHref({ family: d.entry.family, pattern: d.id, side: d.side })}>
                     {d.entry.def.name}
-                    <span className="muted">, {R.side(d.side)}</span>
+                    <span className="muted">{R.dueSide(d.side)}</span>
                   </a>
                 </li>
               ))}

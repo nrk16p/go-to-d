@@ -26,6 +26,12 @@ function ptsOf(container: HTMLElement): Pt[] {
   return hits(container).map((el) => ({ x: Number(el.getAttribute('data-x')), y: Number(el.getAttribute('data-y')) }))
 }
 
+function touchTap(container: HTMLElement, p: Pt): void {
+  const el = hitAt(container, p)
+  fireEvent.pointerDown(el, { pointerType: 'touch' })
+  fireEvent.click(el)
+}
+
 function labels(container: HTMLElement): string[] {
   return [...container.querySelectorAll('[data-label]')].map((el) => el.textContent ?? '')
 }
@@ -108,16 +114,65 @@ describe('Board', () => {
 
   it('on touch, a tap on another point moves the ghost instead of playing', () => {
     const onPlay = vi.fn()
-    const onPreview = vi.fn()
-    const { container } = render(<Board board={empty} onPlay={onPlay} onPreview={onPreview} />)
-    fireEvent.pointerDown(hitAt(container, { x: 15, y: 3 }), { pointerType: 'touch' })
-    fireEvent.click(hitAt(container, { x: 15, y: 3 }))
-    fireEvent.pointerDown(hitAt(container, { x: 16, y: 3 }), { pointerType: 'touch' })
-    fireEvent.click(hitAt(container, { x: 16, y: 3 }))
+    const { container } = render(<Board board={empty} onPlay={onPlay} />)
+    touchTap(container, { x: 15, y: 3 })
+    touchTap(container, { x: 16, y: 3 })
     expect(onPlay).not.toHaveBeenCalled()
-    expect(onPreview).toHaveBeenLastCalledWith({ x: 16, y: 3 })
-    const ghost = container.querySelector('[data-ghost]')
-    expect(ghost?.getAttribute('data-ghost')).toBe('16,3')
+    expect(container.querySelector('[data-ghost]')?.getAttribute('data-ghost')).toBe('16,3')
+  })
+
+  it('does not bring a ghost back when the board returns to a position it showed before (Retry)', () => {
+    const pos = emptyPosition()
+    const r = play(pos, { x: 3, y: 3 }, 'black')
+    if ('illegal' in r) throw new Error('illegal')
+    const A = pos.board
+    const B = r.pos.board
+    const onPlay = vi.fn()
+    const { container, rerender } = render(<Board board={A} onPlay={onPlay} />)
+    touchTap(container, { x: 15, y: 3 })
+    expect(container.querySelector('[data-ghost]')).not.toBeNull()
+    rerender(<Board board={B} onPlay={onPlay} />)
+    rerender(<Board board={A} onPlay={onPlay} />)
+    expect(container.querySelector('[data-ghost]')).toBeNull()
+    // And one tap there is a new first tap, not a confirm.
+    touchTap(container, { x: 15, y: 3 })
+    expect(onPlay).not.toHaveBeenCalled()
+  })
+
+  it('leaves no ghost after a confirmed tap the session turns down (ko, suicide)', () => {
+    const onPlay = vi.fn() // the position doesn't change: the move was illegal
+    const { container } = render(<Board board={empty} onPlay={onPlay} />)
+    touchTap(container, { x: 15, y: 3 })
+    touchTap(container, { x: 15, y: 3 })
+    expect(onPlay).toHaveBeenCalledTimes(1)
+    expect(container.querySelector('[data-ghost]')).toBeNull()
+  })
+
+  it('with a controlled ghost, asks the parent to set and clear it', () => {
+    const onPlay = vi.fn()
+    const onGhost = vi.fn()
+    const { container, rerender } = render(<Board board={empty} onPlay={onPlay} ghost={null} onGhost={onGhost} />)
+    touchTap(container, { x: 15, y: 3 })
+    expect(onGhost).toHaveBeenLastCalledWith({ x: 15, y: 3 })
+    expect(container.querySelector('[data-ghost]')).toBeNull() // shown only once the parent says so
+    rerender(<Board board={empty} onPlay={onPlay} ghost={{ x: 15, y: 3 }} onGhost={onGhost} />)
+    expect(container.querySelector('[data-ghost]')?.getAttribute('data-ghost')).toBe('15,3')
+    touchTap(container, { x: 15, y: 3 })
+    expect(onGhost).toHaveBeenLastCalledWith(null)
+    expect(onPlay).toHaveBeenCalledWith({ x: 15, y: 3 })
+  })
+
+  it('stays focusable while disabled, and ignores keys then', () => {
+    const onPlay = vi.fn()
+    const { container, rerender } = render(<Board board={empty} onPlay={onPlay} disabled />)
+    const svg = container.querySelector('svg')!
+    expect(svg.getAttribute('tabindex')).toBe('0')
+    expect(svg.getAttribute('aria-disabled')).toBe('true')
+    fireEvent.keyDown(svg, { key: 'Enter' })
+    expect(onPlay).not.toHaveBeenCalled()
+    rerender(<Board board={empty} onPlay={onPlay} />)
+    fireEvent.keyDown(svg, { key: 'Enter' })
+    expect(onPlay).toHaveBeenCalledWith({ x: 9, y: 9 })
   })
 
   it('drops the ghost when the position changes', () => {

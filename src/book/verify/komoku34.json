@@ -1,5 +1,5 @@
 {
-  "familyHash": "19bf3f1d0b6388",
+  "familyHash": "18e8cafcc2da65",
   "model": "kata1-b18c384nbt-s9996604416-d4316597426",
   "visits": 800,
   "nodes": {
@@ -9,12 +9,12 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q17": {
-      "loss": 0.2,
+      "loss": 0.18,
       "bestAt": "Q15",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q17/W:Q16": {
-      "loss": 1.04,
+      "loss": 0.98,
       "bestAt": "P16",
       "kind": "joseki"
     },
@@ -44,7 +44,7 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q17/W:Q16/B:R14": {
-      "loss": 4.28,
+      "loss": 4.08,
       "bestAt": "Q15",
       "kind": "mistake"
     },
@@ -59,8 +59,8 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q17/W:Q16/B:R14/W:R17/B:Q18/W:P16": {
-      "loss": 1.04,
-      "bestAt": "R15",
+      "loss": 0,
+      "bestAt": "P16",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q17/W:Q16/B:R14/W:R17/B:Q18/W:P16/B:P18": {
@@ -84,13 +84,43 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q17/W:Q16/B:Q15/W:P16/B:R17": {
+      "loss": 0.06,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q17/W:Q16/B:Q15/W:P16/B:R17/W:N16": {
+      "loss": 0.45,
+      "bestAt": "O14",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q17/W:Q16/B:P16": {
+      "loss": 1.83,
+      "bestAt": "Q15",
+      "kind": "trick"
+    },
+    "komoku34:W:P17/B:Q17/W:Q16/B:P16/W:Q15": {
+      "loss": 0,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q17/W:Q16/B:P16/W:Q15/B:R17": {
       "loss": 0,
       "bestAt": "R17",
       "kind": "joseki"
     },
-    "komoku34:W:P17/B:Q17/W:Q16/B:Q15/W:P16/B:R17/W:N16": {
+    "komoku34:W:P17/B:Q17/W:Q16/B:P16/W:Q15/B:R17/W:O17": {
       "loss": 0,
-      "bestAt": "K16",
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q17/W:Q16/B:P16/W:O16": {
+      "loss": 11.35,
+      "bestAt": "Q15",
+      "kind": "mistake"
+    },
+    "komoku34:W:P17/B:Q17/W:Q16/B:P16/W:O16/B:Q15": {
+      "loss": 0,
+      "bestAt": "Q15",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q17/W:P16": {
@@ -103,13 +133,33 @@
       "bestAt": "R14",
       "kind": "joseki"
     },
+    "komoku34:W:P17/B:Q17/W:P16/B:R14/W:P13": {
+      "loss": 0,
+      "bestAt": "P13",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q17/W:P16/B:R14/W:P13/B:tenuki": {
+      "loss": 0,
+      "bestAt": "J17",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q17/W:Q18": {
+      "loss": 1.9,
+      "bestAt": "P16",
+      "kind": "mistake"
+    },
+    "komoku34:W:P17/B:Q17/W:Q18/B:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
     "komoku34:W:P17/B:N16": {
-      "loss": 0.43,
+      "loss": 0.44,
       "bestAt": "Q15",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:N16/W:R17": {
-      "loss": 1.59,
+      "loss": 1.51,
       "bestAt": "P15",
       "kind": "alternative"
     },
@@ -144,7 +194,7 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:N16/W:R17/B:S17/W:Q16/B:R18/W:Q17/B:R15/W:P14/B:R13": {
-      "loss": 0.02,
+      "loss": 0.05,
       "bestAt": "Q13",
       "kind": "joseki"
     },
@@ -168,8 +218,28 @@
       "bestAt": "O13",
       "kind": "joseki"
     },
+    "komoku34:W:P17/B:N16/W:O15": {
+      "loss": 0,
+      "bestAt": "P15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N16/W:O15/B:Q15": {
+      "loss": 0,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N16/W:O15/B:Q15/W:N15": {
+      "loss": 0,
+      "bestAt": "N15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N16/W:O15/B:Q15/W:N15/B:L16": {
+      "loss": 0,
+      "bestAt": "L16",
+      "kind": "joseki"
+    },
     "komoku34:W:P17/B:tenuki": {
-      "loss": 0.37,
+      "loss": 0.54,
       "bestAt": "Q15",
       "kind": "joseki"
     },
@@ -204,13 +274,13 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:tenuki/W:Q15/B:Q17": {
-      "loss": 0.59,
+      "loss": 0.73,
       "bestAt": "R15",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:tenuki/W:Q15/B:Q17/W:P18": {
-      "loss": 0,
-      "bestAt": "P18",
+      "loss": 0.56,
+      "bestAt": "Q18",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:tenuki/W:Q15/B:Q17/W:P18/B:R15": {
@@ -228,14 +298,24 @@
       "bestAt": "R13",
       "kind": "joseki"
     },
-    "komoku34:W:P17/B:tenuki/W:Q15/B:tenuki": {
-      "loss": 1.52,
-      "bestAt": "R15",
-      "kind": "mistake"
+    "komoku34:W:P17/B:tenuki/W:Q13": {
+      "loss": 0.19,
+      "bestAt": "Q15",
+      "kind": "joseki"
     },
-    "komoku34:W:P17/B:tenuki/W:Q15/B:tenuki/W:R15": {
+    "komoku34:W:P17/B:tenuki/W:Q13/B:Q15": {
       "loss": 0,
-      "bestAt": "R15",
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:tenuki/W:Q13/B:Q15/W:N16": {
+      "loss": 0,
+      "bestAt": "N16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:tenuki/W:Q13/B:Q15/W:N16/B:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:Q15": {
@@ -263,8 +343,38 @@
       "bestAt": "O16",
       "kind": "joseki"
     },
+    "komoku34:W:P17/B:Q15/W:R12": {
+      "loss": 0.27,
+      "bestAt": "M17",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q15/W:R12/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q15/W:R12/B:O16/W:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q15/W:R12/B:O16/W:O17/B:N16": {
+      "loss": 0,
+      "bestAt": "N16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q15/W:R12/B:O16/W:O17/B:N16/W:M17": {
+      "loss": 0,
+      "bestAt": "M17",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q15/W:R12/B:O16/W:O17/B:N16/W:M17/B:R10": {
+      "loss": 0,
+      "bestAt": "R10",
+      "kind": "joseki"
+    },
     "komoku34:W:P17/B:Q14": {
-      "loss": 0.04,
+      "loss": 0.07,
       "bestAt": "Q15",
       "kind": "joseki"
     },
@@ -278,8 +388,23 @@
       "bestAt": "N17",
       "kind": "joseki"
     },
+    "komoku34:W:P17/B:Q14/W:R12": {
+      "loss": 0,
+      "bestAt": "L16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q14/W:R12/B:N17": {
+      "loss": 0,
+      "bestAt": "N17",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:Q14/W:R12/B:N17/W:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
     "komoku34:W:P17/B:N17": {
-      "loss": 0.25,
+      "loss": 0.47,
       "bestAt": "Q15",
       "kind": "joseki"
     },
@@ -289,8 +414,8 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:N17/W:P14/B:R14": {
-      "loss": 0,
-      "bestAt": "R14",
+      "loss": 0.1,
+      "bestAt": "P15",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:N17/W:P14/B:R14/W:L17": {
@@ -304,7 +429,7 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:N17/W:O15": {
-      "loss": 0.08,
+      "loss": 0.69,
       "bestAt": "P14",
       "kind": "joseki"
     },
@@ -323,13 +448,48 @@
       "bestAt": "M17",
       "kind": "joseki"
     },
+    "komoku34:W:P17/B:N17/W:Q15": {
+      "loss": 0,
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N17/W:Q15/B:Q16": {
+      "loss": 0,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N17/W:Q15/B:Q16/W:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N17/W:Q15/B:Q16/W:P16/B:P15": {
+      "loss": 0,
+      "bestAt": "P15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N17/W:Q15/B:Q16/W:P16/B:P15/W:O15": {
+      "loss": 0,
+      "bestAt": "O15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N17/W:Q15/B:Q16/W:P16/B:P15/W:O15/B:P14": {
+      "loss": 0,
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:N17/W:Q15/B:Q16/W:P16/B:P15/W:O15/B:P14/W:N16": {
+      "loss": 0,
+      "bestAt": "N16",
+      "kind": "joseki"
+    },
     "komoku34:W:P17/B:M17": {
-      "loss": 0.1,
+      "loss": 0.15,
       "bestAt": "Q15",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:M17/W:P14": {
-      "loss": 0.4,
+      "loss": 0.32,
       "bestAt": "N16",
       "kind": "joseki"
     },
@@ -339,8 +499,8 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:M17/W:P14/B:R14/W:Q15": {
-      "loss": 0,
-      "bestAt": "Q15",
+      "loss": 0.49,
+      "bestAt": "J17",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:M17/W:P14/B:R14/W:Q15/B:R17": {
@@ -349,8 +509,33 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:M17/W:P14/B:R14/W:Q15/B:R17/W:tenuki": {
-      "loss": 0.18,
-      "bestAt": "J17",
+      "loss": 0.01,
+      "bestAt": "K17",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M17/W:N16": {
+      "loss": 0,
+      "bestAt": "N16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M17/W:N16/B:M16": {
+      "loss": 0,
+      "bestAt": "M16",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M17/W:N16/B:M16/W:M15": {
+      "loss": 0,
+      "bestAt": "N14",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M17/W:N16/B:M16/W:M15/B:L15": {
+      "loss": 0,
+      "bestAt": "L15",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M17/W:N16/B:M16/W:M15/B:L15/W:N17": {
+      "loss": 0,
+      "bestAt": "N17",
       "kind": "joseki"
     },
     "komoku34:W:P17/B:M16": {
@@ -369,7 +554,7 @@
       "kind": "joseki"
     },
     "komoku34:W:P17/B:M16/W:P14/B:R14/W:Q15": {
-      "loss": 0.21,
+      "loss": 0.23,
       "bestAt": "K17",
       "kind": "joseki"
     },
@@ -383,8 +568,28 @@
       "bestAt": "K17",
       "kind": "joseki"
     },
+    "komoku34:W:P17/B:M16/W:N15": {
+      "loss": 0,
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M16/W:N15/B:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M16/W:N15/B:Q14/W:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "komoku34:W:P17/B:M16/W:N15/B:Q14/W:R12/B:P13": {
+      "loss": 0.16,
+      "bestAt": "M15",
+      "kind": "joseki"
+    },
     "komoku34:W:P16": {
-      "loss": 0.17,
+      "loss": 0.26,
       "bestAt": "P17",
       "kind": "joseki"
     },
@@ -404,7 +609,7 @@
       "kind": "joseki"
     },
     "komoku34:W:P16/B:P17/W:O17/B:Q17/W:O16": {
-      "loss": 0.05,
+      "loss": 0.04,
       "bestAt": "N16",
       "kind": "joseki"
     },

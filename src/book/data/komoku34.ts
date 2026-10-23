@@ -167,6 +167,24 @@ export const KOMOKU34: FamilyDef = {
           note: 'Black jumps to R14 for a base toward Q4. The corner is settled, and White can play elsewhere.',
         },
       ],
+      branches: [
+        {
+          after: 2,
+          move: {
+            c: 'W',
+            at: 'Q18',
+            kind: 'mistake',
+            note: 'White hanes under at Q18. It grabs a little edge, but Black gets the hane at P16 and White ends up low.',
+          },
+          then: [
+            {
+              c: 'B',
+              at: 'P16',
+              note: 'Black hanes at the head of P17. White’s stones are stuck on the edge with few liberties, and Black faces the center.',
+            },
+          ],
+        },
+      ],
     },
     {
       id: 'komoku34-drawback-tenuki',
@@ -475,6 +493,272 @@ export const KOMOKU34: FamilyDef = {
       ],
     },
     {
+      id: 'komoku34-tenuki-second-approach',
+      name: "Small knight's approach, tenuki, White approaches from the other side",
+      difficulty: 2,
+      order: 63,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'tenuki', note: '' },
+        {
+          c: 'W',
+          at: 'Q13',
+          note: 'White approaches again, this time from the Q4 side. R16 has a White stone on each side now.',
+        },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black jumps toward the center between the two White stones, so neither can press Black low.',
+        },
+        {
+          c: 'W',
+          at: 'N16',
+          note: 'White makes shape for P17 with a knight’s move toward the center.',
+        },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black takes the corner on the P17 side. Black has a base, and Q15 keeps the way to the center open.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-cut-trick',
+      name: "Attach and hane, Black's cutting trick and White's calm answer",
+      difficulty: 2,
+      order: 65,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        { c: 'W', at: 'Q16', note: '' },
+        {
+          c: 'B',
+          at: 'P16',
+          kind: 'trick',
+          note: 'Black cuts at P16. It’s a trick: Q16 is in atari, and Black hopes White ataris the cutting stone instead.',
+        },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White just extends Q16 to Q15. Now P16 is the stone in trouble, with two liberties.',
+        },
+        {
+          c: 'B',
+          at: 'R17',
+          note: 'Black has to fix the corner first. A White stone on R17 would put Q17 in atari.',
+        },
+        {
+          c: 'W',
+          at: 'O17',
+          note: 'White extends P17 as well. Both White groups are safe, and P16 is stuck between them.',
+        },
+      ],
+      branches: [
+        {
+          after: 4,
+          move: {
+            c: 'W',
+            at: 'O16',
+            kind: 'mistake',
+            note: 'White ataris P16 and forgets that Q16 is the stone in atari.',
+          },
+          then: [
+            {
+              c: 'B',
+              at: 'Q15',
+              note: 'Black captures Q16. The corner is solid, and White’s P17 and O16 are thin.',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'komoku34-diagonal-other-side',
+      name: "Diagonal move, White approaches on the other side",
+      difficulty: 3,
+      order: 66,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q15', note: '' },
+        {
+          c: 'W',
+          at: 'R12',
+          note: 'White leaves P17 and approaches on the Q4 side. Black has two White stones to deal with.',
+        },
+        {
+          c: 'B',
+          at: 'O16',
+          note: 'Black hits P17 on the shoulder first. Pressing it low builds a wall that points at R12.',
+        },
+        { c: 'W', at: 'O17', note: 'White stays on the third line to keep a base.' },
+        { c: 'B', at: 'N16', note: 'Black pushes once more on the fourth line, and the wall gets longer.' },
+        { c: 'W', at: 'M17', note: 'White extends along the third line. The group on the D16 side is settled.' },
+        {
+          c: 'B',
+          at: 'R10',
+          note: 'Black pincers R12 from the Q4 side. With the wall nearby, R12 has to run toward the center.',
+          confidence: 'low',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-knight-other-side',
+      name: "Knight's move answer, White approaches on the other side",
+      difficulty: 2,
+      order: 67,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q14', note: '' },
+        {
+          c: 'W',
+          at: 'R12',
+          note: 'White approaches on the Q4 side, a knight’s move from Q14. It takes away part of Black’s base.',
+        },
+        {
+          c: 'B',
+          at: 'N17',
+          note: 'Black turns and pincers P17. Now both White stones need help, and White can only help one at a time.',
+        },
+        {
+          c: 'W',
+          at: 'O16',
+          note: 'White moves P17 out with a diagonal step toward the center.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-low-pincer-shoulder',
+      name: 'One-space low pincer, White hits the shoulder',
+      difficulty: 3,
+      order: 68,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'N17', note: '' },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White ignores the pincer and hits R16 on the shoulder. It goes after the corner first.',
+        },
+        { c: 'B', at: 'Q16', note: 'Black pushes at Q16, between White’s two stones.' },
+        { c: 'W', at: 'P16', note: 'White blocks at P16 and connects to P17.' },
+        { c: 'B', at: 'P15', note: 'Black cuts at P15. Q15 is now separated from P16.' },
+        { c: 'W', at: 'O15', note: 'White ataris P15 from the D16 side.' },
+        {
+          c: 'B',
+          at: 'P14',
+          note: 'Black extends out of atari. Q15 is left with only two liberties.',
+        },
+        {
+          c: 'W',
+          at: 'N16',
+          note: 'White guards the cut at O16 and leans on N17 at the same time. The fight moves to the center.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-pincer-knight',
+      name: "One-space high pincer, White's knight's move out",
+      difficulty: 2,
+      order: 69,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'N16', note: '' },
+        {
+          c: 'W',
+          at: 'O15',
+          note: 'White heads for the center with a knight’s move, past the N16 stone.',
+        },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black takes Q15, the point White would use to press the corner.',
+        },
+        { c: 'W', at: 'N15', note: 'White extends to N15 and blocks N16 from the center side.' },
+        {
+          c: 'B',
+          at: 'L16',
+          note: 'Black jumps along the fourth line toward D16, so N16 isn’t sealed in.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-high-pincer-jump',
+      name: "Two-space high pincer, White's diagonal jump",
+      difficulty: 3,
+      order: 70,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'M16', note: '' },
+        {
+          c: 'W',
+          at: 'N15',
+          note: 'White jumps diagonally to N15. It runs toward the center and leans on M16 at the same time.',
+        },
+        { c: 'B', at: 'Q14', note: 'Black takes a base with a knight’s move toward Q4.' },
+        {
+          c: 'W',
+          at: 'R12',
+          note: 'White approaches on the Q4 side to cut down Black’s base.',
+        },
+        {
+          c: 'B',
+          at: 'P13',
+          note: 'Black jumps to P13, between R12 and N15, so the two White groups can’t join easily.',
+          confidence: 'low',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-extend-press-tenuki',
+      name: 'Attach and extend, White presses from the center side',
+      difficulty: 1,
+      order: 71,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        { c: 'W', at: 'P16', note: '' },
+        { c: 'B', at: 'R14', note: '' },
+        {
+          c: 'W',
+          at: 'P13',
+          note: 'White plays P13 to keep R14 from growing toward the center.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. The group already has its base, so P13 is no threat yet.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-low-pincer-shoulder',
+      name: 'Two-space low pincer, White hits the shoulder',
+      difficulty: 3,
+      order: 72,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'M17', note: '' },
+        {
+          c: 'W',
+          at: 'N16',
+          note: 'White hits M17 on the shoulder. It leans on the pincer instead of running.',
+        },
+        { c: 'B', at: 'M16', note: 'Black pushes at M16.' },
+        { c: 'W', at: 'M15', note: 'White hanes at the head of M16.' },
+        {
+          c: 'B',
+          at: 'L15',
+          note: 'Black hanes right back at the head of M15. M15 has only two liberties.',
+        },
+        {
+          c: 'W',
+          at: 'N17',
+          note: 'White pushes in at N17 and keeps M17 apart from the corner. Black’s pincer group has to look after itself.',
+          confidence: 'low',
+        },
+      ],
+    },
+    {
       id: 'komoku34-tenuki-lean-attach',
       name: "Small knight's approach, tenuki, Black attaches after the lean",
       difficulty: 2,
@@ -486,7 +770,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'Q17',
-          note: 'Black attaches at Q17 and takes the corner first. It’s the other answer to the lean, next to R15.',
+          note: 'Black attaches at Q17 and takes the corner first. R15 is the other good answer to the lean.',
         },
         {
           c: 'W',
@@ -503,25 +787,6 @@ export const KOMOKU34: FamilyDef = {
           c: 'B',
           at: 'R13',
           note: 'Black jumps to R13. The group has room for eyes, and White has a wall facing the center.',
-        },
-      ],
-      branches: [
-        {
-          after: 3,
-          move: {
-            c: 'B',
-            at: 'tenuki',
-            kind: 'mistake',
-            note: 'Black plays elsewhere a second time. R16 already took one extra White move, and a third one takes its base.',
-          },
-          then: [
-            {
-              c: 'W',
-              at: 'R15',
-              note: 'White blocks at R15. R16 has no base left, and saving it means running with a weak group.',
-              confidence: 'low',
-            },
-          ],
         },
       ],
     },

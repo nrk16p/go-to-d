@@ -52,4 +52,22 @@ describe('orientNote', () => {
   it('returns an empty note unchanged', () => {
     expect(orientNote('', 3)).toBe('')
   })
+
+  it('turns points inside Thai text, with or without a space next to them', () => {
+    // Thai letters are not word characters, so a point right against them is still a whole word.
+    expect(orientNote('ขาวฮาเนะที่ Q18 แล้วต่อที่R18ไว้ ดำได้Q4', 4)).toBe('ขาวฮาเนะที่ D18 แล้วต่อที่C18ไว้ ดำได้D4')
+    const turned = (gtp: string, sym: Sym) => toGtp(transform(parseGtp(gtp), sym))
+    for (const sym of SYMS) {
+      expect(orientNote('ดำกันที่P18 ถ้าปล่อยไว้ ขาวจะไหลไปทาง D16ได้อีก (R14)', sym)).toBe(
+        `ดำกันที่${turned('P18', sym)} ถ้าปล่อยไว้ ขาวจะไหลไปทาง ${turned('D16', sym)}ได้อีก (${turned('R14', sym)})`,
+      )
+    }
+  })
+
+  it('leaves Thai text without points alone, and Thai digits are not points', () => {
+    for (const sym of SYMS) {
+      expect(orientNote('บุก 3-3 แล้วกันฝั่งนี้', sym)).toBe('บุก 3-3 แล้วกันฝั่งนี้')
+      expect(orientNote('จุด Q๔ ไม่ใช่พิกัด', sym)).toBe('จุด Q๔ ไม่ใช่พิกัด')
+    }
+  })
 })

@@ -1,7 +1,7 @@
 // Every pattern in the book, family by family in course order, with how far each drillable side has got.
 
 import { useState } from 'react'
-import { BOOK } from '../../book/data'
+import { BOOK } from '../shownBook'
 import type { FamilyId } from '../../book/types'
 import { reviewKey } from '../../progress/srs'
 import { loadProgress } from '../../progress/store'

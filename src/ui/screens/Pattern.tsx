@@ -2,7 +2,7 @@
 // drill from each side it can be drilled from. Shown in the book's own frame (sym 0), as notes are written.
 
 import { useEffect, useState } from 'react'
-import { BOOK } from '../../book/data'
+import { BOOK } from '../shownBook'
 import { toGtp, type Color } from '../../go/coords'
 import { drillableSides, ownerColor } from '../../session/sides'
 import { Board } from '../Board'

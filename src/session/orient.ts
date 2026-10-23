@@ -3,8 +3,12 @@
 
 import { parseGtp, toGtp, transform, type Sym } from '../go/coords'
 
-/** A GTP point as a whole word: a column letter A–T without I, then a row 1–19. Upper case only. */
-const GTP_TOKEN = /\b[A-HJ-T](?:1\d|[1-9])\b/g
+/**
+ * A GTP point as a whole word: a column letter A–T without I, then a row 1–19. Upper case only.
+ * Thai letters aren't word characters, so a point written right against Thai ("ที่Q4ไว้") still counts.
+ * The Thai book text check (tests/book/th-text.test.ts) uses this same pattern.
+ */
+export const GTP_TOKEN = /\b[A-HJ-T](?:1\d|[1-9])\b/g
 
 /** `note` with every GTP coordinate ("Q4", "D16", "R14") moved by `sym`. Everything else is left as it is. */
 export function orientNote(note: string, sym: Sym): string {

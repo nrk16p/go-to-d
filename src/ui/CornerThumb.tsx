@@ -2,7 +2,7 @@
 // book's frame. It helps tell apart patterns whose names are long and alike. Decoration only: the name
 // next to it says what it is.
 
-import { BOOK } from '../book/data'
+import { BOOK } from './shownBook'
 import { mainLine, thumbSize } from './mainLine'
 
 const PAD = 0.75

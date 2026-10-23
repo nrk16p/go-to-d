@@ -1,4 +1,4 @@
-// Settings: how strict the teacher is, what the engine runs on, and the backup. Progress lives only in
+// Settings: the language, how strict the teacher is, what the engine runs on, and the backup. Progress lives only in
 // this browser, so Export and Import are the safety net. Import and Reset ask in the page first
 // (never window.confirm), and nothing is replaced until the owner says so.
 
@@ -13,10 +13,11 @@ import {
   SETTING_LIMITS,
   todayLocal,
 } from '../../progress/store'
-import { COPY } from '../copy'
+import { COPY, LANG } from '../copy'
 import { EngineChip } from '../EngineChip'
 import type { EngineHub } from '../engine'
 import { isIos } from '../install'
+import { LANG_NAME, setLang, type Lang } from '../lang'
 
 const S = COPY.settings
 
@@ -53,10 +54,40 @@ export function Settings({ engine, today = todayLocal() }: { engine: EngineHub; 
       <header className="page-head">
         <h1>{S.title}</h1>
       </header>
+      <LanguagePick />
       <TeacherForm key={version} initial={settings} />
       <EngineInfo engine={engine} />
       <Backup today={today} onReplaced={reloaded} />
       <Reset onCleared={reloaded} />
+    </section>
+  )
+}
+
+// ---------- language ----------
+
+/** Thai or English. Picking one saves it and reloads the page in it, as the header switch does. */
+function LanguagePick() {
+  const [failed, setFailed] = useState(false)
+
+  function pick(lang: Lang) {
+    if (lang !== LANG) setFailed(!setLang(lang))
+  }
+
+  return (
+    <section className="settings-group" aria-labelledby="lang-title">
+      <h2 id="lang-title">{S.langTitle}</h2>
+      <div className="segmented" role="radiogroup" aria-labelledby="lang-title" aria-describedby="lang-help">
+        {(['th', 'en'] as const).map((lang) => (
+          <label key={lang} lang={lang}>
+            <input type="radio" name="lang" value={lang} checked={LANG === lang} onChange={() => pick(lang)} />
+            <span>{LANG_NAME[lang]}</span>
+          </label>
+        ))}
+      </div>
+      <p id="lang-help" className="help">
+        {S.langHelp}
+      </p>
+      <MessageLine msg={failed ? { error: true, text: S.saveFailed } : null} />
     </section>
   )
 }

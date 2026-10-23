@@ -310,7 +310,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R15',
-          note: 'Black connects at R15 and the wall has no gaps. S14 is about as good.',
+          note: 'Black connects at R15 and the wall has no gaps.',
         },
         {
           c: 'W',
@@ -333,7 +333,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'P16',
-          note: 'Black stays on the fourth line. The hane at P17 is about as good.',
+          note: 'Black stays on the fourth line.',
         },
         { c: 'W', at: 'S16', note: 'White crawls toward R14.' },
         { c: 'B', at: 'S15', note: 'Black blocks, and R14 stays alone.' },
@@ -410,7 +410,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'O16',
-          note: 'Black attaches to O17 from the center side. The stones Black adds here also help the Q11 pincer.',
+          note: 'Black attaches to O17 from the center side.',
         },
         { c: 'W', at: 'N16', note: 'White hanes at N16 to make shape on the D16 side.' },
         {
@@ -462,7 +462,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'Q14',
-          note: 'Black attaches to R14 from the center side. With R12 this close, R14 has no room to settle, so White usually turns to O17.',
+          note: 'Black attaches to R14 from the center side. With R12 this close, R14 has no room to settle, so the O17 stone is where White has to get its base.',
           confidence: 'low',
         },
       ],
@@ -544,7 +544,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R17',
-          note: 'Black blocks at the 3-3 point and the corner is safe. Hitting R14 at Q12 or R12 is also good.',
+          note: 'Black blocks at the 3-3 point and the corner is safe. A pincer on R14 at Q12 is also good.',
         },
         {
           c: 'W',
@@ -600,7 +600,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'R15',
-          note: 'Black closes the corner with the diagonal move, so the slide and the 3-3 point are gone. Playing elsewhere is fine too.',
+          note: 'Black closes the corner with the diagonal move, so the slide and the 3-3 point are gone.',
         },
       ],
     },
@@ -645,7 +645,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'W',
           at: 'Q10',
-          note: 'White extends toward Q4 and has a base. R10 on the third line works too.',
+          note: 'White extends toward Q4 and has a base.',
         },
       ],
     },
@@ -691,7 +691,7 @@ export const STAR44: FamilyDef = {
     },
     {
       id: 'star44-high-hane-back',
-      name: 'Common mistake: hane back under the high approach',
+      name: 'Common mistake: sandwiching the hane under the high approach',
       difficulty: 2,
       order: 35,
       line: [
@@ -707,7 +707,7 @@ export const STAR44: FamilyDef = {
             c: 'B',
             at: 'R12',
             kind: 'mistake',
-            note: 'Hane back at R12 looks strong, but R14 is short of liberties. White ataris at R15 and splits Black in two.',
+            note: 'Sandwiching R13 with R12 looks strong, but R14 is short of liberties. White ataris at R15 and splits Black in two.',
           },
           then: [
             { c: 'W', at: 'R15', note: 'White ataris R14 from the corner side.' },
@@ -794,7 +794,7 @@ export const STAR44: FamilyDef = {
         {
           c: 'B',
           at: 'S14',
-          note: 'Black blocks at S14 and stays connected. White has a small corner and a lone stone on R14 to look after.',
+          note: 'Black extends to S14 so S15 can’t be squeezed from both sides. White has a small corner and a lone stone on R14 to look after.',
         },
       ],
     },
@@ -828,7 +828,7 @@ export const STAR44: FamilyDef = {
         },
         { c: 'W', at: 'R15', note: 'White crawls one more step and touches R14.' },
         { c: 'B', at: 'Q15', note: 'Black blocks on the center side. White is boxed in along the edge.' },
-        { c: 'W', at: 'S14', note: 'White slides under R14 on the second line for eye space.' },
+        { c: 'W', at: 'S14', note: 'White hanes under R14 at S14 for eye space.' },
         {
           c: 'B',
           at: 'R13',

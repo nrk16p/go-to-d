@@ -1,7 +1,7 @@
 {
-  "familyHash": "1dc18effef1ad8",
+  "familyHash": "099471c3c60a8c",
   "model": "kata1-b18c384nbt-s9996604416-d4316597426",
-  "visits": 400,
+  "visits": 800,
   "nodes": {
     "open-even:B:Q16": {
       "loss": 0,
@@ -10,12 +10,507 @@
     },
     "open-even:B:Q16/W:D4": {
       "loss": 0,
-      "bestAt": "D4",
+      "bestAt": "D16",
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4": {
       "loss": 0,
       "bestAt": "Q4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16": {
+      "loss": 0,
+      "bestAt": "D16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3": {
+      "loss": 0,
+      "bestAt": "F17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15": {
+      "loss": 0,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14/W:S14": {
+      "loss": 0,
+      "bestAt": "S14",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14/W:S14/B:F17": {
+      "loss": 0.07,
+      "bestAt": "C17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14/W:S14/B:R12": {
+      "loss": 2.8,
+      "bestAt": "C17",
+      "kind": "mistake"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14/W:S14/B:R12/W:R13": {
+      "loss": 0,
+      "bestAt": "R13",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14/W:S14/B:R12/W:R13/B:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14/W:S14/B:R12/W:R13/B:Q14/W:Q13": {
+      "loss": 0,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3/B:F4": {
+      "loss": 0,
+      "bestAt": "F4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3/B:F4/W:D6": {
+      "loss": 0,
+      "bestAt": "D6",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3/B:F4/W:D6/B:C17": {
+      "loss": 0,
+      "bestAt": "C17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3/B:F4/W:D6/B:C17/W:D17": {
+      "loss": 0,
+      "bestAt": "D17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3/B:F4/W:D6/B:C17/W:D17/B:C16": {
+      "loss": 0,
+      "bestAt": "C16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3/B:F4/W:D6/B:C17/W:D17/B:C16/W:D15": {
+      "loss": 0,
+      "bestAt": "D15",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3/B:F4/W:D6/B:C17/W:D17/B:C16/W:D15/B:B14": {
+      "loss": 0,
+      "bestAt": "B14",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3": {
+      "loss": 0.36,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3/B:C3": {
+      "loss": 0,
+      "bestAt": "C3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3/B:C3/W:D3": {
+      "loss": 0,
+      "bestAt": "D3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3/B:C3/W:D3/B:C4": {
+      "loss": 0,
+      "bestAt": "C4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3/B:C3/W:D3/B:C4/W:D5": {
+      "loss": 0,
+      "bestAt": "D5",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3/B:C3/W:D3/B:C4/W:D5/B:D2": {
+      "loss": 0,
+      "bestAt": "D2",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3/B:C3/W:D3/B:C4/W:D5/B:D2/W:E2": {
+      "loss": 0,
+      "bestAt": "E2",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:K3/B:C3/W:D3/B:C4/W:D5/B:D2/W:E2/B:C2": {
+      "loss": 0,
+      "bestAt": "C2",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14": {
+      "loss": 0.16,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11": {
+      "loss": 0.35,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16/W:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16/W:Q17/B:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16/W:Q17/B:P16/W:S16": {
+      "loss": 0,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10": {
+      "loss": 0.19,
+      "bestAt": "F17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10/W:R3": {
+      "loss": 0,
+      "bestAt": "R3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10/W:R3/B:R4": {
+      "loss": 0,
+      "bestAt": "R4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10/W:R3/B:R4/W:Q3": {
+      "loss": 0,
+      "bestAt": "Q3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10/W:R3/B:R4/W:Q3/B:P4": {
+      "loss": 0,
+      "bestAt": "P4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10/W:R3/B:R4/W:Q3/B:P4/W:O2": {
+      "loss": 0,
+      "bestAt": "O2",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10/W:R3/B:R4/W:Q3/B:P4/W:O2/B:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14": {
+      "loss": 0.12,
+      "bestAt": "F17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3": {
+      "loss": 0,
+      "bestAt": "R3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4": {
+      "loss": 0,
+      "bestAt": "R4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4/W:Q3": {
+      "loss": 0,
+      "bestAt": "Q3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4/W:Q3/B:O3": {
+      "loss": 0,
+      "bestAt": "O3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4/W:Q3/B:O3/W:P3": {
+      "loss": 0,
+      "bestAt": "P3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4/W:Q3/B:O3/W:P3/B:P4": {
+      "loss": 0,
+      "bestAt": "P4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4/W:Q3/B:O3/W:P3/B:P4/W:O2": {
+      "loss": 0,
+      "bestAt": "O2",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4/W:Q3/B:O3/W:P3/B:P4/W:O2/B:F17": {
+      "loss": 0,
+      "bestAt": "F17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17": {
+      "loss": 0.54,
+      "bestAt": "D16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16": {
+      "loss": 0.04,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16/W:O18": {
+      "loss": 0,
+      "bestAt": "O18",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16/W:O18/B:D16": {
+      "loss": 0,
+      "bestAt": "D16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16/W:O18/B:D16/W:C17": {
+      "loss": 0,
+      "bestAt": "C17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16/W:O18/B:D16/W:C17/B:C16": {
+      "loss": 0,
+      "bestAt": "C16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16/W:O18/B:D16/W:C17/B:C16/W:D17": {
+      "loss": 0,
+      "bestAt": "D17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16/W:O18/B:D16/W:C17/B:C16/W:D17/B:F17": {
+      "loss": 0,
+      "bestAt": "F17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4": {
+      "loss": 0.02,
+      "bestAt": "Q4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16": {
+      "loss": 0,
+      "bestAt": "D16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10": {
+      "loss": 0.53,
+      "bestAt": "P4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4": {
+      "loss": 0,
+      "bestAt": "P4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3": {
+      "loss": 0,
+      "bestAt": "P3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3": {
+      "loss": 0,
+      "bestAt": "O3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3/B:Q3": {
+      "loss": 0,
+      "bestAt": "Q3",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3/B:Q3/W:O4": {
+      "loss": 0,
+      "bestAt": "O4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3/B:Q3/W:O4/B:Q6": {
+      "loss": 0,
+      "bestAt": "Q6",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3/B:Q3/W:O4/B:Q6/W:R8": {
+      "loss": 0.1,
+      "bestAt": "K4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3/B:Q3/W:O4/B:Q6/W:R8/B:R7": {
+      "loss": 0,
+      "bestAt": "R7",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3/B:Q3/W:O4/B:Q6/W:R8/B:R7/W:K4": {
+      "loss": 0,
+      "bestAt": "K4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4": {
+      "loss": 0,
+      "bestAt": "P4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17/W:P17": {
+      "loss": 0,
+      "bestAt": "P17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17/W:P17/B:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17/W:P17/B:P16/W:O18": {
+      "loss": 0,
+      "bestAt": "O18",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17/W:P17/B:P16/W:O18/B:Q10": {
+      "loss": 0,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17/W:P17/B:P16/W:O18/B:P14": {
+      "loss": 2.55,
+      "bestAt": "Q10",
+      "kind": "mistake"
+    },
+    "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17/W:P17/B:P16/W:O18/B:P14/W:R9": {
+      "loss": 0,
+      "bestAt": "R9",
+      "kind": "joseki"
+    },
+    "open-even:B:R16": {
+      "loss": 0,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16": {
+      "loss": 0,
+      "bestAt": "D16",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4": {
+      "loss": 0,
+      "bestAt": "C4",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4": {
+      "loss": 0,
+      "bestAt": "Q4",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4/B:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4/B:O17/W:E4": {
+      "loss": 0,
+      "bestAt": "E4",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4/B:O17/W:E4/B:E3": {
+      "loss": 0,
+      "bestAt": "E3",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4/B:O17/W:E4/B:E3/W:F3": {
+      "loss": 0,
+      "bestAt": "F3",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4/B:O17/W:E4/B:E3/W:F3/B:D3": {
+      "loss": 0,
+      "bestAt": "D3",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4/B:O17/W:E4/B:E3/W:F3/B:D3/W:F4": {
+      "loss": 0,
+      "bestAt": "F4",
+      "kind": "joseki"
+    },
+    "open-even:B:R16/W:D16/B:C4/W:Q4/B:O17/W:E4/B:E3/W:F3/B:D3/W:F4/B:C6": {
+      "loss": 0,
+      "bestAt": "C6",
       "kind": "joseki"
     }
   }

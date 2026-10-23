@@ -10,13 +10,8 @@ import type { FamilyTh } from './types'
 
 const TH: FamilyTh = {
   complete: false,
-  names: {
-    'open-h4-approach-pincer': 'ขาวประชิดต่ำ ดำประกบ',
-  },
-  notes: {
-    'W:R14': 'ขาวประชิดต่ำที่ Q16 เป็นตาแรกที่เจอบ่อยในเกมต่อ 4 ตัว',
-    'W:R14/B:Q12': 'ดำประกบโดยมี Q4 คอยช่วย หมากประชิดของขาวเลยโดนหมากดำขนาบสองข้าง',
-  },
+  names: {},
+  notes: {},
 }
 
 export default TH

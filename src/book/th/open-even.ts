@@ -8,14 +8,8 @@ import type { FamilyTh } from './types'
 
 const TH: FamilyTh = {
   complete: false,
-  names: {
-    'open-even-three-stars': 'ยึดมุมก่อน จุดดาวสามมุม',
-  },
-  notes: {
-    'B:Q16': 'ดำเริ่มที่มุมก่อน เพราะมุมทำเขตได้ง่ายที่สุด',
-    'B:Q16/W:D4': 'ขาวเอามุมที่ทแยงกับ Q16',
-    'B:Q16/W:D4/B:Q4': 'ดำเอามุมที่สาม Q4 กับ Q16 จะได้ช่วยกันคุมด้านเดียวกัน',
-  },
+  names: {},
+  notes: {},
 }
 
 export default TH

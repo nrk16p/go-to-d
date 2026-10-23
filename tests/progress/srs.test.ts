@@ -102,14 +102,25 @@ describe('addDays', () => {
 describe('applyResult', () => {
   const today = '2026-03-10'
 
-  it('a clean first run lands in box 1, due tomorrow', () => {
+  it('a clean first run lands in box 1, due tomorrow, and remembers the day it was first played', () => {
     const r = applyResult(undefined, true, [], today)
-    expect(r).toEqual({ box: 1, due: '2026-03-11', runs: 1, cleanRuns: 1, missedKeys: [] })
+    expect(r).toEqual({ box: 1, due: '2026-03-11', runs: 1, cleanRuns: 1, missedKeys: [], firstDay: today })
   })
 
   it('a first run with mistakes lands in box 1, due tomorrow, with the missed keys', () => {
     const r = applyResult(undefined, false, ['k1', 'k2'], today)
-    expect(r).toEqual({ box: 1, due: '2026-03-11', runs: 1, cleanRuns: 0, missedKeys: ['k1', 'k2'] })
+    expect(r).toEqual({ box: 1, due: '2026-03-11', runs: 1, cleanRuns: 0, missedKeys: ['k1', 'k2'], firstDay: today })
+  })
+
+  it('keeps the first day through later runs, and leaves it unknown on a review saved before it existed (R44)', () => {
+    let r = applyResult(undefined, true, [], today)
+    r = applyResult(r, false, ['k'], '2026-03-11')
+    r = applyResult(r, true, [], '2026-03-12')
+    expect(r.firstDay).toBe(today)
+    const old = applyResult(review({ box: 2, due: '2026-03-10' }), true, [], today)
+    expect(old).not.toHaveProperty('firstDay')
+    const oldMiss = applyResult(review({ box: 2, due: '2026-03-10' }), false, ['k'], today)
+    expect(oldMiss).not.toHaveProperty('firstDay')
   })
 
   it('clean runs on their due days climb the ladder: due is the run day plus the new box’s days', () => {

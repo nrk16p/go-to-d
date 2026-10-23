@@ -137,6 +137,8 @@ export const COPY = {
     dueTitle: 'Reviews due',
     newTitle: 'New today',
     allStarted: "You've started every pattern in the book. From here it's reviews.",
+    doneNew: "That's today's new ones.",
+    learnOneMore: 'Learn one more',
     play: 'Play',
     freeTitle: "Teacher's choice",
     freeBody: 'The teacher picks the line, any branch in the book. Good as a warm-up, or once the list is done.',

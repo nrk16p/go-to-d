@@ -12,6 +12,11 @@ export interface ReviewState {
   cleanRuns: number
   /** Book positions (node keys) where the owner last went wrong, oldest first. */
   missedKeys: string[]
+  /**
+   * The local day this pattern and side was first played (R44), so Today knows how many new ones were
+   * started today. Missing on reviews saved before it existed: unknown, and never filled in later.
+   */
+  firstDay?: string
 }
 
 export interface Settings {
@@ -82,16 +87,19 @@ export function applyResult(prev: ReviewState | undefined, clean: boolean, misse
   const before: ReviewState = prev ?? { box: 0, due: today, runs: 0, cleanRuns: 0, missedKeys: [] }
   const runs = before.runs + 1
   const cleanRuns = before.cleanRuns + (clean ? 1 : 0)
+  // The first run sets the first day; a review that never had one keeps not having one.
+  const first = prev ? prev.firstDay : today
+  const firstDay = first === undefined ? {} : { firstDay: first }
   if (!clean) {
     const added = new Set(missedKeys)
     const kept = [...before.missedKeys.filter((k) => !added.has(k)), ...added].slice(-MAX_MISSED_KEYS)
-    return { box: MISS_BOX, due: addDays(today, BOX_DAYS[MISS_BOX]), runs, cleanRuns, missedKeys: kept }
+    return { box: MISS_BOX, due: addDays(today, BOX_DAYS[MISS_BOX]), runs, cleanRuns, missedKeys: kept, ...firstDay }
   }
   if (prev && today < prev.due) {
-    return { box: prev.box, due: prev.due, runs, cleanRuns, missedKeys: [...prev.missedKeys] }
+    return { box: prev.box, due: prev.due, runs, cleanRuns, missedKeys: [...prev.missedKeys], ...firstDay }
   }
   const box = Math.min(before.box + 1, TOP_BOX) as ReviewState['box']
-  return { box, due: addDays(today, BOX_DAYS[box]), runs, cleanRuns, missedKeys: [...before.missedKeys] }
+  return { box, due: addDays(today, BOX_DAYS[box]), runs, cleanRuns, missedKeys: [...before.missedKeys], ...firstDay }
 }
 
 export function isMastered(r: ReviewState): boolean {

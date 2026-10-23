@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { BOOK } from '../../src/book/data'
-import { courseOrder, currentStreak, dueItems, masteredCount, newItems } from '../../src/progress/course'
+import { courseOrder, currentStreak, dueItems, masteredCount, newItems, newToday, startedToday } from '../../src/progress/course'
 import type { Progress, ReviewState } from '../../src/progress/srs'
 import { defaultProgress } from '../../src/progress/store'
 import { drillableSides } from '../../src/session/sides'
@@ -86,6 +86,43 @@ describe('newItems', () => {
     const all = Object.fromEntries(keys(courseOrder(BOOK)).map((k) => [k, review(1, '2026-12-01')]))
     delete all['sansan33-fourth-line-approach:attack']
     expect(keys(newItems(BOOK, progressWith(all), 2))).toEqual(['sansan33-fourth-line-approach:attack'])
+  })
+})
+
+describe('new patterns for today (R44)', () => {
+  const COURSE = keys(courseOrder(BOOK))
+  const started = (day: string | undefined): ReviewState => ({ ...review(1, '2026-10-23'), ...(day ? { firstDay: day } : {}) })
+
+  it('counts the patterns first played today; an old review with no first day is unknown and doesn’t count', () => {
+    const p = progressWith({
+      [COURSE[0]]: started(TODAY),
+      [COURSE[1]]: started('2026-10-21'),
+      [COURSE[2]]: started(undefined),
+      [COURSE[3]]: started(TODAY),
+    })
+    expect(startedToday(p, TODAY)).toBe(2)
+    expect(startedToday(p, '2026-10-21')).toBe(1)
+  })
+
+  it('offers newPerDay less what was started today, then nothing until tomorrow', () => {
+    const newPerDay = defaultProgress().settings.newPerDay
+    const none = progressWith({})
+    expect(keys(newToday(BOOK, none, TODAY))).toEqual(COURSE.slice(0, newPerDay))
+
+    const one = progressWith({ [COURSE[0]]: started(TODAY) })
+    expect(keys(newToday(BOOK, one, TODAY))).toEqual(COURSE.slice(1, newPerDay))
+
+    const all = progressWith(Object.fromEntries(COURSE.slice(0, newPerDay).map((k) => [k, started(TODAY)])))
+    expect(newToday(BOOK, all, TODAY)).toEqual([])
+    // Past the day's share the next one is still there for whoever wants it.
+    expect(keys(newItems(BOOK, all, 1))).toEqual([COURSE[newPerDay]])
+    // Tomorrow the share is back.
+    expect(keys(newToday(BOOK, all, '2026-10-23'))).toEqual(COURSE.slice(newPerDay, 2 * newPerDay))
+  })
+
+  it('never goes below none, when more than the day’s share was started', () => {
+    const many = progressWith(Object.fromEntries(COURSE.slice(0, 5).map((k) => [k, started(TODAY)])))
+    expect(newToday(BOOK, many, TODAY)).toEqual([])
   })
 })
 

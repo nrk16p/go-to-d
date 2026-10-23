@@ -18,7 +18,8 @@
 
 import { expect, test, type Page } from 'playwright/test'
 import { parseGtp, transform, type Sym } from '../src/go/coords'
-import { COPY } from '../src/ui/copy'
+import { COPY } from '../src/ui/copy.en'
+import { LANG_KEY } from '../src/ui/lang'
 import { sparHref } from '../src/ui/router'
 
 /** Black answers to W R14 that are not in the book (book frame). */
@@ -99,6 +100,8 @@ test('the teacher answers an off-book move', async ({ page, browserName }, info)
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
   }
 
+  // The app picks Thai on a Thai browser (R38); this reads the English text.
+  await page.addInitScript((key) => localStorage.setItem(key, 'en'), LANG_KEY)
   await page.goto('./#/settings')
   await expect(page.getByText(COPY.engine.ready)).toBeVisible({ timeout: 60_000 })
   const backend = (await page.locator('.facts dd').first().textContent()) ?? ''

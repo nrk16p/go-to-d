@@ -8,7 +8,7 @@
 
 import { Component, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { checkedLoss } from '../../book/checkedLoss'
-import { BOOK } from '../../book/data'
+import { BOOK } from '../shownBook'
 import { toGtp, type Board as Grid, type Color, type Pt } from '../../go/coords'
 import { otherColor } from '../../go/rules'
 import { loadProgress } from '../../progress/store'

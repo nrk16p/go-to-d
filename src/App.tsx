@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { COPY } from './ui/copy'
 import type { EngineHub } from './ui/engine'
+import { LangSwitch } from './ui/LangSwitch'
 import { href, parseRoute, useHash, type Route } from './ui/router'
 import { Library } from './ui/screens/Library'
 import { NotFound } from './ui/screens/NotFound'
@@ -53,13 +54,16 @@ export default function App({ engine }: { engine: EngineHub }) {
         <a className="wordmark" href={href.today}>
           {COPY.appName}
         </a>
-        <nav aria-label={COPY.nav.label}>
-          {NAV.map((n) => (
-            <a key={n.name} href={n.to} aria-current={section === n.name ? 'page' : undefined}>
-              {n.label}
-            </a>
-          ))}
-        </nav>
+        <div className="shell-end">
+          <nav aria-label={COPY.nav.label}>
+            {NAV.map((n) => (
+              <a key={n.name} href={n.to} aria-current={section === n.name ? 'page' : undefined}>
+                {n.label}
+              </a>
+            ))}
+          </nav>
+          <LangSwitch />
+        </div>
       </header>
       <main className="screen">
         <Screen route={route} hash={hash} engine={engine} />

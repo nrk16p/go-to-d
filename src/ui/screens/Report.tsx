@@ -1,7 +1,7 @@
 // After a session: how it went, the corner as it ended, when this pattern comes back, what else is due.
 
 import { useState } from 'react'
-import { BOOK } from '../../book/data'
+import { BOOK } from '../shownBook'
 import { dueKeys, reviewKey } from '../../progress/srs'
 import { loadProgress, todayLocal } from '../../progress/store'
 import type { Side } from '../../session/sides'

@@ -3,7 +3,7 @@
 // never in doubt. Below: the streak, how much is mastered, and free sparring ("Teacher's choice").
 
 import { useState } from 'react'
-import { BOOK } from '../../book/data'
+import { BOOK } from '../shownBook'
 import type { FamilyId } from '../../book/types'
 import { currentStreak, dueItems, masteredCount, newItems, type CourseItem } from '../../progress/course'
 import { loadProgress, saveProgress, todayLocal } from '../../progress/store'

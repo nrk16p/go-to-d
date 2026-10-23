@@ -23,7 +23,9 @@ import { defaultProgress, STORAGE_KEY, todayLocal } from '../src/progress/store'
 import { DEFAULT_THRESHOLDS, round1 } from '../src/session/judge'
 import { orientNote } from '../src/session/orient'
 import { ownerColor, type Side } from '../src/session/sides'
-import { COPY } from '../src/ui/copy'
+// English: the browser is held to English below, whatever language the machine running this speaks.
+import { COPY } from '../src/ui/copy.en'
+import { LANG_KEY } from '../src/ui/lang'
 
 /** Ruling R4: the e2e uses a real book pattern with a `mistake` branch (Black's S17 here). */
 const MISTAKE_PATTERN = 'star44-low-knight-slide'
@@ -150,6 +152,8 @@ function queueNames(page: Page, title: string) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // The app picks Thai on a Thai browser (R38); these checks read the English text.
+  await page.addInitScript((key) => localStorage.setItem(key, 'en'), LANG_KEY)
   // A headless browser has no share sheet. On iOS the app hands Export to navigator.share, so stand in
   // for the sheet and keep the file it was given.
   await page.addInitScript(() => {

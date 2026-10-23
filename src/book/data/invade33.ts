@@ -89,7 +89,7 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'R13',
-          note: 'Black stops the slide at R13. White’s corner stays small, and Black’s wall has no weak points.',
+          note: 'Black stops the slide at R13. White’s corner stays small, and Black’s wall faces the center.',
         },
       ],
     },
@@ -231,7 +231,7 @@ export const INVADE33: FamilyDef = {
     // Phase 2 (Task 12). Every line below follows KataGo's choices in this setup; see the verify file.
     {
       id: 'invade33-hane-hane-q18',
-      name: '3-3 invasion, hane-hane, White hanes at Q18',
+      name: '3-3 invasion, hane-hane, White hanes on the other edge',
       difficulty: 2,
       order: 43,
       line: [
@@ -251,7 +251,7 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'P18',
-          note: 'Black blocks at P18. If Black leaves it, White pushes further along the edge toward D16.',
+          note: 'Black blocks at P18. If Black leaves it, White goes further along the edge toward D16.',
         },
         { c: 'W', at: 'R18', note: 'White connects. Otherwise a Black stone on R18 would put Q18 in atari.' },
         {
@@ -267,14 +267,13 @@ export const INVADE33: FamilyDef = {
             c: 'B',
             at: 'P17',
             kind: 'mistake',
-            note: 'The solid connection is what older books show. It’s safe but slow: O17 guards the same cut and also works toward D16.',
-            confidence: 'low',
+            note: 'The solid connection is safe but slow. O17 guards the same cut and also works toward D16.',
           },
           then: [
             {
               c: 'W',
               at: 'J17',
-              note: 'White uses the tempo to split the side between Q16 and D16 at J17. P17 does nothing on that side.',
+              note: 'White splits the side between Q16 and D16 at J17. With P17 instead of O17, Black’s wall doesn’t reach as far toward D16.',
             },
           ],
         },
@@ -352,12 +351,12 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'Q18',
-          note: 'Black hanes at Q18 first. It’s the point White wanted for itself, and now it shrinks White’s corner instead.',
+          note: 'Black descends to Q18 first. That was White’s hane point, and now it shrinks White’s corner instead.',
         },
         {
           c: 'W',
           at: 'S13',
-          note: 'White crawls at S13 before blocking. Blocking at R18 first would let Black hane at S13, and the corner would shrink from both ends.',
+          note: 'White crawls at S13 first. If White blocks at R18 instead, Black takes S13 and the corner shrinks from both ends.',
         },
         { c: 'B', at: 'R12', note: 'Black extends to R12 and keeps White low.' },
         {
@@ -369,7 +368,7 @@ export const INVADE33: FamilyDef = {
     },
     {
       id: 'invade33-q18-first',
-      name: '3-3 invasion, hane-hane, White hanes at Q18 first',
+      name: '3-3 invasion, hane-hane, White hanes on the other edge first',
       difficulty: 2,
       order: 46,
       line: [
@@ -388,12 +387,12 @@ export const INVADE33: FamilyDef = {
         {
           c: 'B',
           at: 'P18',
-          note: 'Black blocks at P18 so White can’t push along the edge toward D16.',
+          note: 'Black blocks at P18 so White can’t go further along the edge toward D16.',
         },
         {
           c: 'W',
           at: 'S14',
-          note: 'White crawls before connecting. Connecting at R18 now would let Black hane at S14 and take the corner’s room.',
+          note: 'White crawls before connecting. Connecting at R18 now would let Black block at S14 and take the corner’s room.',
         },
         { c: 'B', at: 'R13', note: 'Black blocks at R13 and keeps White on the second line.' },
         {
@@ -414,7 +413,7 @@ export const INVADE33: FamilyDef = {
             c: 'W',
             at: 'R18',
             kind: 'mistake',
-            note: 'White connects too soon. Black hanes at S14 next, and White’s corner loses its room along the edge.',
+            note: 'White connects too soon. Black blocks at S14 next, and White’s corner loses its room along the edge.',
           },
           then: [
             {
@@ -451,7 +450,7 @@ export const INVADE33: FamilyDef = {
         {
           c: 'W',
           at: 'tenuki',
-          note: 'White plays elsewhere and leaves the two stones for later. Under an enclosure, the 3-3 invasion is a probe, not a way to live.',
+          note: 'White plays elsewhere and leaves the two stones for later. Once Black blocks on the open side, the 3-3 stone here is a probe, not a way to live.',
         },
       ],
     },
@@ -492,7 +491,7 @@ export const INVADE33: FamilyDef = {
     },
     {
       id: 'invade33-stand-squeeze',
-      name: "3-3 invasion, stand firm, White's squeeze at R14",
+      name: "3-3 invasion, stand firm, White's wedge",
       difficulty: 2,
       order: 49,
       line: [
@@ -508,7 +507,7 @@ export const INVADE33: FamilyDef = {
           note: 'White wedges in at R14, between Q15 and R13. Black has to answer this one.',
         },
         { c: 'B', at: 'Q14', note: 'Black blocks at Q14, so R14 can’t come out toward the center.' },
-        { c: 'W', at: 'R12', note: 'White attaches at R12, at the end of Black’s line. R13 is down to two liberties.' },
+        { c: 'W', at: 'R12', note: 'White attaches to R13 at R12, leaving it two liberties.' },
         { c: 'B', at: 'Q13', note: 'Black connects R13 to the wall at Q13.' },
         {
           c: 'W',
@@ -523,10 +522,10 @@ export const INVADE33: FamilyDef = {
             c: 'B',
             at: 'S16',
             kind: 'mistake',
-            note: 'Black hanes under White to try to kill the corner. It doesn’t work: White pushes out at R15, and S16 ends up on its own.',
+            note: 'Black attaches under R16 to try to kill the corner. It doesn’t work: White extends to R15, and S16 ends up on its own.',
           },
           then: [
-            { c: 'W', at: 'R15', note: 'White pushes out at R15. Now White’s group can run along the edge.' },
+            { c: 'W', at: 'R15', note: 'White extends to R15. Now White’s group can run along the edge.' },
             { c: 'B', at: 'Q15', note: 'Black blocks the way to the center at Q15.' },
             {
               c: 'W',
@@ -540,7 +539,7 @@ export const INVADE33: FamilyDef = {
     },
     {
       id: 'invade33-long-extend-r18',
-      name: '3-3 invasion, the long hane-and-extend with the R18 hane',
+      name: '3-3 invasion, the long hane-and-extend with Black’s corner hane',
       difficulty: 2,
       order: 50,
       line: [
@@ -558,11 +557,11 @@ export const INVADE33: FamilyDef = {
           at: 'R18',
           note: 'Black hanes at R18 before extending. It takes a point of White’s eye space, and White answers.',
         },
-        { c: 'W', at: 'S18', note: 'White blocks at S18 so Black can’t push further into the corner.' },
+        { c: 'W', at: 'S18', note: 'White blocks at S18 so Black gets no further into the corner.' },
         {
           c: 'B',
           at: 'R12',
-          note: 'Now Black extends to R12. The R18 hane came for free, and White is still low on the second line.',
+          note: 'Now Black extends to R12. The R18 hane cost Black no tempo, but Q18 is a weak point now: a White stone there puts R18 in atari.',
         },
       ],
     },

@@ -145,5 +145,385 @@ export const KOMOKU34: FamilyDef = {
         },
       ],
     },
+
+    // ---- Phase 2 (orders 52-92) ----
+
+    {
+      id: 'komoku34-attach-extend',
+      name: "Small knight's approach, attach, White extends",
+      difficulty: 1,
+      order: 52,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        {
+          c: 'W',
+          at: 'P16',
+          note: 'White extends to P16 instead of haning. There’s nothing to cut, and both stones face the center.',
+        },
+        {
+          c: 'B',
+          at: 'R14',
+          note: 'Black jumps to R14 for a base toward Q4. The corner is settled, and White can play elsewhere.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-drawback-tenuki',
+      name: 'Attach and draw back, White plays elsewhere',
+      difficulty: 2,
+      order: 53,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        { c: 'W', at: 'Q16', note: '' },
+        { c: 'B', at: 'R17', note: '' },
+        {
+          c: 'W',
+          at: 'tenuki',
+          note: 'White leaves the cut at P16 and plays elsewhere. Q16 is only one stone, so White can afford to lose it.',
+        },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black ataris Q16 from the center side. It’s down to one liberty, and Black’s corner is thick either way.',
+        },
+      ],
+      branches: [
+        {
+          after: 3,
+          move: {
+            c: 'B',
+            at: 'R14',
+            kind: 'mistake',
+            note: 'Black extends before drawing back. The cut at R17 is still open, and White takes it.',
+          },
+          then: [
+            { c: 'W', at: 'R17', note: 'White cuts at R17. Q17 is in atari, and R16 is cut off from it.' },
+            { c: 'B', at: 'Q18', note: 'Black extends to Q18. Losing Q17 here would hand White the corner.' },
+            { c: 'W', at: 'P16', note: 'White connects, so Black has no cut to fight back with.' },
+            { c: 'B', at: 'P18', note: 'Black crawls along the edge to give Q17 some room.' },
+            {
+              c: 'W',
+              at: 'R15',
+              note: 'White cuts again at R15, and R16 is in atari. Black is in three weak pieces.',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'komoku34-attach-atari',
+      name: 'Attach, hane, Black ataris from the center side',
+      difficulty: 2,
+      order: 54,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        { c: 'W', at: 'Q16', note: '' },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black ataris Q16 right away instead of drawing back. Q16 is down to one liberty.',
+        },
+        { c: 'W', at: 'P16', note: 'White connects. Losing Q16 now would leave P17 crushed.' },
+        {
+          c: 'B',
+          at: 'R17',
+          note: 'Black fixes the corner. A White stone on R17 would put Q17 in atari.',
+        },
+        {
+          c: 'W',
+          at: 'N16',
+          note: 'White jumps to N16 to make shape on the D16 side. Both groups are settled for now.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-diagonal-shoulder',
+      name: "Small knight's approach, diagonal move, shoulder hit",
+      difficulty: 1,
+      order: 55,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black plays diagonally to Q15. It takes the point White wants for pressing, and engines like it a lot.',
+        },
+        {
+          c: 'W',
+          at: 'M17',
+          note: 'White extends two spaces along the third line toward D16 for a base.',
+        },
+        {
+          c: 'B',
+          at: 'O16',
+          note: 'Black hits P17 on the shoulder from the center side. White stays low and Black faces the center.',
+        },
+        {
+          c: 'W',
+          at: 'O17',
+          note: 'White links P17 toward M17 along the third line. The base is safe, but it’s low.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-diagonal-tenuki',
+      name: "Small knight's approach, diagonal move, Black plays elsewhere",
+      difficulty: 1,
+      order: 56,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'Q15', note: '' },
+        { c: 'W', at: 'M17', note: '' },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. R16 and Q15 already hold the corner, and White’s base is settled too.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-knight',
+      name: "Small knight's approach, knight's move answer",
+      difficulty: 1,
+      order: 57,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        {
+          c: 'B',
+          at: 'Q14',
+          note: 'Black answers with a knight’s move toward Q4. The corner and that side stay Black’s.',
+        },
+        {
+          c: 'W',
+          at: 'L16',
+          note: 'White makes a wide extension to L16 to settle on the D16 side.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. R16 and Q14 make a solid shape, so nothing here is urgent.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-low-pincer-jump',
+      name: "Small knight's approach, one-space low pincer, White jumps out",
+      difficulty: 2,
+      order: 58,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        {
+          c: 'B',
+          at: 'N17',
+          note: 'Black pincers one space away on the third line. P17 can’t settle along the edge toward D16.',
+        },
+        {
+          c: 'W',
+          at: 'P14',
+          note: 'White jumps two spaces toward the center. Running out is easier than living under the pincer.',
+        },
+        {
+          c: 'B',
+          at: 'R14',
+          note: 'Black takes a base toward Q4 before P14 can reach that side.',
+        },
+        {
+          c: 'W',
+          at: 'L17',
+          note: 'White pincers N17 from the D16 side. Now the pincer stone is the one under attack.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. N17 has done its job, so Black doesn’t mind if White takes it.',
+          confidence: 'low',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-low-pincer-knight',
+      name: "Small knight's approach, one-space low pincer, knight's move out",
+      difficulty: 2,
+      order: 59,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'N17', note: '' },
+        {
+          c: 'W',
+          at: 'O15',
+          note: 'White heads for the center with a knight’s move from P17.',
+        },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black takes Q15 before White can press there. The corner stays big.',
+        },
+        {
+          c: 'W',
+          at: 'M16',
+          note: 'White hits N17 on the shoulder from the center side, so the pincer has to stay low.',
+        },
+        {
+          c: 'B',
+          at: 'M17',
+          note: 'Black extends along the third line so N17 has room. White keeps pressing from the center side.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-pincer-jump',
+      name: "Small knight's approach, one-space high pincer, White jumps out",
+      difficulty: 2,
+      order: 60,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'N16', note: '' },
+        {
+          c: 'W',
+          at: 'P15',
+          note: 'White jumps one space toward the center. N16 sits on the fourth line, so a base along the edge is hard.',
+        },
+        {
+          c: 'B',
+          at: 'Q14',
+          note: 'Black makes a knight’s move toward Q4. The corner has its base, and P15 can’t come in.',
+        },
+        {
+          c: 'W',
+          at: 'K16',
+          note: 'White pincers N16 from the D16 side. White’s group is out, and N16 is the weak stone now.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. N16 is light: if White attacks it, Black can give it up.',
+          confidence: 'low',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-low-pincer',
+      name: "Small knight's approach, two-space low pincer, White jumps out",
+      difficulty: 2,
+      order: 61,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        {
+          c: 'B',
+          at: 'M17',
+          note: 'Black pincers two spaces away on the third line. White gets a little more room, but M17 is harder to attack.',
+        },
+        {
+          c: 'W',
+          at: 'P14',
+          note: 'White jumps two spaces toward the center instead of living small along the edge.',
+        },
+        { c: 'B', at: 'R14', note: 'Black takes the base toward Q4 first.' },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White hits R16 on the shoulder. Its stones face the center and the M17 pincer.',
+        },
+        {
+          c: 'B',
+          at: 'R17',
+          note: 'Black takes the 3-3 point. The corner can’t be attacked now.',
+        },
+        {
+          c: 'W',
+          at: 'tenuki',
+          note: 'White plays elsewhere. Its stones are out in the center, and nothing here needs a move yet.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-high-pincer',
+      name: "Small knight's approach, two-space high pincer, White jumps out",
+      difficulty: 2,
+      order: 62,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        {
+          c: 'B',
+          at: 'M16',
+          note: 'Black pincers two spaces away on the fourth line. It aims more at the center than at the edge.',
+        },
+        {
+          c: 'W',
+          at: 'P14',
+          note: 'White jumps two spaces toward the center. M16 leaves too little room for a base along the edge.',
+        },
+        { c: 'B', at: 'R14', note: 'Black extends to R14 and keeps the side toward Q4.' },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White hits R16 on the shoulder and keeps building toward the center.',
+        },
+        {
+          c: 'B',
+          at: 'R17',
+          note: 'Black takes the 3-3 point, so White can’t get into the corner.',
+        },
+        {
+          c: 'W',
+          at: 'K17',
+          note: 'White approaches M16 from the D16 side. The pincer stone has to look after itself now.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-tenuki-lean-attach',
+      name: "Small knight's approach, tenuki, Black attaches after the lean",
+      difficulty: 2,
+      order: 64,
+      line: [
+        { c: 'W', at: 'P17', note: '' },
+        { c: 'B', at: 'tenuki', note: '' },
+        { c: 'W', at: 'Q15', note: '' },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black attaches at Q17 and takes the corner first. It’s the other answer to the lean, next to R15.',
+        },
+        {
+          c: 'W',
+          at: 'P18',
+          note: 'White blocks at P18 on the edge side, so Black can’t slide toward D16.',
+        },
+        {
+          c: 'B',
+          at: 'R15',
+          note: 'Black extends under Q15 toward Q4 to make the base wider.',
+        },
+        { c: 'W', at: 'Q14', note: 'White presses again and keeps Black on the third line.' },
+        {
+          c: 'B',
+          at: 'R13',
+          note: 'Black jumps to R13. The group has room for eyes, and White has a wall facing the center.',
+        },
+      ],
+      branches: [
+        {
+          after: 3,
+          move: {
+            c: 'B',
+            at: 'tenuki',
+            kind: 'mistake',
+            note: 'Black plays elsewhere a second time. R16 already took one extra White move, and a third one takes its base.',
+          },
+          then: [
+            {
+              c: 'W',
+              at: 'R15',
+              note: 'White blocks at R15. R16 has no base left, and saving it means running with a weak group.',
+              confidence: 'low',
+            },
+          ],
+        },
+      ],
+    },
   ],
 }

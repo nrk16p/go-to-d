@@ -51,6 +51,8 @@ export const COPY = {
     freeTitle: (family: string) => `Free sparring, ${family}`,
     youAre: (c: Color, side: Side) =>
       `You're ${colorName(c)}, ${side === 'defend' ? 'defending the corner' : 'attacking the corner'}.`,
+    /** An opening (R46): the whole board, so only the colour. */
+    youAreColor: (c: Color) => `You're ${colorName(c)}.`,
     teacherThinking: 'The teacher is thinking…',
     yourMove: 'Your move.',
     tapAgain: (gtp: string) => `${gtp}? Tap it again to play.`,
@@ -97,6 +99,8 @@ export const COPY = {
     retry: 'Retry',
     playOn: 'Play on',
     otherJoseki: "Fine, that's joseki too.",
+    /** The same in an opening, where "joseki" is the wrong word. */
+    otherOpening: "Fine, that's in the book too.",
     otherJosekiOne: (name: string) => `It's the start of "${name}". This drill goes another way.`,
     otherJosekiMany: 'It starts other patterns. This drill goes another way.',
     otherJosekiNone: 'This drill goes another way.',
@@ -127,13 +131,22 @@ export const COPY = {
     side: (side: Side) => (side === 'defend' ? 'defending' : 'attacking'),
     subtitle: (title: string, side: Side) => `${title}, ${side === 'defend' ? 'defending' : 'attacking'}.`,
     dueSide: (side: Side) => `, ${side === 'defend' ? 'defending' : 'attacking'}`,
+    /** An opening's side is its colour (R46). */
+    subtitleColor: (title: string, c: Color) => `${title}, as ${colorName(c)}.`,
+    dueColor: (c: Color) => `, as ${colorName(c)}`,
   },
 
   today: {
     title: 'Today',
-    lead: (due: number, fresh: number) => {
-      if (due === 0 && fresh === 0) return 'Nothing left on the list today. Spar below, or look through the Library.'
-      const parts = [due > 0 ? `${count(due, 'review')} due` : '', fresh > 0 ? count(fresh, 'new pattern') : '']
+    lead: (due: number, fresh: number, openings: number = 0) => {
+      if (due === 0 && fresh === 0 && openings === 0) {
+        return 'Nothing left on the list today. Spar below, or look through the Library.'
+      }
+      const parts = [
+        due > 0 ? `${count(due, 'review')} due` : '',
+        fresh > 0 ? count(fresh, 'new pattern') : '',
+        openings > 0 ? count(openings, 'new opening') : '',
+      ]
       return `${parts.filter(Boolean).join(', then ')}. Start at the top.`
     },
     streak: 'Day streak',
@@ -144,6 +157,11 @@ export const COPY = {
     allStarted: "You've started every pattern in the book. From here it's reviews.",
     doneNew: "That's today's new ones.",
     learnOneMore: 'Learn one more',
+    openingsTitle: 'Opening for today',
+    doneOpenings: "That's today's opening.",
+    allOpeningsStarted: "You've started every opening in the book. From here it's reviews.",
+    freeOpenings: 'Openings',
+    freeOpening: (family: string, c: Color) => `${family}, as ${colorName(c)}`,
     play: 'Play',
     freeTitle: "Teacher's choice",
     freeBody: 'The teacher picks the line, any branch in the book. Good as a warm-up, or once the list is done.',
@@ -164,6 +182,8 @@ export const COPY = {
   level: (box: number, mastered: boolean) =>
     box === 0 ? 'Not played yet' : mastered ? `Mastered, level ${box} of 5` : `Level ${box} of 5`,
   sideName: (side: Side) => (side === 'defend' ? 'Defending' : 'Attacking'),
+  /** "Black" / "White": how an opening names the owner's side (R46). */
+  colorName,
 
   library: {
     title: 'Library',
@@ -171,6 +191,8 @@ export const COPY = {
     legend:
       'A pattern gets its first dot the first time you play it, and one more each time it comes back and you play it clean. A mistake takes it back to one. Four dots counts as mastered.',
     sideShort: (side: Side) => (side === 'defend' ? 'Defend' : 'Attack'),
+    openingsTitle: 'Openings',
+    openingsBody: 'The whole board from the first move: where to play, and why there.',
   },
 
   pattern: {
@@ -186,7 +208,10 @@ export const COPY = {
       `${family}, ${difficulty === 1 ? 'easy' : difficulty === 2 ? 'medium' : 'hard'}`,
     drillTitle: 'Drill it',
     drill: (side: Side, c: Color) => (side === 'defend' ? `Defend as ${colorName(c)}` : `Attack as ${colorName(c)}`),
+    drillColor: (c: Color) => `Play as ${colorName(c)}`,
     oneSide: "Only one side to drill here. The other side's line is a trick, not something to copy.",
+    blackOnly: 'In a handicap game you take Black, so this one is drilled as Black only.',
+    emptyBoard: 'An empty board. Black plays first.',
   },
 
   settings: {
@@ -199,6 +224,7 @@ export const COPY = {
     visits: 'Engine visits per search',
     visitsHelp: 'More is a bit stronger and slower. A slow phone stops at about 2 seconds anyway.',
     newPerDay: 'New patterns a day',
+    newOpeningsPerDay: 'New openings a day',
     save: 'Save',
     saved: 'Saved.',
     saveFailed: "This browser wouldn't save it.",
@@ -207,6 +233,7 @@ export const COPY = {
     fineNegative: "Fine can't be below 0.",
     visitsRange: 'Visits go from 16 to 400.',
     newRange: 'New patterns a day go from 0 to 10.',
+    newOpeningsRange: 'New openings a day go from 0 to 3.',
 
     engineTitle: 'Engine',
     backend: 'Runs on',

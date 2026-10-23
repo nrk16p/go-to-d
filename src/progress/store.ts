@@ -22,6 +22,7 @@ export function defaultProgress(): Progress {
       thresholds: { ...DEFAULT_THRESHOLDS },
       visits: DEFAULT_VISITS,
       newPerDay: 2,
+      newOpeningsPerDay: 1,
       iosHintDismissed: false,
     },
   }
@@ -67,13 +68,14 @@ function finite(v: unknown): v is number {
 export const SETTING_LIMITS = {
   visits: { min: 16, max: 400 },
   newPerDay: { min: 0, max: 10 },
+  newOpeningsPerDay: { min: 0, max: 3 },
 } as const
 
 const clamp = (n: number, r: { min: number; max: number }) => Math.min(r.max, Math.max(r.min, n))
 
 /**
  * Settings from whatever was saved: each field that is missing or the wrong type falls back to its default.
- * Visits and new per day are held to SETTING_LIMITS. Thresholds where fine isn't below big go back to
+ * Visits and the new-per-day counts are held to SETTING_LIMITS. Thresholds where fine isn't below big go back to
  * the default pair, as the form would never have saved them.
  */
 function settingsFrom(raw: Obj): Settings {
@@ -86,6 +88,9 @@ function settingsFrom(raw: Obj): Settings {
     visits:
       finite(raw.visits) && Number.isInteger(raw.visits) ? clamp(raw.visits, SETTING_LIMITS.visits) : d.visits,
     newPerDay: isCount(raw.newPerDay) ? clamp(raw.newPerDay, SETTING_LIMITS.newPerDay) : d.newPerDay,
+    newOpeningsPerDay: isCount(raw.newOpeningsPerDay)
+      ? clamp(raw.newOpeningsPerDay, SETTING_LIMITS.newOpeningsPerDay)
+      : d.newOpeningsPerDay,
     iosHintDismissed: typeof raw.iosHintDismissed === 'boolean' ? raw.iosHintDismissed : d.iosHintDismissed,
   }
 }

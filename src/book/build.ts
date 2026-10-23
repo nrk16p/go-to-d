@@ -2,7 +2,7 @@
 
 import { parseGtp, toGtp, type Color, type Pt } from '../go/coords'
 import { colorOf } from './color'
-import { SETUPS } from './setups'
+import { familyRegion, SETUPS } from './setups'
 import type { Book, BookNode, FamilyDef, FamilyId, MoveSpec, PatternDef, SetupId } from './types'
 
 export { colorOf }
@@ -214,9 +214,11 @@ function collectNodes(node: BookNode, out: BookNode[]): BookNode[] {
 
 /**
  * Fingerprint of everything the engine check depends on for one family: the corner stones, every node
- * (its path and kind), the setup each node is played under and what those setups contain (stones, komi).
- * Note text, confidence, weights, names, pattern ids and pattern order are left out on purpose, so
- * copy-editing a note never forces a new engine run.
+ * (its path and kind), the setup each node is played under and what those setups contain (stones, komi),
+ * and the region (R46: a whole-board family is checked against the best move anywhere). Note text,
+ * confidence, weights, names, pattern ids and pattern order are left out on purpose, so copy-editing a
+ * note never forces a new engine run. A corner family adds no region line, so its hash is the one it
+ * had before regions existed and its committed check stays fresh.
  */
 export function familyHash(book: Book, family: FamilyId): string {
   const fam = book.families[family]
@@ -227,7 +229,9 @@ export function familyHash(book: Book, family: FamilyId): string {
     for (const s of setups) used.add(s)
     return `${node.key}|${node.kind}|${setups.sort().join(',')}`
   })
+  const region = familyRegion(fam.def)
   const text = [
+    ...(region === 'corner' ? [] : [`region:${region}`]),
     `setup:${fam.def.setup}`,
     `start:${fam.def.start.map((s) => `${s.c}${s.at}`).sort().join(' ')}`,
     ...[...used].sort().map(describeSetup),

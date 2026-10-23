@@ -43,7 +43,13 @@ describe('defaultProgress', () => {
       version: 1,
       reviews: {},
       streak: { count: 0, lastDay: null },
-      settings: { thresholds: DEFAULT_THRESHOLDS, visits: DEFAULT_VISITS, newPerDay: 2, iosHintDismissed: false },
+      settings: {
+        thresholds: DEFAULT_THRESHOLDS,
+        visits: DEFAULT_VISITS,
+        newPerDay: 2,
+        newOpeningsPerDay: 1,
+        iosHintDismissed: false,
+      },
     })
   })
 
@@ -294,7 +300,14 @@ describe('loadProgress', () => {
   it('fills the fields of a half-written thresholds object and ignores bad setting values', () => {
     const raw = {
       ...defaultProgress(),
-      settings: { thresholds: { fine: 2 }, visits: 'lots', newPerDay: -3, iosHintDismissed: 'yes', extra: 1 },
+      settings: {
+        thresholds: { fine: 2 },
+        visits: 'lots',
+        newPerDay: -3,
+        newOpeningsPerDay: 1.5,
+        iosHintDismissed: 'yes',
+        extra: 1,
+      },
     }
     storage.data.set(STORAGE_KEY, JSON.stringify(raw))
     const s = loadProgress().settings
@@ -302,6 +315,7 @@ describe('loadProgress', () => {
       thresholds: { fine: 2, big: DEFAULT_THRESHOLDS.big },
       visits: DEFAULT_VISITS,
       newPerDay: 2,
+      newOpeningsPerDay: 1,
       iosHintDismissed: false,
     })
   })
@@ -310,8 +324,11 @@ describe('loadProgress', () => {
     const withSettings = (settings: unknown) => JSON.stringify({ ...defaultProgress(), settings })
     const d = defaultProgress().settings
 
-    storage.data.set(STORAGE_KEY, withSettings({ visits: 5000, newPerDay: 50 }))
-    expect(loadProgress().settings).toMatchObject({ visits: 400, newPerDay: 10 })
+    storage.data.set(STORAGE_KEY, withSettings({ visits: 5000, newPerDay: 50, newOpeningsPerDay: 9 }))
+    expect(loadProgress().settings).toMatchObject({ visits: 400, newPerDay: 10, newOpeningsPerDay: 3 })
+    // A save from before openings existed gets the default: one new opening a day (R46).
+    expect(importProgress(withSettings({ newPerDay: 4 })).settings.newOpeningsPerDay).toBe(1)
+    expect(importProgress(withSettings({ newOpeningsPerDay: 0 })).settings.newOpeningsPerDay).toBe(0)
     expect(importProgress(withSettings({ visits: 3 })).settings.visits).toBe(16)
     expect(importProgress(withSettings({ visits: 16.5 })).settings.visits).toBe(d.visits)
 
@@ -500,7 +517,10 @@ describe('exportProgress and importProgress', () => {
     let p = defaultProgress()
     p = recordSession(p, result({ patternIds: ['p1', 'p2'] }), '2026-03-10')
     p = recordSession(p, result({ patternIds: ['p1'], side: 'attack', clean: false, missedKeys: ['a', 'b'] }), '2026-03-11')
-    return { ...p, settings: { thresholds: { fine: 2, big: 5 }, visits: 200, newPerDay: 3, iosHintDismissed: true } }
+    return {
+      ...p,
+      settings: { thresholds: { fine: 2, big: 5 }, visits: 200, newPerDay: 3, newOpeningsPerDay: 2, iosHintDismissed: true },
+    }
   }
 
   it('round-trips', () => {

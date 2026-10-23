@@ -3,7 +3,17 @@ import { buildBook } from '../../src/book/build'
 import { BOOK as REAL_BOOK } from '../../src/book/data'
 import type { Book, FamilyDef, FamilyId } from '../../src/book/types'
 import type { TeacherEngine } from '../../src/engine/teacher'
-import { CORNER_REGION, parseGtp, toGtp, transform, transformRegion, type Pt, type Sym } from '../../src/go/coords'
+import {
+  BOARD_REGION,
+  CORNER_REGION,
+  isWholeBoard,
+  parseGtp,
+  toGtp,
+  transform,
+  transformRegion,
+  type Pt,
+  type Sym,
+} from '../../src/go/coords'
 import { ENGINE_TIMEOUT_MS, SparController, type SparState } from '../../src/session/controller'
 import { DEFAULT_THRESHOLDS } from '../../src/session/judge'
 import { orientNote } from '../../src/session/orient'
@@ -1383,5 +1393,175 @@ describe('SparController: what a session counts for (R25, R26)', () => {
     c.retry()
     await c.ownerPlay(at('P13'))
     expect(c.state.result).toMatchObject({ clean: false, mistakes: 1, pointsLost: 3 })
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// Whole-board openings (R46): the region is the board, so nothing is elsewhere.
+
+const OPEN_EVEN_TEST: FamilyDef = {
+  id: 'open-even',
+  name: 'Even-game opening',
+  region: 'board',
+  setup: 'empty',
+  start: [],
+  patterns: [
+    {
+      id: 'even-stars',
+      name: 'Three star points',
+      difficulty: 1,
+      order: 1,
+      line: [
+        { c: 'B', at: 'Q16', note: 'Black takes a corner.' },
+        { c: 'W', at: 'D4', note: 'White takes the corner across from Q16.' },
+        { c: 'B', at: 'Q4', note: 'Black takes a third corner, so Q4 and Q16 work together.' },
+      ],
+    },
+  ],
+}
+
+const OPEN_H4_TEST: FamilyDef = {
+  id: 'open-h4',
+  name: 'Opening with four stones',
+  region: 'board',
+  setup: 'handicap4',
+  start: [{ c: 'B', at: 'Q16', note: 'Four star points.' }],
+  patterns: [
+    {
+      id: 'h4-approach',
+      name: 'Approach and pincer',
+      difficulty: 1,
+      order: 1,
+      line: [
+        { c: 'W', at: 'R14', note: 'White approaches Q16 low.' },
+        { c: 'B', at: 'Q12', note: 'Black pincers with help from Q4.' },
+      ],
+    },
+  ],
+}
+
+const OPENINGS = buildBook([OPEN_EVEN_TEST, OPEN_H4_TEST])
+
+function makeOpening(over: Partial<Config> = {}, engine: TeacherEngine = new FakeEngine()): SparController {
+  return make({ family: 'open-even', patternId: 'even-stars', side: 'defend', ...over }, engine, OPENINGS)
+}
+
+describe('SparController: whole-board openings (R46)', () => {
+  it.each([0, 3, 6] as Sym[])('open-even as Black under sym %i: the whole board, Black first, done at the leaf', async (sym) => {
+    const engine = new FakeEngine()
+    const c = makeOpening({ sym }, engine)
+    expect(c.state.region).toEqual(BOARD_REGION)
+    expect(c.state.komi).toBe(7.5)
+    await c.start()
+    expect(c.state.status).toBe('owner-to-move')
+    expect(c.state.log).toEqual([])
+    await c.ownerPlay(at('Q16', sym))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'good' })
+    expect(stoneAt(c, 'D4', sym)).toBe('white')
+    expect(c.state.note).toBe(orientNote('White takes the corner across from Q16.', sym))
+    await c.ownerPlay(at('Q4', sym))
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toMatchObject({ patternIds: ['even-stars'], side: 'defend', clean: true })
+    // Book moves need no engine.
+    expect(engine.analyzeCalls.every((call) => call.region === c.state.region || isWholeBoard(call.region))).toBe(true)
+  })
+
+  it('open-even as White: the teacher plays Black’s first move from the book', async () => {
+    const c = makeOpening({ side: 'attack', sym: 1 })
+    await c.start()
+    expect(stoneAt(c, 'Q16', 1)).toBe('black')
+    await c.ownerPlay(at('D4', 1))
+    expect(stoneAt(c, 'Q4', 1)).toBe('black')
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toMatchObject({ side: 'attack', clean: true })
+  })
+
+  it('judges a move far from every corner against the best move on the whole board, not as a tenuki', async () => {
+    // The engine likes the book's Q16 (board frame) by 3 points over K10 and D10, which it also looked at.
+    const engine = new FakeEngine({
+      analyze: (pos) => analysisOf(pos.toMove, [['Q16', 1], ['D10', -2], ['K10', 0.5]], null),
+    })
+    const c = makeOpening({}, engine)
+    await c.start()
+    await c.ownerPlay(parseGtp('D10'))
+    expect(engine.analyzeCalls.length).toBeGreaterThan(0)
+    for (const call of engine.analyzeCalls) expect(call.region).toEqual(BOARD_REGION)
+    expect(c.state.log[0].move).toMatchObject({ ...parseGtp('D10'), player: 'black' })
+    expect(c.state.lastVerdict).toEqual({
+      type: 'mistake',
+      better: parseGtp('Q16'),
+      pointsLost: 3,
+      big: false,
+      inBook: false,
+    })
+    expect(c.state.status).toBe('stopped')
+    expect(engine.scoreCalls).toHaveLength(0) // its value came from the search before the move
+
+    // The center, half a point behind the best: fine, and the book's move is shown.
+    c.retry()
+    await c.ownerPlay(parseGtp('K10'))
+    expect(c.state.lastVerdict).toEqual({ type: 'fine-offbook', pointsLost: 0.5, bookMove: parseGtp('Q16') })
+  })
+
+  it('ignores Play elsewhere: an opening has no tenuki', async () => {
+    const engine = new FakeEngine()
+    const c = makeOpening({}, engine)
+    await c.start()
+    await c.ownerPlay('tenuki')
+    expect(c.state.status).toBe('owner-to-move')
+    expect(c.state.log).toEqual([])
+    expect(c.state.pos.history).toEqual([])
+  })
+
+  it('off book the teacher answers on the board and never leaves, however big "elsewhere" looks', async () => {
+    // A fake that still claims a move elsewhere 10 points bigger: in an opening the tenuki rule is off.
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) => ({ ...defaultAnalysis(pos, region), tenukiBest: { pt: parseGtp('A1'), scoreLead: 10 } }),
+    })
+    const c = makeOpening({ mode: 'free', patternId: undefined }, engine)
+    await c.start()
+    await c.ownerPlay(parseGtp('K10'))
+    expect(c.state.status).toBe('owner-to-move')
+    const reply = c.state.log[1]
+    expect(reply.by).toBe('teacher')
+    expect('tenuki' in reply.move).toBe(false)
+    expect(c.state.offBookMoves).toBe(2)
+  })
+
+  it('still ends after six moves off the book', async () => {
+    const c = makeOpening({ mode: 'free', patternId: undefined })
+    await c.start()
+    for (const gtp of ['K10', 'K16', 'K4']) {
+      expect(c.state.status).toBe('owner-to-move')
+      await c.ownerPlay(parseGtp(gtp))
+    }
+    expect(c.state.offBookMoves).toBe(6)
+    expect(c.state.status).toBe('done')
+  })
+
+  it('open-h4: the owner is Black, White is not drillable, and the engine gets the +4 handicap komi (R9)', async () => {
+    const engine = new FakeEngine({ analyze: (pos) => analysisOf(pos.toMove, [['Q12', 0], ['C10', -3]], null) })
+    expect(drillableSides(OPENINGS, 'h4-approach')).toEqual(['defend'])
+    expect(() => make({ family: 'open-h4', patternId: 'h4-approach', side: 'attack' }, engine, OPENINGS)).toThrow(/attack/)
+    const c = make({ family: 'open-h4', patternId: 'h4-approach', side: 'defend' }, engine, OPENINGS)
+    expect(c.state.region).toEqual(BOARD_REGION)
+    expect(c.state.komi).toBe(0.5)
+    await c.start()
+    expect(stoneAt(c, 'R14')).toBe('white')
+    await c.ownerPlay(parseGtp('C10'))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'mistake', pointsLost: 3, better: parseGtp('Q12') })
+    expect(engine.analyzeCalls.map((call) => call.komi)).toContain(4.5)
+    expect(engine.analyzeCalls.every((call) => call.komi === 4.5)).toBe(true)
+  })
+
+  it('does not take the 4-4 point’s corner book as the 4-stone opening’s (different regions are not siblings)', async () => {
+    const book = buildBook([FIXTURE_FAMILY, OPEN_H4_TEST])
+    const engine = new FakeEngine({ analyze: (pos) => analysisOf(pos.toMove, [['Q12', 0], ['Q14', -0.4]], null) })
+    const c = make({ family: 'open-h4', patternId: 'h4-approach', side: 'defend' }, engine, book)
+    await c.start()
+    // Q14 is book in the 4-4 corner after W R14, but not here: engine-judged, off book.
+    await c.ownerPlay(parseGtp('Q14'))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'fine-offbook', bookMove: parseGtp('Q12') })
+    expect(c.state.node).toBeNull()
   })
 })

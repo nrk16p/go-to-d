@@ -4,16 +4,17 @@
 //
 // Loss is in points, from the view of the player who makes the node's move:
 //   loss = max(0, best move's score - this move's score),
-// with the best move picked from the corner only (allowMoves = the corner region).
+// with the best move picked from the corner only (allowMoves = the corner region). In a whole-board
+// family (R46, region 'board') nothing is restricted: the best move is the best anywhere on the board.
 
 import { familyHash, nodeSetups } from '../src/book/build'
-import { startPosition } from '../src/book/setups'
+import { isBoardFamily, startPosition } from '../src/book/setups'
 import type { Book, BookNode, FamilyId, NodeKind, SetupId } from '../src/book/types'
 import { parseGtp, toGtp, type Region } from '../src/go/coords'
 import { pass, play, type Position } from '../src/go/rules'
 import { stonesFromBoard, type Analysis, type AnalysisRequest, type Letter } from './katago-protocol'
 
-/** joseki and alternative nodes may lose at most this much against the engine's best corner move. */
+/** joseki and alternative nodes may lose at most this much against the engine's best corner (or whole-board) move. */
 export const MAX_LOSS_JOSEKI = 2.0
 /** mistake nodes must lose at least this much, or the teacher would punish a move the engine likes. */
 export const MIN_LOSS_MISTAKE = 1.5
@@ -138,8 +139,10 @@ function legalRegionPoints(region: Region, pos: Position, mover: 'black' | 'whit
 }
 
 /**
- * - 'region':  the position before the node's move; only corner moves are searched (allowMoves)
- * - 'outside': the same position; corner moves are excluded (avoidMoves), so the best move is a tenuki
+ * - 'region':  the position before the node's move; only corner moves are searched (allowMoves). In a
+ *              whole-board family the region is the board, so nothing is restricted.
+ * - 'outside': the same position; corner moves are excluded (avoidMoves), so the best move is a tenuki.
+ *              A whole-board family has no outside (and no tenuki nodes, validateBook makes sure).
  * - 'free':    the same position, no restriction
  * - 'child':   the position after the node's move, no restriction
  */
@@ -192,6 +195,11 @@ export function positionRequest(
   if (scope === 'region' || scope === 'outside') {
     if (task.node.move && task.node.move.color !== pos.toMove) {
       throw new Error(`${where}: ${task.node.move.color} plays here but ${pos.toMove} is to move`)
+    }
+    if (isBoardFamily(book.families[task.family].def)) {
+      // The whole board is the region: the engine's own first choice is the best move (R46).
+      if (scope === 'outside') throw new Error(`${where}: a whole-board family has nothing outside its region`)
+      return req
     }
     const points = legalRegionPoints(start.region, pos, pos.toMove)
     if (points.length === 0) throw new Error(`${where}: no legal move left in the corner`)

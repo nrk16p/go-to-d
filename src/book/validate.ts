@@ -4,31 +4,55 @@
 import { CORNER_REGION, inRegion, parseGtp, toGtp, type Color, type Pt } from '../go/coords'
 import { pass, play, type Position } from '../go/rules'
 import { colorOf, nodeKey, parseAt, patternSequences, type Sequence } from './build'
-import { startFromDef } from './setups'
-import type { Book, BookNode, FamilyDef, FamilyId, PatternDef } from './types'
+import { canonicalRegion, isBoardFamily, startFromDef } from './setups'
+import type { Book, BookNode, FamilyDef, FamilyId, PatternDef, SetupId } from './types'
 
 const REGION_NAME = `${toGtp({ x: CORNER_REGION.xMin, y: CORNER_REGION.yMax })}..${toGtp({
   x: CORNER_REGION.xMax,
   y: CORNER_REGION.yMin,
 })}`
 
+const REGIONS: readonly unknown[] = [undefined, 'corner', 'board']
+
 function message(e: unknown): string {
   return e instanceof Error ? e.message : String(e)
 }
 
-/** Corner stones: readable, inside the corner region. Returns false if the family's own setup cannot be placed. */
+/**
+ * The start stones and a setup go together (R46): no start stones means the empty board, and the empty
+ * board means no start stones. Null when they fit, else what is wrong.
+ */
+function startMismatch(def: FamilyDef, setup: SetupId): string | null {
+  if (def.start.length === 0 && setup !== 'empty') return `start is [], which only setup "empty" allows (this is "${setup}")`
+  if (def.start.length > 0 && setup === 'empty') return `setup "empty" is an empty board, so start must be []`
+  return null
+}
+
+/**
+ * The region, the start stones and the setup. Corner stones are readable and, in a corner family, inside
+ * the corner region. Returns false if the family's own setup cannot be placed.
+ */
 function checkStart(def: FamilyDef, errors: string[]): boolean {
+  if (!REGIONS.includes(def.region)) {
+    errors.push(`${def.id}: region must be 'corner' or 'board', got ${JSON.stringify(def.region)}`)
+  }
+  const board = isBoardFamily(def)
   def.start.forEach((s, i) => {
     try {
       const p = parseGtp(s.at)
       colorOf(s.c)
-      if (!inRegion(p, CORNER_REGION)) {
+      if (!board && !inRegion(p, CORNER_REGION)) {
         errors.push(`${def.id}: start[${i}] "${s.at}" is outside the corner region ${REGION_NAME}`)
       }
     } catch (e) {
       errors.push(`${def.id}: start[${i}] "${s.at}" is not a point on the board (${message(e)})`)
     }
   })
+  const mismatch = startMismatch(def, def.setup)
+  if (mismatch) {
+    errors.push(`${def.id}: ${mismatch}`)
+    return false
+  }
   try {
     startFromDef(def, null, 0)
     return true
@@ -57,7 +81,10 @@ function checkNodes(familyId: string, node: BookNode, errors: string[]) {
  * Plays one sequence from `start`. Stops at the first problem. A problem in the part that repeats
  * the line (before `seq.from`) was already reported with the line, so it is not reported again.
  */
-function checkSequence(familyId: string, pattern: PatternDef, seq: Sequence, start: Position, errors: string[]) {
+function checkSequence(def: FamilyDef, pattern: PatternDef, seq: Sequence, start: Position, errors: string[]) {
+  const familyId = def.id
+  const board = isBoardFamily(def)
+  const region = canonicalRegion(def)
   let pos = start
   const trail: Array<{ color: Color; at: Pt | 'tenuki' }> = []
   for (let i = 0; i < seq.moves.length; i++) {
@@ -80,10 +107,15 @@ function checkSequence(familyId: string, pattern: PatternDef, seq: Sequence, sta
       return
     }
     if (at === 'tenuki') {
+      // A whole-board family has no elsewhere: every point is in the lesson (R46).
+      if (board) {
+        fail(`a whole-board family has no tenuki; write the point that is played`)
+        return
+      }
       pos = pass(pos)
       continue
     }
-    if (!inRegion(at, CORNER_REGION)) {
+    if (!inRegion(at, region)) {
       fail(`outside the corner region ${REGION_NAME}`)
       return
     }
@@ -101,6 +133,12 @@ function checkPattern(def: FamilyDef, pattern: PatternDef, errors: string[]) {
     errors.push(`${def.id}: pattern "${pattern.id}" has an empty line`)
     return
   }
+  const mismatch = startMismatch(def, pattern.setup ?? def.setup)
+  if (mismatch) {
+    // The family's own mismatch is already reported by checkStart.
+    if (pattern.setup !== undefined) errors.push(`${def.id}: pattern "${pattern.id}": ${mismatch}`)
+    return
+  }
   let start: Position
   try {
     start = startFromDef(def, pattern, 0).pos
@@ -111,7 +149,7 @@ function checkPattern(def: FamilyDef, pattern: PatternDef, errors: string[]) {
     }
     return
   }
-  for (const seq of patternSequences(pattern)) checkSequence(def.id, pattern, seq, start, errors)
+  for (const seq of patternSequences(pattern)) checkSequence(def, pattern, seq, start, errors)
 }
 
 /** All problems with the book, one string each. Empty means the book is valid. */

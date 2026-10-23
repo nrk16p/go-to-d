@@ -2,7 +2,7 @@
 // The Pattern page steps through the main line with its notes, and drills from each drillable side.
 // The Library lists every pattern with a level for each of its sides.
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BOOK } from '../../src/book/data'
 import { drillableSides } from '../../src/session/sides'
@@ -79,5 +79,49 @@ describe('Library', () => {
     const sides = Object.keys(BOOK.patterns).reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
     expect(document.querySelectorAll('.side-level')).toHaveLength(sides)
     expect(screen.getAllByRole('img', { name: COPY.level(0, false) })).toHaveLength(sides)
+  })
+
+  it('lists the openings in a section of their own after the corners, with colours for sides (R46)', () => {
+    render(<Library />)
+    const section = screen.getByRole('region', { name: COPY.library.openingsTitle })
+    const h4 = BOOK.families['open-h4']
+    const even = BOOK.families['open-even']
+    expect(within(section).getByRole('heading', { name: h4.def.name })).toBeTruthy()
+    expect(within(section).getByRole('heading', { name: even.def.name })).toBeTruthy()
+    const rows = within(section).getAllByRole('link')
+    expect(rows).toHaveLength(h4.def.patterns.length + even.def.patterns.length)
+    const sides = [...section.querySelectorAll('.side-level')].map((e) => e.textContent)
+    expect(sides).toContain(COPY.colorName('black'))
+    expect(sides).toContain(COPY.colorName('white'))
+    expect(sides).not.toContain(COPY.library.sideShort('defend'))
+    // Corner families come first and keep defend/attack.
+    const all = [...document.querySelectorAll('a.queue-item')]
+    expect(all.indexOf(rows[0] as Element)).toBe(all.length - rows.length)
+  })
+})
+
+describe('Pattern: an opening (R46)', () => {
+  const first = (family: 'open-h4' | 'open-even') => BOOK.families[family].def.patterns[0].id
+  const drills = () =>
+    screen
+      .getAllByRole('link')
+      .filter((a) => a.getAttribute('href')!.startsWith('#/spar'))
+      .map((a) => a.textContent)
+
+  it('starts the even game on an empty board and drills it as Black or White', () => {
+    render(<Pattern id={first('open-even')} />)
+    expect(step()).toContain(P.emptyBoard)
+    expect(stones()).toBe(0)
+    expect(drills()).toEqual([P.drillColor('black'), P.drillColor('white')])
+  })
+
+  it('drills the 4-stone opening as Black only, and says why', () => {
+    render(<Pattern id={first('open-h4')} />)
+    expect(drills()).toEqual([P.drillColor('black')])
+    expect(screen.getByText(P.blackOnly)).toBeTruthy()
+    expect(screen.queryByText(P.oneSide)).toBeNull()
+    // The whole board: 361 points, 19 row numbers and 19 column letters.
+    expect(document.querySelectorAll('[data-x]')).toHaveLength(361)
+    expect(document.querySelectorAll('.board .labels text')).toHaveLength(38)
   })
 })

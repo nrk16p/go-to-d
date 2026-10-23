@@ -30,6 +30,7 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['black', 'defend'],
     ['white', 'attack'],
   ],
+  'spar.youAreColor': [['black'], ['white']],
   'spar.tapAgain': [['R14']],
   'spar.playPoint': [['R14']],
   'spar.elsewhere': [['D4']],
@@ -59,6 +60,11 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['ฮาเนะ แล้วกัน', 'attack'],
   ],
   'report.dueSide': [['defend'], ['attack']],
+  'report.subtitleColor': [
+    ['ฮาเนะ แล้วกัน', 'black'],
+    ['ฮาเนะ แล้วกัน', 'white'],
+  ],
+  'report.dueColor': [['black'], ['white']],
   'today.lead': [
     [0, 0],
     [1, 0],
@@ -66,7 +72,15 @@ const SAMPLES: Record<string, unknown[][]> = {
     [0, 1],
     [0, 2],
     [3, 2],
+    [0, 0, 1],
+    [3, 2, 1],
+    [0, 2, 2],
   ],
+  'today.freeOpening': [
+    ['เปิดเกม เกมเสมอ', 'black'],
+    ['เปิดเกม เกมเสมอ', 'white'],
+  ],
+  colorName: [['black'], ['white']],
   'today.masteredValue': [[0, 186]],
   level: [
     [0, false],
@@ -91,6 +105,7 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['defend', 'black'],
     ['attack', 'white'],
   ],
+  'pattern.drillColor': [['black'], ['white']],
   'settings.backendName': [['webgpu'], ['wasm'], ['cpu'], ['webgl']],
   'settings.importConfirm': [
     [0, 0],
@@ -154,6 +169,13 @@ describe('Thai copy', () => {
     expect(TH.COPY.report.mistakes(3)).toContain('3')
     expect(TH.COPY.today.lead(3, 2)).toContain('3')
     expect(TH.COPY.today.lead(3, 2)).toContain('2')
+    expect(TH.COPY.today.lead(0, 0, 1)).toContain('เปิดเกมใหม่ 1')
+  })
+
+  it('counts the new opening in the English lead too (R46)', () => {
+    expect(EN.COPY.today.lead(2, 2, 1)).toBe('2 reviews due, then 2 new patterns, then 1 new opening. Start at the top.')
+    expect(EN.COPY.today.lead(0, 0, 1)).toBe('1 new opening. Start at the top.')
+    expect(EN.COPY.today.lead(0, 0)).toBe(EN.COPY.today.lead(0, 0, 0))
   })
 
   it('reads cleanly for every sample: no Thai digits, no leftovers, no English words', () => {

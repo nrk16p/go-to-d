@@ -67,6 +67,14 @@ export type Region = { xMin: number; xMax: number; yMin: number; yMax: number }
 /** The studied corner in the canonical frame: upper right, 11x11 points. */
 export const CORNER_REGION: Region = { xMin: 8, xMax: 18, yMin: 0, yMax: 10 }
 
+/** All 361 points: the region of a whole-board opening (R46). Every symmetry maps it to itself. */
+export const BOARD_REGION: Region = { xMin: 0, xMax: BOARD_SIZE - 1, yMin: 0, yMax: BOARD_SIZE - 1 }
+
+/** True when `r` covers the whole board, so nothing is "elsewhere". */
+export function isWholeBoard(r: Region): boolean {
+  return r.xMin <= 0 && r.yMin <= 0 && r.xMax >= BOARD_SIZE - 1 && r.yMax >= BOARD_SIZE - 1
+}
+
 export function transformRegion(r: Region, sym: Sym): Region {
   const a = transform({ x: r.xMin, y: r.yMin }, sym)
   const b = transform({ x: r.xMax, y: r.yMax }, sym)

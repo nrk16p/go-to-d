@@ -2,7 +2,18 @@
 
 import { describe, expect, it } from 'vitest'
 import { BOOK } from '../../src/book/data'
-import { courseOrder, currentStreak, dueItems, masteredCount, newItems, newToday, startedToday } from '../../src/progress/course'
+import {
+  courseOrder,
+  currentStreak,
+  dueItems,
+  masteredCount,
+  newItems,
+  newOpeningsToday,
+  newToday,
+  openingOrder,
+  startedToday,
+  trackOf,
+} from '../../src/progress/course'
 import type { Progress, ReviewState } from '../../src/progress/srs'
 import { defaultProgress } from '../../src/progress/store'
 import { drillableSides } from '../../src/session/sides'
@@ -20,8 +31,14 @@ function progressWith(reviews: Record<string, ReviewState>, patch: Partial<Progr
 const keys = (items: { key: string }[]) => items.map((i) => i.key)
 
 // The book grows, so totals come from the book itself: every pattern × the sides it can be drilled from.
-const BY_ORDER = Object.keys(BOOK.patterns).sort((a, b) => BOOK.patterns[a].def.order - BOOK.patterns[b].def.order)
-const TOTAL = BY_ORDER.reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
+// Joseki (corner families) and whole-board openings (R46) are two lists; TOTAL counts both.
+const ALL_BY_ORDER = Object.keys(BOOK.patterns).sort((a, b) => BOOK.patterns[a].def.order - BOOK.patterns[b].def.order)
+const isOpening = (id: string) => ['open-h4', 'open-even'].includes(BOOK.patterns[id].family)
+const BY_ORDER = ALL_BY_ORDER.filter((id) => !isOpening(id))
+const OPENINGS = ALL_BY_ORDER.filter(isOpening)
+const sides = (ids: string[]) => ids.reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
+const JOSEKI_TOTAL = sides(BY_ORDER)
+const TOTAL = sides(ALL_BY_ORDER)
 
 describe('courseOrder', () => {
   const order = keys(courseOrder(BOOK))
@@ -52,12 +69,12 @@ describe('courseOrder', () => {
   })
 
   it('holds each drillable side once and leaves out the trick side', () => {
-    expect(order).toHaveLength(TOTAL)
-    expect(new Set(order).size).toBe(TOTAL)
+    expect(order).toHaveLength(JOSEKI_TOTAL)
+    expect(new Set(order).size).toBe(JOSEKI_TOTAL)
     // A pattern with a trick in its main line has one side, not two.
     const oneSided = BY_ORDER.filter((id) => drillableSides(BOOK, id).length === 1)
     expect(oneSided).toContain('invade33-cut-trick')
-    expect(TOTAL).toBe(2 * BY_ORDER.length - oneSided.length)
+    expect(JOSEKI_TOTAL).toBe(2 * BY_ORDER.length - oneSided.length)
     for (const id of oneSided) {
       const other = drillableSides(BOOK, id)[0] === 'defend' ? 'attack' : 'defend'
       expect(order).not.toContain(`${id}:${other}`)
@@ -65,6 +82,36 @@ describe('courseOrder', () => {
     expect(order).not.toContain('invade33-cut-trick:attack')
     const k = order.indexOf('komoku34-attach-drawback:defend')
     expect(order[k + 1]).toBe('komoku34-attach-drawback:attack')
+  })
+
+  it('has no openings: they are a list of their own (R46)', () => {
+    expect(OPENINGS.length).toBeGreaterThan(0)
+    expect(order.filter((k) => isOpening(k.slice(0, k.lastIndexOf(':'))))).toEqual([])
+  })
+})
+
+describe('openingOrder (R46)', () => {
+  const order = keys(openingOrder(BOOK))
+
+  it('holds every opening × drillable side once: Black first by order, then White by order', () => {
+    expect(order).toHaveLength(sides(OPENINGS))
+    const black = OPENINGS.filter((id) => drillableSides(BOOK, id).includes('defend')).map((id) => `${id}:defend`)
+    const white = OPENINGS.filter((id) => drillableSides(BOOK, id).includes('attack')).map((id) => `${id}:attack`)
+    expect(order).toEqual([...black, ...white])
+  })
+
+  it('drills the 4-stone opening as Black only, the even game from both colours', () => {
+    const h4 = OPENINGS.filter((id) => BOOK.patterns[id].family === 'open-h4')
+    const even = OPENINGS.filter((id) => BOOK.patterns[id].family === 'open-even')
+    expect(h4.length).toBeGreaterThan(0)
+    expect(even.length).toBeGreaterThan(0)
+    for (const id of h4) expect(order).not.toContain(`${id}:attack`)
+    for (const id of even) expect(order).toContain(`${id}:attack`)
+  })
+
+  it('knows which list a pattern is on', () => {
+    expect(trackOf(BOOK, 'star44-low-knight-slide')).toBe('joseki')
+    for (const id of OPENINGS) expect(trackOf(BOOK, id)).toBe('openings')
   })
 })
 
@@ -126,6 +173,40 @@ describe('new patterns for today (R44)', () => {
   })
 })
 
+describe('new openings for today (R46)', () => {
+  const COURSE = keys(courseOrder(BOOK))
+  const OPEN = keys(openingOrder(BOOK))
+  const started = (day: string): ReviewState => ({ ...review(1, '2026-10-23'), firstDay: day })
+
+  it('offers one new opening a day by default, the first in opening order', () => {
+    expect(defaultProgress().settings.newOpeningsPerDay).toBe(1)
+    expect(keys(newOpeningsToday(BOOK, progressWith({}), TODAY))).toEqual([OPEN[0]])
+  })
+
+  it('counts openings and joseki started today apart, so neither uses up the other’s share', () => {
+    // Every joseki of the day started: the opening is still on offer.
+    const joseki = progressWith(Object.fromEntries(COURSE.slice(0, 5).map((k) => [k, started(TODAY)])))
+    expect(keys(newOpeningsToday(BOOK, joseki, TODAY))).toEqual([OPEN[0]])
+    expect(startedToday(joseki, TODAY, { book: BOOK, track: 'openings' })).toBe(0)
+
+    // The day's opening started: none more today, the joseki share untouched, the next opening a tap away.
+    const opening = progressWith({ [OPEN[0]]: started(TODAY) })
+    expect(newOpeningsToday(BOOK, opening, TODAY)).toEqual([])
+    expect(keys(newToday(BOOK, opening, TODAY))).toEqual(COURSE.slice(0, defaultProgress().settings.newPerDay))
+    expect(startedToday(opening, TODAY, { book: BOOK, track: 'joseki' })).toBe(0)
+    if (OPEN.length > 1) expect(keys(newItems(BOOK, opening, 1, 'openings'))).toEqual([OPEN[1]])
+    // Tomorrow it is back.
+    expect(newOpeningsToday(BOOK, opening, '2026-10-23')).toHaveLength(Math.min(1, OPEN.length - 1))
+  })
+
+  it('offers none when the setting is 0, and up to the setting otherwise', () => {
+    const settings = defaultProgress().settings
+    expect(newOpeningsToday(BOOK, progressWith({}, { settings: { ...settings, newOpeningsPerDay: 0 } }), TODAY)).toEqual([])
+    const three = newOpeningsToday(BOOK, progressWith({}, { settings: { ...settings, newOpeningsPerDay: 3 } }), TODAY)
+    expect(keys(three)).toEqual(OPEN.slice(0, 3))
+  })
+})
+
 describe('dueItems', () => {
   it('keeps the most overdue first and drops keys the book no longer drills', () => {
     const p = progressWith({
@@ -142,7 +223,7 @@ describe('dueItems', () => {
 })
 
 describe('masteredCount', () => {
-  it('counts box 4 and up over every drillable side (a trick pattern has one side, not two)', () => {
+  it('counts box 4 and up over every drillable side, joseki and openings (a trick pattern has one side, not two)', () => {
     const p = progressWith({
       'star44-low-knight-slide:defend': review(4, '2026-11-01'),
       'komoku34-tenuki:defend': review(5, '2026-11-20'),

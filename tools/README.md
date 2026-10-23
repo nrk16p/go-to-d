@@ -29,6 +29,7 @@ The network's name is written into every result file. If you change it, rerun ev
 
 ```sh
 npx tsx tools/check-book.ts --family star44      # one family, the normal case
+npx tsx tools/check-book.ts --family open-h4     # a whole-board opening works the same way
 npx tsx tools/check-book.ts                      # every family that has patterns
 npx tsx tools/check-book.ts --family star44 --visits 800   # slower, steadier
 npx tsx tools/check-book.ts --fixture            # the test family in tests/book/fixture.ts
@@ -46,6 +47,8 @@ Commit the JSON file with the family. `npm test` fails when the file is missing,
 **Loss** is how many points the move gives up compared with the engine's best move in the corner, from the point of view of the player who makes the move. At each node the engine looks at the position before the move, restricted to the corner region (`allowMoves`), and the loss is its best score minus the score of the move in the book. Rules are Chinese, with the komi of the setup.
 
 If the engine barely looked at the book move (less than 10% of the visits), the position after the move is analysed as well and that score is used.
+
+**Whole-board families** (the openings, `region: 'board'` in the family, R46) have no corner: nothing is restricted, so the best move is the engine's first choice anywhere on the board, and the loss is measured against it. They have no tenuki nodes (the validator refuses them), and `bestAt` is a point anywhere on the board. Thresholds are the same.
 
 **Tenuki nodes** compare the best move in the corner with the best move anywhere else. The loss is how much better the corner is. For the moves that come after a tenuki, the engine's best outside move is played in its place, so later positions are real ones. These are the replacements, they are printed in the log only.
 
@@ -72,7 +75,7 @@ Moves after a mistake (the punishment line) are `joseki` nodes and are judged ag
 }
 ```
 
-`familyHash` covers the family's moves, node kinds, setups and corner stones. It does not cover note text, weights, confidence, names or pattern order, so copy-editing a note does not mean a new run. Any change to a move, a kind or a setup does.
+`familyHash` covers the family's moves, node kinds, setups and corner stones, and the region of a whole-board family (a corner family's hash is the same as before regions existed). It does not cover note text, weights, confidence, names or pattern order, so copy-editing a note does not mean a new run. Any change to a move, a kind or a setup does.
 
 KataGo searches with several threads, so two runs differ a little. Two runs over the fixture family differed by 0.12 points on average and 0.41 at most. A node that sits right on a threshold can flip between runs; if one does, rerun the family with `--visits 800` before changing the move.
 

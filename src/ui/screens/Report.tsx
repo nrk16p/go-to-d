@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { BOOK } from '../shownBook'
+import type { FamilyId } from '../../book/types'
+import type { Side } from '../../session/sides'
 import { dueItems } from '../../progress/course'
 import { reviewKey } from '../../progress/srs'
 import { loadProgress, todayLocal } from '../../progress/store'
@@ -9,6 +11,7 @@ import { Board } from '../Board'
 import { COPY, points } from '../copy'
 import { getLastReport, type SessionReport } from '../reportStore'
 import { href, sparHref } from '../router'
+import { seatColor } from '../seat'
 
 /** Whole days from `from` to `to`, both "YYYY-MM-DD". */
 function daysBetween(from: string, to: string): number {
@@ -17,6 +20,12 @@ function daysBetween(from: string, to: string): number {
     return Date.UTC(y, m - 1, day)
   }
   return Math.round((utc(to) - utc(from)) / 86_400_000)
+}
+
+/** ", defending" for a corner, ", as Black" for an opening. */
+function dueWho(family: FamilyId, side: Side): string {
+  const c = seatColor(BOOK.families[family].def, side)
+  return c ? COPY.report.dueColor(c) : COPY.report.dueSide(side)
 }
 
 function headline(r: SessionReport): string {
@@ -51,6 +60,10 @@ export function Report() {
   // The same list as Today's (M4): sides the book can no longer drill are left out.
   const dueList = dueItems(BOOK, progress, today).map((d) => ({ ...d, id: d.patternId, entry: BOOK.patterns[d.patternId] }))
 
+  // An opening (R46) names the side by colour. A family the book no longer has falls back to defend/attack.
+  const fam = Object.hasOwn(BOOK.families, report.family) ? BOOK.families[report.family] : undefined
+  const seat = fam ? seatColor(fam.def, report.side) : null
+
   const again = sparHref({
     family: report.family,
     ...(report.mode === 'drill' && report.patternId ? { pattern: report.patternId } : { mode: 'free' }),
@@ -61,7 +74,7 @@ export function Report() {
     <div className="report">
       <header className="report-head">
         <h1>{headline(report)}</h1>
-        <p className="who">{R.subtitle(report.title, report.side)}</p>
+        <p className="who">{seat ? R.subtitleColor(report.title, seat) : R.subtitle(report.title, report.side)}</p>
       </header>
 
       <div className="report-board">
@@ -109,7 +122,7 @@ export function Report() {
                 <li key={d.key}>
                   <a href={sparHref({ family: d.entry.family, pattern: d.id, side: d.side })}>
                     {d.entry.def.name}
-                    <span className="muted">{R.dueSide(d.side)}</span>
+                    <span className="muted">{dueWho(d.entry.family, d.side)}</span>
                   </a>
                 </li>
               ))}

@@ -322,6 +322,38 @@ describe('Spar', () => {
   })
 })
 
+describe('Spar: a whole-board opening (R46)', () => {
+  const EVEN = BOOK.families['open-even'].def.patterns[0]
+  const params = { family: 'open-even', pattern: EVEN.id, side: 'defend', sym: '0', seed: '1' }
+
+  it('shows the whole board with no corner view and no Play elsewhere, and names the side by colour', async () => {
+    const engine = new EngineHub(() => new FakeEngine({ status: 'ready' }))
+    hubs.push(engine.start())
+    const { container } = render(<Spar params={params} engine={engine} gapMs={0} />)
+    await settle()
+    expect(screen.getByText(COPY.spar.youAreColor('black'))).toBeTruthy()
+    expect(container.querySelectorAll('.spar-board [data-x]')).toHaveLength(361)
+    expect(screen.getByText(COPY.spar.yourMove)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: COPY.spar.playElsewhere })).toBeNull()
+    expect(screen.queryByRole('button', { name: COPY.spar.fullBoard })).toBeNull()
+    expect(screen.queryByRole('button', { name: COPY.spar.cornerView })).toBeNull()
+
+    // A touch tap far from every corner still gets the ghost and its confirm button.
+    await touchTap(container, 'K10')
+    expect(screen.getByRole('button', { name: COPY.spar.playPoint('K10') })).toBeTruthy()
+  })
+
+  it('a book move is good, and the teacher answers from the book', async () => {
+    const { container } = render(<Spar params={params} engine={hub()} gapMs={0} />)
+    await settle()
+    const first = EVEN.line[0]
+    await tap(container, first.at)
+    expect(verdict()).toContain(COPY.verdict.good)
+    const reply = parseGtp(EVEN.line[1].at)
+    expect(container.querySelector(`.spar-board [data-stone="white"][cx="${reply.x}"][cy="${reply.y}"]`)).toBeTruthy()
+  })
+})
+
 describe('Spar on touch', () => {
   it('Play O17 confirms the ghost; after a mistake and Retry no ghost comes back', async () => {
     const { container } = await startKnight()

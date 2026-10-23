@@ -242,6 +242,74 @@ describe('positionRequest', () => {
   })
 })
 
+describe('positionRequest and analyseFamily: a whole-board family (R46)', () => {
+  const def: FamilyDef = {
+    id: 'open-even',
+    name: 'opening',
+    region: 'board',
+    setup: 'empty',
+    start: [],
+    patterns: [
+      {
+        id: 'o',
+        name: 'o',
+        difficulty: 1,
+        order: 1,
+        line: [
+          { c: 'B', at: 'Q16', note: 'n' },
+          { c: 'W', at: 'D4', note: 'n' },
+          { c: 'B', at: 'K10', note: 'n' },
+        ],
+      },
+    ],
+  }
+  const book = buildBook([def])
+  const subs = new Map<string, string>()
+
+  it('asks about the empty board, Black to move, komi 7.5, with no region restriction', () => {
+    const [first, second] = nodeTasks(book, 'open-even')
+    const req = positionRequest(book, first, subs, 'region', 400)
+    expect(req.initialStones).toEqual([])
+    expect(req.initialPlayer).toBe('B')
+    expect(req.komi).toBe(7.5)
+    expect(req.moves).toEqual([])
+    expect(req.allowMoves).toBeUndefined()
+    expect(req.avoidMoves).toBeUndefined()
+    expect(positionRequest(book, second, subs, 'region', 400).moves).toEqual([['B', 'Q16']])
+  })
+
+  it('has nothing outside the region to ask about', () => {
+    const task = nodeTasks(book, 'open-even')[0]
+    expect(() => positionRequest(book, task, subs, 'outside', 400)).toThrow(/whole-board/)
+  })
+
+  it('judges each move against the engine’s best anywhere on the board', async () => {
+    const asked: AnalysisRequest[] = []
+    const analyseAll = async (reqs: AnalysisRequest[]): Promise<Analysis[]> =>
+      reqs.map((req) => {
+        asked.push(req)
+        const moves = req.moves.map(([c, p]) => `${c}${p}`).join(' ')
+        if (moves === '') return an('B', [['D16', 1.0, 300], ['Q16', 0.9, 100]])
+        if (moves === 'BQ16') return an('W', [['D4', -0.9, 300]])
+        if (moves === 'BQ16 WD4') return an('B', [['C3', 1.2, 300], ['K10', -1.8, 60]])
+        throw new Error(`unscripted ${moves}`)
+      })
+    const { nodes } = await analyseFamily(book, 'open-even', analyseAll, { visits: 400 })
+    expect(asked.every((r) => r.allowMoves === undefined && r.avoidMoves === undefined)).toBe(true)
+    expect(nodes).toEqual({
+      'open-even:B:Q16': { loss: 0.1, bestAt: 'D16', kind: 'joseki' },
+      'open-even:B:Q16/W:D4': { loss: 0, bestAt: 'D4', kind: 'joseki' },
+      'open-even:B:Q16/W:D4/B:K10': { loss: 3, bestAt: 'C3', kind: 'joseki' },
+    })
+  })
+
+  it('leaves a corner family’s requests as they were', () => {
+    const corner = buildBook([FIXTURE_FAMILY])
+    const req = positionRequest(corner, nodeTasks(corner, 'star44')[0], subs, 'region', 400)
+    expect(req.allowMoves).toHaveLength(120)
+  })
+})
+
 describe('verdicts', () => {
   it('cornerVerdict: loss is the best move’s score minus the move’s score, from the mover’s view', () => {
     const parent = an('W', [['Q9', 3.0, 200], ['R14', 1.4, 100], ['K10', 0.5, 20]])

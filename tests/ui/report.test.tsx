@@ -65,6 +65,32 @@ describe('Report after a reload', () => {
     expect(screen.getByText(COPY.report.unchecked)).toBeTruthy()
   })
 
+  it('names an opening’s side by colour, in the subtitle and in the due list (R46)', async () => {
+    const { BOOK } = await import('../../src/book/data')
+    const { defaultProgress, STORAGE_KEY, todayLocal } = await import('../../src/progress/store')
+    const { BOARD_REGION } = await import('../../src/go/coords')
+    const even = BOOK.families['open-even'].def.patterns[0]
+    const p = defaultProgress()
+    p.reviews[`${even.id}:attack`] = { box: 1, due: todayLocal(), runs: 1, cleanRuns: 0, missedKeys: [] }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(p))
+    const store = await import('../../src/ui/reportStore')
+    store.setLastReport({
+      ...REPORT,
+      result: { ...REPORT.result, patternIds: [even.id], side: 'defend' },
+      title: even.name,
+      family: 'open-even',
+      side: 'defend',
+      patternId: even.id,
+      region: BOARD_REGION,
+    })
+    const { Report } = await import('../../src/ui/screens/Report')
+    const { COPY } = await import('../../src/ui/copy')
+    render(<Report />)
+    expect(screen.getByText(COPY.report.subtitleColor(even.name, 'black'))).toBeTruthy()
+    expect(screen.getByText(COPY.report.dueColor('white'))).toBeTruthy()
+    expect(document.querySelectorAll('.report-board [data-x]')).toHaveLength(361)
+  })
+
   it('lists what is due exactly as Today does (M4): a side the book doesn’t drill is left out', async () => {
     const { BOOK } = await import('../../src/book/data')
     const { dueItems } = await import('../../src/progress/course')

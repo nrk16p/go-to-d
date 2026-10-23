@@ -1,14 +1,16 @@
 // One pattern's main line, a move at a time, with the teacher's note on each move, then a way into the
 // drill from each side it can be drilled from. Shown in the book's own frame (sym 0), as notes are written.
+// An opening (R46) shows the whole board, and its drills are named by colour.
 
 import { useEffect, useState } from 'react'
 import { BOOK } from '../shownBook'
 import { toGtp, type Color } from '../../go/coords'
-import { drillableSides, ownerColor } from '../../session/sides'
+import { drillableSides, familySides, ownerColor } from '../../session/sides'
 import { Board } from '../Board'
 import { COPY } from '../copy'
 import { mainLine } from '../mainLine'
 import { href, sparHref } from '../router'
+import { seatColor } from '../seat'
 import { NotFound } from './NotFound'
 
 const P = COPY.pattern
@@ -78,7 +80,7 @@ function PatternView({ id }: { id: string }) {
                 {kind && <span className={`tag tag-${node!.kind}`}>{kind}</span>} {node!.note}
               </>
             ) : (
-              family.start[0]?.note
+              (family.start[0]?.note ?? P.emptyBoard)
             )}
           </p>
           {node?.confidence === 'low' && <p className="low">{COPY.spar.lowConfidence}</p>}
@@ -93,11 +95,11 @@ function PatternView({ id }: { id: string }) {
                 className={`btn${i === 0 ? ' btn-primary' : ''}`}
                 href={sparHref({ family: entry.family, pattern: id, side })}
               >
-                {P.drill(side, ownerColor(family, side))}
+                {seatColor(family, side) ? P.drillColor(ownerColor(family, side)) : P.drill(side, ownerColor(family, side))}
               </a>
             ))}
           </div>
-          {sides.length === 1 && <p className="muted small">{P.oneSide}</p>}
+          {sides.length === 1 && <p className="muted small">{familySides(family).length === 1 ? P.blackOnly : P.oneSide}</p>}
         </section>
       </div>
     </div>

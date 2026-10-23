@@ -259,6 +259,79 @@ describe('validateBook: ids and setup', () => {
   })
 })
 
+describe('validateBook: whole-board families and the empty board (R46)', () => {
+  const empty = (patterns: PatternDef[], extra: Partial<FamilyDef> = {}) =>
+    family(patterns, { id: 'open-even', region: 'board', setup: 'empty', start: [], ...extra })
+
+  it('accepts an empty-board opening: no start stones, Black first, moves anywhere', () => {
+    const p = pattern('p', [mv('B', 'Q16'), mv('W', 'D4'), mv('B', 'K10'), mv('W', 'C3')])
+    expect(errorsFor([empty([p])])).toEqual([])
+  })
+
+  it('accepts a 4-stone opening: the handicap setup, White first, moves far from Q16', () => {
+    const p = pattern('p', [mv('W', 'C6'), mv('B', 'K4')])
+    expect(errorsFor([family([p], { id: 'open-h4', region: 'board' })])).toEqual([])
+  })
+
+  it('allows start [] only with setup "empty"', () => {
+    const errors = errorsFor([family([pattern('p', [mv('W', 'R14')])], { start: [] })])
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toMatch(/start is \[\]/)
+    expect(errors[0]).toMatch(/"empty"/)
+
+    const board = errorsFor([empty([pattern('p', [mv('B', 'Q16')])], { setup: 'even' })])
+    expect(board).toHaveLength(1)
+    expect(board[0]).toMatch(/start is \[\]/)
+  })
+
+  it('keeps start stones out of the empty board', () => {
+    const errors = errorsFor([family([pattern('p', [mv('B', 'R14')])], { setup: 'empty' })])
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toMatch(/start must be \[\]/)
+  })
+
+  it('checks a pattern’s own setup against the start stones too', () => {
+    const toEmpty = errorsFor([family([pattern('p', [mv('B', 'R14')], { setup: 'empty' })])])
+    expect(toEmpty).toHaveLength(1)
+    expect(toEmpty[0]).toContain('"p"')
+    expect(toEmpty[0]).toMatch(/start must be \[\]/)
+    const fromEmpty = errorsFor([empty([pattern('p', [mv('W', 'R14')], { setup: 'even' })])])
+    expect(fromEmpty).toHaveLength(1)
+    expect(fromEmpty[0]).toContain('"p"')
+  })
+
+  it('rejects a tenuki in a whole-board family, naming the pattern and node', () => {
+    const p = pattern('p', [mv('B', 'Q16'), mv('W', 'tenuki'), mv('B', 'D4')])
+    const errors = errorsFor([empty([p])])
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toContain('"p"')
+    expect(errors[0]).toContain('line[1]')
+    expect(errors[0]).toContain('"B:Q16/W:tenuki"')
+    expect(errors[0]).toMatch(/tenuki/)
+    // In a branch too.
+    const branch = pattern('b', [mv('B', 'Q16'), mv('W', 'D4')], { branches: [{ after: 1, move: mv('W', 'tenuki', 'x') }] })
+    expect(errorsFor([empty([branch])]).some((e) => e.includes('branches[0].move'))).toBe(true)
+  })
+
+  it('still allows a tenuki in a corner family, said or defaulted', () => {
+    const p = pattern('p', [mv('W', 'R14'), mv('B', 'tenuki')])
+    expect(errorsFor([family([p], { region: 'corner' })])).toEqual([])
+    expect(errorsFor([family([p])])).toEqual([])
+  })
+
+  it('reports a region that is neither corner nor board', () => {
+    const errors = errorsFor([family([], { region: 'side' as unknown as 'board' })])
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toMatch(/region/)
+  })
+
+  it('allows start stones away from the corner region in a whole-board family only', () => {
+    const corner = errorsFor([family([], { setup: 'even', start: [mv('B', 'D10')] })])
+    expect(corner.some((e) => /outside the corner region/.test(e))).toBe(true)
+    expect(errorsFor([family([], { setup: 'even', region: 'board', start: [mv('B', 'D10')] })])).toEqual([])
+  })
+})
+
 // ---------------------------------------------------------------------------------------
 // Replay under symmetry: written independently of the validator.
 

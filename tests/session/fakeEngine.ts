@@ -2,7 +2,7 @@
 // By default it is 'ready', says the first legal point of the region is best (score 0) with a much
 // worse move elsewhere, and scores every position 0 for everyone, so off-book moves come out "fine".
 
-import { BOARD_SIZE, inRegion, parseGtp, type Color, type Pt, type Region } from '../../src/go/coords'
+import { BOARD_SIZE, inRegion, isWholeBoard, parseGtp, type Color, type Pt, type Region } from '../../src/go/coords'
 import { play, type Position } from '../../src/go/rules'
 import type { CornerAnalysis, EngineFailure, TeacherEngine } from '../../src/engine/teacher'
 
@@ -29,14 +29,17 @@ export function firstLegal(pos: Position, want: (p: Pt) => boolean): Pt {
   throw new Error('no legal point')
 }
 
-/** First legal point in the region is best (score `corner`); first legal point outside it scores `tenuki`. */
+/**
+ * First legal point in the region is best (score `corner`); first legal point outside it scores `tenuki`.
+ * A region that covers the whole board (an opening) has no point outside: tenukiBest is null, as the real engine's.
+ */
 export function defaultAnalysis(pos: Position, region: Region, corner = 0, tenuki = -20): CornerAnalysis {
   const best = firstLegal(pos, (p) => inRegion(p, region))
-  const away = firstLegal(pos, (p) => !inRegion(p, region))
+  const away = isWholeBoard(region) ? null : firstLegal(pos, (p) => !inRegion(p, region))
   return {
     toMove: pos.toMove,
     cornerBest: { pt: best, scoreLead: corner },
-    tenukiBest: { pt: away, scoreLead: tenuki },
+    tenukiBest: away && { pt: away, scoreLead: tenuki },
     candidates: [{ pt: best, scoreLead: corner, prior: 0.5 }],
   }
 }

@@ -1,0 +1,22 @@
+{
+  "familyHash": "1dc18effef1ad8",
+  "model": "kata1-b18c384nbt-s9996604416-d4316597426",
+  "visits": 400,
+  "nodes": {
+    "open-even:B:Q16": {
+      "loss": 0,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4": {
+      "loss": 0,
+      "bestAt": "D4",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4": {
+      "loss": 0,
+      "bestAt": "Q4",
+      "kind": "joseki"
+    }
+  }
+}

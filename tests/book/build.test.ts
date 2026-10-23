@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CORNER_REGION, parseGtp, transform, transformRegion, type Pt, type Sym } from '../../src/go/coords'
+import { BOARD_REGION, CORNER_REGION, parseGtp, transform, transformRegion, type Pt, type Sym } from '../../src/go/coords'
 import { buildBook, nodeKey } from '../../src/book/build'
 import { SETUPS, startPosition } from '../../src/book/setups'
 import type { BookNode, FamilyDef, MoveSpec, PatternDef } from '../../src/book/types'
@@ -379,5 +379,41 @@ describe('startPosition', () => {
       family([pattern('p2', [mv('W', 'R14')])], { id: 'invade33' }),
     ])
     expect(() => startPosition(two, 'star44', 'p2', 0)).toThrow(/p2/)
+  })
+})
+
+describe('startPosition: the empty board and whole-board families (R46)', () => {
+  const opening = buildBook([
+    family([pattern('first', [mv('B', 'Q16')])], { id: 'open-even', region: 'board', setup: 'empty', start: [] }),
+    family([pattern('h4', [mv('W', 'C6')])], { id: 'open-h4', region: 'board' }),
+  ])
+
+  it('the "empty" setup is an empty board, Black to move, komi 7.5', () => {
+    expect(SETUPS.empty([])).toEqual({ stones: [], toMove: 'black', komi: 7.5 })
+    const { pos, komi, region } = startPosition(opening, 'open-even', 'first', 0)
+    expect(komi).toBe(7.5)
+    expect(pos.toMove).toBe('black')
+    expect(pos.board.flat().every((c) => c === null)).toBe(true)
+    expect(region).toEqual(BOARD_REGION)
+  })
+
+  it('gives a whole-board family the whole board as its region, under every symmetry', () => {
+    for (const sym of SYMS) {
+      expect(startPosition(opening, 'open-even', null, sym).region).toEqual(BOARD_REGION)
+      const h4 = startPosition(opening, 'open-h4', 'h4', sym)
+      expect(h4.region).toEqual(BOARD_REGION)
+      // The setup still turns: the four handicap stones are on the star points whatever the symmetry.
+      expect(h4.komi).toBe(0.5)
+      expect(h4.pos.toMove).toBe('white')
+      for (const gtp of ['Q16', 'D4', 'D16', 'Q4']) {
+        const p = transform(parseGtp(gtp), sym)
+        expect(h4.pos.board[p.y][p.x]).toBe('black')
+      }
+    }
+  })
+
+  it('keeps the corner region for a family that says region: corner, as for one that says nothing', () => {
+    const said = buildBook([family([pattern('p', [mv('W', 'R14')])], { region: 'corner' })])
+    expect(startPosition(said, 'star44', null, 3).region).toEqual(transformRegion(CORNER_REGION, 3))
   })
 })

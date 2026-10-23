@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { buildBook } from '../../src/book/build'
 import { startPosition } from '../../src/book/setups'
-import { parseGtp } from '../../src/go/coords'
+import { BOARD_REGION, parseGtp } from '../../src/go/coords'
 import type { KataGoAnalyzeRequest } from '../../src/engine/katago/types'
 import { DEFAULT_MAX_TIME_MS } from '../../src/engine/model'
 import { createTeacherFromRunner, type EngineSearch, type SearchRunner } from '../../src/engine/teacher'
@@ -122,6 +122,23 @@ describe('createTeacherFromRunner', () => {
     expect(corner.maxTimeMs).toBe(1000)
     expect(anywhere.maxTimeMs).toBeGreaterThan(900)
     expect(anywhere.maxTimeMs).toBeLessThanOrEqual(2000)
+  })
+
+  it('analyzeCorner over the whole board (an opening, R46) runs one whole-board search with the whole budget', async () => {
+    const f = fakeRunner()
+    const engine = createTeacherFromRunner(f.runner)
+    const { pos, komi } = start()
+    const a = await engine.analyzeCorner(pos, komi, BOARD_REGION, { visits: 50, maxTimeMs: 2000 })
+    expect(f.calls).toHaveLength(1)
+    expect(f.calls[0].regionOfInterest).toBeNull()
+    expect(f.calls[0].maxTimeMs).toBe(2000)
+    // D10 is far from the corner, but on the board: a candidate like any other, and nothing is elsewhere.
+    expect(a.cornerBest).toEqual({ pt: parseGtp('Q14'), scoreLead: -31 })
+    expect(a.candidates.map((c) => c.pt)).toEqual([parseGtp('Q14'), parseGtp('D10')])
+    expect(a.tenukiBest).toBeNull()
+    // A scoreFor on the same position shares it.
+    expect(await engine.scoreFor(pos, komi, 'black', { visits: 50 })).toBe(30)
+    expect(f.calls).toHaveLength(1)
   })
 
   it('a corner search that overruns its half of the budget leaves less for the whole-board search', async () => {

@@ -5,9 +5,13 @@
 // Phone layout, top to bottom: the board, then a bar with what's happening now and the button for it
 // (the touch confirm "Play O17", or Play elsewhere), then the teacher's words. The bar sits right under
 // the board so its button is on screen on a small phone.
+//
+// A whole-board opening (R46) shows the whole board, always: no corner view to zoom to, and no Play
+// elsewhere, since every point is on the board. The owner's side is a colour, not defend/attack.
 
 import { Component, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { checkedLoss } from '../../book/checkedLoss'
+import { isBoardFamily } from '../../book/setups'
 import { BOOK } from '../shownBook'
 import { inRegion, toGtp, withMargin, type Board as Grid, type Color, type Pt, type Region } from '../../go/coords'
 import { otherColor } from '../../go/rules'
@@ -22,6 +26,7 @@ import { setLastReport } from '../reportStore'
 import { href, navigate, replaceQuietly, sparHref, type SparParams } from '../router'
 import { saveSession } from '../saveSession'
 import { SessionView, type FeedLine } from '../sessionView'
+import { seatColor } from '../seat'
 import { resolveSpar } from '../sparSetup'
 
 export interface SparProps {
@@ -158,6 +163,8 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
   const side = config.side
   const family = BOOK.families[drill.family]
   const owner = ownerColor(family.def, side)
+  const opening = isBoardFamily(family.def)
+  const seat = seatColor(family.def, side)
   const title = drill.patternId ? BOOK.patterns[drill.patternId].def.name : COPY.spar.freeTitle(family.def.name)
 
   // The session is over: save it, hand it to the report, go there.
@@ -245,13 +252,13 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
     <div className="spar">
       <header className="spar-head">
         <h1>{title}</h1>
-        <p className="who">{COPY.spar.youAre(owner, side)}</p>
+        <p className="who">{seat ? COPY.spar.youAreColor(seat) : COPY.spar.youAre(owner, side)}</p>
       </header>
 
       <div className="spar-board">
         <Board
           board={state.pos.board}
-          region={full ? undefined : state.region}
+          region={full && !opening ? undefined : state.region}
           lastMove={lastMove}
           markers={markersFor(state, lastMove)}
           onPlay={play}
@@ -273,9 +280,11 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
                 {COPY.spar.playPoint(toGtp(shownGhost))}
               </button>
             ) : (
-              <button type="button" className="btn" onClick={() => play('tenuki')}>
-                {COPY.spar.playElsewhere}
-              </button>
+              !opening && (
+                <button type="button" className="btn" onClick={() => play('tenuki')}>
+                  {COPY.spar.playElsewhere}
+                </button>
+              )
             ))}
           {state.status === 'done' && (
             <a className="btn btn-primary" href={href.report}>
@@ -291,6 +300,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
             <VerdictView
               v={v}
               region={state.region}
+              opening={opening}
               low={ownerLine.low}
               stopped={stopped}
               onRetry={() => controller.retry()}
@@ -304,13 +314,15 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
         </div>
 
         <div className="tools">
-          <button type="button" className="btn btn-quiet" aria-pressed={full} onClick={toggleFull}>
-            {full ? COPY.spar.cornerView : COPY.spar.fullBoard}
-          </button>
+          {!opening && (
+            <button type="button" className="btn btn-quiet" aria-pressed={full} onClick={toggleFull}>
+              {full ? COPY.spar.cornerView : COPY.spar.fullBoard}
+            </button>
+          )}
           <EngineChip engine={engine} />
         </div>
 
-        {feed.length > 0 && <Feed feed={feed} owner={owner} />}
+        {feed.length > 0 && <Feed feed={feed} owner={owner} opening={opening} />}
       </div>
     </div>
   )
@@ -339,6 +351,8 @@ interface VerdictProps {
   v: Verdict
   /** The session's corner: a better point away from it reads as playing elsewhere there. */
   region: Region
+  /** A whole-board opening (R46): another book line is "in the book", not "joseki". */
+  opening: boolean
   low: boolean
   stopped: boolean
   onRetry: () => void
@@ -346,7 +360,7 @@ interface VerdictProps {
   onSwitch: (patternId: string) => void
 }
 
-function VerdictView({ v, region, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictProps) {
+function VerdictView({ v, region, opening, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictProps) {
   const C = COPY.verdict
   switch (v.type) {
     case 'good':
@@ -412,7 +426,7 @@ function VerdictView({ v, region, low, stopped, onRetry, onPlayOn, onSwitch }: V
       return (
         <div className="verdict verdict-other">
           <p>
-            <strong>{C.otherJoseki}</strong> {v.note}
+            <strong>{opening ? C.otherOpening : C.otherJoseki}</strong> {v.note}
           </p>
           {low && <Low />}
           <p>{body}</p>
@@ -460,7 +474,7 @@ function MoveLine({ line, color }: { line: FeedLine; color: Color }) {
   )
 }
 
-function verdictWord(v: Verdict | undefined): string {
+function verdictWord(v: Verdict | undefined, opening: boolean): string {
   const C = COPY.verdict
   switch (v?.type) {
     case 'good':
@@ -470,7 +484,7 @@ function verdictWord(v: Verdict | undefined): string {
     case 'mistake':
       return v.big ? C.bigMistake : C.mistake
     case 'other-joseki':
-      return C.otherJoseki
+      return opening ? C.otherOpening : C.otherJoseki
     case 'unjudged':
       return C.unjudged
     default:
@@ -478,7 +492,7 @@ function verdictWord(v: Verdict | undefined): string {
   }
 }
 
-function Feed({ feed, owner }: { feed: FeedLine[]; owner: Color }) {
+function Feed({ feed, owner, opening }: { feed: FeedLine[]; owner: Color; opening: boolean }) {
   return (
     <details className="feed">
       <summary>{COPY.spar.movesSoFar(feed.length)}</summary>
@@ -486,7 +500,7 @@ function Feed({ feed, owner }: { feed: FeedLine[]; owner: Color }) {
         {feed.map((l, i) => (
           <li key={i}>
             <StoneGlyph color={l.by === 'owner' ? owner : otherColor(owner)} />
-            <strong>{where(l)}</strong> {l.by === 'owner' && <em>{verdictWord(l.verdict)}</em>} {l.note}
+            <strong>{where(l)}</strong> {l.by === 'owner' && <em>{verdictWord(l.verdict, opening)}</em>} {l.note}
           </li>
         ))}
       </ol>

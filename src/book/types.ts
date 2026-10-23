@@ -8,7 +8,10 @@ export type NodeKind = 'joseki' | 'alternative' | 'mistake' | 'trick'
 /** One move as an author writes it. Every field except `c`, `at` and `note` is optional. */
 export interface MoveSpec {
   c: 'B' | 'W'
-  /** A GTP point such as "R14" (upper case, no leading zero), or 'tenuki' for "play the biggest point elsewhere". */
+  /**
+   * A GTP point such as "R14" (upper case, no leading zero), or 'tenuki' for "play the biggest point
+   * elsewhere" (corner families only: a whole-board family has no elsewhere).
+   */
   at: string
   /** The teacher's one- or two-line reason. May be '' on a node another pattern already explains. */
   note: string
@@ -31,9 +34,17 @@ export interface Branch {
   then?: MoveSpec[]
 }
 
-export type SetupId = 'handicap4' | 'even'
+/** 'empty' is an empty board, Black to move (R46); only a family with no start stones uses it. */
+export type SetupId = 'handicap4' | 'even' | 'empty'
 
-export type FamilyId = 'star44' | 'invade33' | 'komoku34' | 'sansan33'
+export type FamilyId = 'star44' | 'invade33' | 'komoku34' | 'sansan33' | 'open-h4' | 'open-even'
+
+/**
+ * What a family studies (R46). 'corner': one corner, moves inside the corner region (canonical upper
+ * right); a move elsewhere is a `tenuki`. 'board': the whole board, an opening; every point is in play,
+ * the book check and the teacher compare against the best move anywhere, and there is no `tenuki`.
+ */
+export type FamilyRegion = 'corner' | 'board'
 
 export interface PatternDef {
   id: string
@@ -43,7 +54,7 @@ export interface PatternDef {
   order: number
   /** Overrides the family's setup for this pattern. */
   setup?: SetupId
-  /** The main line. It starts with the side to move in the setup (White). */
+  /** The main line. It starts with the side to move in the setup (White; Black on the empty board). */
   line: MoveSpec[]
   branches?: Branch[]
 }
@@ -51,7 +62,12 @@ export interface PatternDef {
 export interface FamilyDef {
   id: FamilyId
   name: string
-  /** Corner stones placed as setup (canonical frame, upper right). They are not part of the tree. */
+  /** Defaults to 'corner'. */
+  region?: FamilyRegion
+  /**
+   * Corner stones placed as setup (canonical frame, upper right). They are not part of the tree.
+   * Empty only with setup 'empty' (an empty board).
+   */
   start: MoveSpec[]
   setup: SetupId
   patterns: PatternDef[]

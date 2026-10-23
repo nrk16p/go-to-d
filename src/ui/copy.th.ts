@@ -47,6 +47,7 @@ export const COPY: Copy = {
   spar: {
     freeTitle: (family) => `ซ้อมอิสระ ${family}`,
     youAre: (c, side) => `เล่น${colorName(c)} ${side === 'defend' ? 'ฝ่ายรับมุม' : 'ฝ่ายบุกมุม'}`,
+    youAreColor: (c) => `คุณเล่น${colorName(c)}`,
     teacherThinking: 'ครูกำลังคิด…',
     yourMove: 'ถึงตาคุณ',
     tapAgain: (gtp) => `${gtp} ใช่ไหม แตะซ้ำอีกทีเพื่อวาง`,
@@ -88,6 +89,7 @@ export const COPY: Copy = {
     retry: 'ลองใหม่',
     playOn: 'เล่นต่อ',
     otherJoseki: 'ได้ อันนี้ก็โจเซกิเหมือนกัน',
+    otherOpening: 'ได้ ตานี้ก็มีในตำราเหมือนกัน',
     otherJosekiOne: (name) => `ตานี้พาไปท่า "${name}" แต่รอบนี้ซ้อมอีกทาง`,
     otherJosekiMany: 'ตานี้พาไปท่าอื่น แต่รอบนี้ซ้อมอีกทาง',
     otherJosekiNone: 'แต่รอบนี้ซ้อมอีกทาง',
@@ -118,13 +120,19 @@ export const COPY: Copy = {
     side: sideWord,
     subtitle: (title, side) => `${title} · ${sideWord(side)}`,
     dueSide: (side) => ` · ${sideWord(side)}`,
+    subtitleColor: (title, c) => `${title} · เล่น${colorName(c)}`,
+    dueColor: (c) => ` · เล่น${colorName(c)}`,
   },
 
   today: {
     title: 'วันนี้',
-    lead: (due, fresh) => {
-      if (due === 0 && fresh === 0) return 'วันนี้ไม่มีอะไรค้างแล้ว จะซ้อมข้างล่างหรือเปิดดูคลังท่าก็ได้'
-      const parts = [due > 0 ? `ทบทวน ${due} ท่า` : '', fresh > 0 ? `ท่าใหม่ ${fresh} ท่า` : '']
+    lead: (due, fresh, openings = 0) => {
+      if (due === 0 && fresh === 0 && openings === 0) return 'วันนี้ไม่มีอะไรค้างแล้ว จะซ้อมข้างล่างหรือเปิดดูคลังท่าก็ได้'
+      const parts = [
+        due > 0 ? `ทบทวน ${due} ท่า` : '',
+        fresh > 0 ? `ท่าใหม่ ${fresh} ท่า` : '',
+        openings > 0 ? `เปิดเกมใหม่ ${openings} แบบ` : '',
+      ]
       return `${parts.filter(Boolean).join(' แล้วต่อด้วย')} เริ่มจากอันบนสุดเลย`
     },
     streak: 'วันติดกัน',
@@ -135,6 +143,11 @@ export const COPY: Copy = {
     allStarted: 'เล่นมาครบทุกท่าในตำราแล้ว จากนี้ไปก็ทบทวนอย่างเดียว',
     doneNew: 'ท่าใหม่ของวันนี้ครบแล้ว',
     learnOneMore: 'ขอเพิ่มอีกท่า',
+    openingsTitle: 'เปิดเกมวันนี้',
+    doneOpenings: 'เปิดเกมของวันนี้ครบแล้ว',
+    allOpeningsStarted: 'เล่นเปิดเกมมาครบทุกแบบในตำราแล้ว จากนี้ไปก็ทบทวนอย่างเดียว',
+    freeOpenings: 'เปิดเกม',
+    freeOpening: (family, c) => `${family} · เล่น${colorName(c)}`,
     play: 'เล่น',
     freeTitle: 'ครูเลือกให้',
     freeBody: 'ครูเลือกลำดับให้เอง ไปได้ทุกทางในตำรา ไว้วอร์มก่อนซ้อม หรือเล่นต่อหลังทำรายการวันนี้หมดแล้ว',
@@ -153,6 +166,7 @@ export const COPY: Copy = {
 
   level: (box, mastered) => (box === 0 ? 'ยังไม่ได้เล่น' : mastered ? `คล่องแล้ว ขั้น ${box} จาก 5` : `ขั้น ${box} จาก 5`),
   sideName: (side) => (side === 'defend' ? 'รับมุม' : 'บุกมุม'),
+  colorName,
 
   library: {
     title: 'คลังท่า',
@@ -160,6 +174,8 @@ export const COPY: Copy = {
     legend:
       'เล่นท่าไหนครั้งแรกได้หนึ่งจุด พอท่ากลับมาให้ทบทวนแล้วเล่นไม่พลาดก็ได้เพิ่มอีกจุด ถ้าพลาดจะกลับไปเหลือจุดเดียว ครบสี่จุดถือว่าคล่องแล้ว',
     sideShort: (side) => (side === 'defend' ? 'รับ' : 'บุก'),
+    openingsTitle: 'เปิดเกม',
+    openingsBody: 'ดูทั้งกระดานตั้งแต่ตาแรก ว่าลงตรงไหนและเพราะอะไร',
   },
 
   pattern: {
@@ -174,7 +190,10 @@ export const COPY: Copy = {
     meta: (family, difficulty) => `${family} · ${difficulty === 1 ? 'ง่าย' : difficulty === 2 ? 'ปานกลาง' : 'ยาก'}`,
     drillTitle: 'ซ้อมท่านี้',
     drill: (side, c) => (side === 'defend' ? `รับมุม เล่น${colorName(c)}` : `บุกมุม เล่น${colorName(c)}`),
+    drillColor: (c) => `เล่น${colorName(c)}`,
     oneSide: 'ท่านี้ซ้อมได้ฝั่งเดียว อีกฝั่งเป็นกล ไม่ใช่ท่าที่ควรจำไปเล่น',
+    blackOnly: 'เกมต่อหมากเราถือดำ แบบนี้เลยซ้อมฝั่งดำอย่างเดียว',
+    emptyBoard: 'กระดานว่าง ดำเดินก่อน',
   },
 
   settings: {
@@ -187,6 +206,7 @@ export const COPY: Copy = {
     visits: 'เอไอคิดกี่ visits ต่อครั้ง',
     visitsHelp: 'ยิ่งเยอะยิ่งเก่งขึ้นนิดหน่อย แต่ช้าลง ถ้ามือถือช้า เอไอจะหยุดคิดที่ราว 2 วินาทีอยู่ดี',
     newPerDay: 'ท่าใหม่ต่อวัน',
+    newOpeningsPerDay: 'เปิดเกมใหม่ต่อวัน',
     save: 'บันทึก',
     saved: 'บันทึกแล้ว',
     saveFailed: 'เบราว์เซอร์นี้ไม่ยอมบันทึก',
@@ -195,6 +215,7 @@ export const COPY: Copy = {
     fineNegative: 'ค่า "ผ่าน" ติดลบไม่ได้',
     visitsRange: 'จำนวน visits ใส่ได้ตั้งแต่ 16 ถึง 400',
     newRange: 'ท่าใหม่ต่อวันใส่ได้ตั้งแต่ 0 ถึง 10',
+    newOpeningsRange: 'เปิดเกมใหม่ต่อวันใส่ได้ตั้งแต่ 0 ถึง 3',
 
     engineTitle: 'เอไอ',
     backend: 'รันบน',

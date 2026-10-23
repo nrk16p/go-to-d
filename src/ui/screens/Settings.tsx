@@ -23,6 +23,7 @@ const S = COPY.settings
 
 const VISITS = SETTING_LIMITS.visits
 const NEW_PER_DAY = SETTING_LIMITS.newPerDay
+const NEW_OPENINGS = SETTING_LIMITS.newOpeningsPerDay
 
 type Message = { error: boolean; text: string } | null
 
@@ -96,20 +97,23 @@ function LanguagePick() {
 
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s))
 
-function readForm(f: { fine: string; big: string; visits: string; newPerDay: string }):
-  | { ok: true; values: Pick<SettingsData, 'thresholds' | 'visits' | 'newPerDay'> }
+function readForm(f: { fine: string; big: string; visits: string; newPerDay: string; newOpeningsPerDay: string }):
+  | { ok: true; values: Pick<SettingsData, 'thresholds' | 'visits' | 'newPerDay' | 'newOpeningsPerDay'> }
   | { ok: false; error: string } {
   const fine = num(f.fine)
   const big = num(f.big)
   const visits = num(f.visits)
   const newPerDay = num(f.newPerDay)
-  if (![fine, big, visits, newPerDay].every(Number.isFinite)) return { ok: false, error: S.notNumber }
+  const newOpeningsPerDay = num(f.newOpeningsPerDay)
+  if (![fine, big, visits, newPerDay, newOpeningsPerDay].every(Number.isFinite)) return { ok: false, error: S.notNumber }
   if (fine < 0) return { ok: false, error: S.fineNegative }
   if (fine >= big) return { ok: false, error: S.fineBelowBig }
   if (!Number.isInteger(visits) || visits < VISITS.min || visits > VISITS.max) return { ok: false, error: S.visitsRange }
   if (!Number.isInteger(newPerDay) || newPerDay < NEW_PER_DAY.min || newPerDay > NEW_PER_DAY.max)
     return { ok: false, error: S.newRange }
-  return { ok: true, values: { thresholds: { fine, big }, visits, newPerDay } }
+  if (!Number.isInteger(newOpeningsPerDay) || newOpeningsPerDay < NEW_OPENINGS.min || newOpeningsPerDay > NEW_OPENINGS.max)
+    return { ok: false, error: S.newOpeningsRange }
+  return { ok: true, values: { thresholds: { fine, big }, visits, newPerDay, newOpeningsPerDay } }
 }
 
 function TeacherForm({ initial }: { initial: SettingsData }) {
@@ -118,6 +122,7 @@ function TeacherForm({ initial }: { initial: SettingsData }) {
     big: String(initial.thresholds.big),
     visits: String(initial.visits),
     newPerDay: String(initial.newPerDay),
+    newOpeningsPerDay: String(initial.newOpeningsPerDay),
   })
   const [msg, setMsg] = useState<Message>(null)
 
@@ -172,6 +177,12 @@ function TeacherForm({ initial }: { initial: SettingsData }) {
           <label htmlFor="set-new">{S.newPerDay}</label>
           <div className="input-row">
             <input id="set-new" type="number" inputMode="numeric" step="1" min={NEW_PER_DAY.min} max={NEW_PER_DAY.max} value={form.newPerDay} onChange={set('newPerDay')} />
+          </div>
+        </div>
+        <div className="field">
+          <label htmlFor="set-new-openings">{S.newOpeningsPerDay}</label>
+          <div className="input-row">
+            <input id="set-new-openings" type="number" inputMode="numeric" step="1" min={NEW_OPENINGS.min} max={NEW_OPENINGS.max} value={form.newOpeningsPerDay} onChange={set('newOpeningsPerDay')} />
           </div>
         </div>
         <div className="actions">

@@ -213,9 +213,27 @@ describe('Settings › Teacher', () => {
     fireEvent.change(field(S.big), { target: { value: '3.5' } })
     fireEvent.change(field(S.visits), { target: { value: '200' } })
     fireEvent.change(field(S.newPerDay), { target: { value: '3' } })
+    fireEvent.change(field(S.newOpeningsPerDay), { target: { value: '2' } })
     await press(S.save)
-    expect(loadProgress().settings).toMatchObject({ thresholds: { fine: 1, big: 3.5 }, visits: 200, newPerDay: 3 })
+    expect(loadProgress().settings).toMatchObject({
+      thresholds: { fine: 1, big: 3.5 },
+      visits: 200,
+      newPerDay: 3,
+      newOpeningsPerDay: 2,
+    })
     expect(screen.getByText(S.saved)).toBeTruthy()
+  })
+
+  it('shows one new opening a day by default and keeps it from 0 to 3 (R46)', async () => {
+    render(<Settings engine={hub()} today={TODAY} />)
+    expect((field(S.newOpeningsPerDay) as HTMLInputElement).value).toBe('1')
+    fireEvent.change(field(S.newOpeningsPerDay), { target: { value: '4' } })
+    await press(S.save)
+    expect(screen.getByRole('alert').textContent).toBe(S.newOpeningsRange)
+    expect(stored()).toBeNull()
+    fireEvent.change(field(S.newOpeningsPerDay), { target: { value: '0' } })
+    await press(S.save)
+    expect(loadProgress().settings.newOpeningsPerDay).toBe(0)
   })
 
   it('refuses fine below 0, fine at or above big, and visits outside 16 to 400', async () => {

@@ -73,6 +73,17 @@ describe('resolveSpar', () => {
     expect(r).toMatchObject({ ok: true, config: { side: 'defend' } })
   })
 
+  it('plays the 4-stone opening as Black, free sparring too, and the even-game opening from either colour (R46)', () => {
+    expect(resolveSpar({ family: 'open-h4', side: 'attack', mode: 'free' }, BOOK, progress, fixed)).toMatchObject({
+      ok: true,
+      config: { family: 'open-h4', mode: 'free', side: 'defend' },
+    })
+    expect(resolveSpar({ family: 'open-even', side: 'attack', mode: 'free' }, BOOK, progress, fixed)).toMatchObject({
+      ok: true,
+      config: { family: 'open-even', side: 'attack' },
+    })
+  })
+
   it('is free sparring without a pattern, or with mode=free', () => {
     expect(resolveSpar({ family: 'star44' }, BOOK, progress, fixed)).toMatchObject({ ok: true, config: { mode: 'free' } })
     const r = resolveSpar({ pattern: 'star44-low-jump', mode: 'free' }, BOOK, progress, fixed)

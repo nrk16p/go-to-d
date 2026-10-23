@@ -8,10 +8,14 @@
 // Families that start the same way share their book (R42, src/book/siblings.ts): at every position the
 // book's moves are the session tree's own plus those its siblings have there. A move found in a sibling
 // tree is judged as book, and the session goes on in that tree, so its patterns get the credit.
+//
+// A whole-board opening (R46) works the same way with the board as its region: every tap is a move on
+// the board (never a tenuki, there is no elsewhere), the engine's best is the best anywhere, and the
+// teacher never leaves to play elsewhere. Six moves off the book still end the session.
 
 import { nodeSetups } from '../book/build'
 import type { CheckedLoss } from '../book/checkedLoss'
-import { startPosition } from '../book/setups'
+import { isBoardFamily, startPosition } from '../book/setups'
 import { bookIndex, type BookIndex } from '../book/siblings'
 import type { Book, BookNode, SetupId } from '../book/types'
 import type { TeacherEngine } from '../engine/teacher'
@@ -34,7 +38,7 @@ export type { LogEntry, SparConfig, SparState } from './types'
 
 /** Moves played off the book, by either side, before the session ends. */
 const MAX_OFF_BOOK = 6
-/** Off book, the teacher leaves the corner (and ends the session) when elsewhere is this much bigger. */
+/** Off book, the teacher leaves the corner (and ends the session) when elsewhere is this much bigger. Corners only. */
 const TENUKI_MARGIN = 1.0
 /** Off book, the teacher picks at random among corner moves this close to the best one. */
 const NEAR_BEST = 0.5
@@ -69,6 +73,8 @@ export class SparController {
   private owner!: Color
   /** The setup this session is played in; a sibling's move counts only if it was checked in it too. */
   private setup!: SetupId
+  /** A whole-board opening (R46): no tenuki, for either side. */
+  private wholeBoard = false
   private eng!: EngineAccess
   private drillPath: BookNode[] | undefined
   private rng!: () => number
@@ -121,6 +127,8 @@ export class SparController {
 
   async ownerPlay(p: Pt | 'tenuki'): Promise<void> {
     if (this.s.status !== 'owner-to-move' || this.disposed) return
+    // An opening has no elsewhere: the screen shows no Play elsewhere button, and one is ignored.
+    if (p === 'tenuki' && this.wholeBoard) return
     const { pos, node, region, log, offBookMoves, note } = this.s
     const { sym } = this.cfg
     const gen = this.gen
@@ -228,6 +236,7 @@ export class SparController {
     this.cfg = cfg
     this.owner = ownerColor(fam.def, cfg.side)
     this.setup = setup
+    this.wholeBoard = isBoardFamily(fam.def)
     const komi = start.komi + (setup === 'handicap4' ? HANDICAP_BONUS : 0)
     const isCurrent = (pos: Position) => gen === this.gen && this.s.pos === pos && this.s.status === 'owner-to-move'
     this.eng = new EngineAccess(this.engine, komi, start.region, cfg.sym, isCurrent)
@@ -364,7 +373,9 @@ export class SparController {
     if (!a) return this.finish(MESSAGES.engineFailed)
     const color = otherColor(this.owner)
     const { cornerBest, tenukiBest } = a
-    if (tenukiBest && tenukiBest.scoreLead > cornerBest.scoreLead + TENUKI_MARGIN && legal(pos, tenukiBest.pt, color)) {
+    // In a corner the teacher may leave for a bigger point elsewhere; an opening's region is the board.
+    const leave = !this.wholeBoard && tenukiBest && tenukiBest.scoreLead > cornerBest.scoreLead + TENUKI_MARGIN
+    if (leave && tenukiBest && legal(pos, tenukiBest.pt, color)) {
       this.teacherPlays(tenukiBest.pt, true, node && bookChild(this.withSiblings(node), 'tenuki'))
       return this.finish()
     }

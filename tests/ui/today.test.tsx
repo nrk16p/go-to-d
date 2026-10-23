@@ -5,7 +5,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BOOK } from '../../src/book/data'
-import { courseOrder } from '../../src/progress/course'
+import { courseOrder, openingOrder } from '../../src/progress/course'
 import type { Progress, ReviewState } from '../../src/progress/srs'
 import { defaultProgress, loadProgress, STORAGE_KEY } from '../../src/progress/store'
 import { drillableSides } from '../../src/session/sides'
@@ -102,7 +102,8 @@ describe('Today', () => {
     store({ ...defaultProgress(), reviews: { [course[0].key]: { ...review(1, '2026-10-23'), firstDay: TODAY } } })
     render(<Today today={TODAY} />)
     expect(itemsIn(COPY.today.newTitle)).toEqual(course.slice(1, newPerDay).map((i) => i.key))
-    expect(screen.getByText(COPY.today.lead(0, newPerDay - 1))).toBeTruthy()
+    // The day's opening (R46) is still to come.
+    expect(screen.getByText(COPY.today.lead(0, newPerDay - 1, 1))).toBeTruthy()
   })
 
   it('once today’s new ones are started, says so, the list is done, and one more is a tap away', () => {
@@ -111,7 +112,7 @@ describe('Today', () => {
     const started = Object.fromEntries(course.slice(0, newPerDay).map((i) => [i.key, { ...review(1, '2026-10-23'), firstDay: TODAY }]))
     store({ ...defaultProgress(), reviews: started })
     render(<Today today={TODAY} />)
-    expect(screen.getByText(COPY.today.lead(0, 0))).toBeTruthy()
+    expect(screen.getByText(COPY.today.lead(0, 0, 1))).toBeTruthy()
     const region = screen.getByRole('region', { name: COPY.today.newTitle })
     expect(within(region).getByText(COPY.today.doneNew)).toBeTruthy()
     const next = course[newPerDay]
@@ -143,11 +144,62 @@ describe('Today', () => {
   it("offers Teacher's choice: free sparring in each corner, on the side picked", () => {
     render(<Today today={TODAY} />)
     const region = screen.getByRole('region', { name: COPY.today.freeTitle })
-    const hrefs = () => within(region).getAllByRole('link').map((a) => a.getAttribute('href'))
-    expect(hrefs()).toHaveLength(4)
-    expect(hrefs()[0]).toBe('#/spar?family=star44&side=defend&mode=free')
+    const corners = () =>
+      within(region)
+        .getAllByRole('link')
+        .map((a) => a.getAttribute('href'))
+        .filter((h) => !h?.includes('family=open-'))
+    expect(corners()).toHaveLength(4)
+    expect(corners()[0]).toBe('#/spar?family=star44&side=defend&mode=free')
     fireEvent.click(within(region).getByRole('radio', { name: COPY.today.sideAttack }))
-    expect(hrefs()[1]).toBe('#/spar?family=invade33&side=attack&mode=free')
+    expect(corners()[1]).toBe('#/spar?family=invade33&side=attack&mode=free')
+  })
+
+  it("offers the openings in Teacher's choice by colour: the 4-stone one as Black, the even game as either (R46)", () => {
+    render(<Today today={TODAY} />)
+    const list = screen.getByRole('list', { name: COPY.today.freeOpenings })
+    const links = within(list).getAllByRole('link')
+    expect(links.map((a) => a.getAttribute('href'))).toEqual([
+      '#/spar?family=open-h4&side=defend&mode=free',
+      '#/spar?family=open-even&side=defend&mode=free',
+      '#/spar?family=open-even&side=attack&mode=free',
+    ])
+    expect(links[0].textContent).toBe(COPY.today.freeOpening(BOOK.families['open-h4'].def.name, 'black'))
+    expect(links[2].textContent).toBe(COPY.today.freeOpening(BOOK.families['open-even'].def.name, 'white'))
+    // The corner side switch doesn't touch them.
+    fireEvent.click(screen.getByRole('radio', { name: COPY.today.sideAttack }))
+    expect(within(list).getAllByRole('link')[0].getAttribute('href')).toBe('#/spar?family=open-h4&side=defend&mode=free')
+  })
+
+  it('shows one new opening a day after the new joseki, by colour, and says when it is done (R46)', () => {
+    const opening = openingOrder(BOOK)[0]
+    render(<Today today={TODAY} />)
+    expect(itemsIn(COPY.today.openingsTitle)).toEqual([opening.key])
+    const region = screen.getByRole('region', { name: COPY.today.openingsTitle })
+    expect(within(region).getByText(COPY.colorName('black'))).toBeTruthy()
+    const newPerDay = defaultProgress().settings.newPerDay
+    expect(screen.getByText(COPY.today.lead(0, newPerDay, 1))).toBeTruthy()
+    // It comes after the new joseki on the page.
+    const links = screen.getAllByRole('link').map((a) => a.getAttribute('href'))
+    const lastJoseki = links.findIndex((h) => h?.includes(`pattern=${courseOrder(BOOK)[newPerDay - 1].patternId}`))
+    const theOpening = links.findIndex((h) => h?.includes(`pattern=${opening.patternId}`))
+    expect(lastJoseki).toBeGreaterThanOrEqual(0)
+    expect(theOpening).toBeGreaterThan(lastJoseki)
+
+    // Started today: done for today, one more a tap away if there is one.
+    cleanup()
+    store({ ...defaultProgress(), reviews: { [opening.key]: { ...review(1, '2026-10-23'), firstDay: TODAY } } })
+    render(<Today today={TODAY} />)
+    const done = screen.getByRole('region', { name: COPY.today.openingsTitle })
+    expect(within(done).getByText(COPY.today.doneOpenings, { exact: false })).toBeTruthy()
+    expect(within(done).queryByText(COPY.today.play)).toBeNull()
+    expect(screen.getByText(COPY.today.lead(0, newPerDay, 0))).toBeTruthy()
+  })
+
+  it('leaves the openings out when newOpeningsPerDay is 0 and none was started', () => {
+    store({ ...defaultProgress(), settings: { ...defaultProgress().settings, newOpeningsPerDay: 0 } })
+    render(<Today today={TODAY} />)
+    expect(screen.queryByRole('region', { name: COPY.today.openingsTitle })).toBeNull()
   })
 
   it('on iOS outside the Home Screen app, shows the install hint until it is dismissed', () => {

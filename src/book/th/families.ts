@@ -7,7 +7,7 @@ import type { FamilyId } from '../types'
 export interface FamilyHeadTh {
   /** The family's name. No board coordinates (R36); "4-4" is a point type, not a coordinate. */
   name: string
-  /** One note per corner stone, in the order of FamilyDef.start. */
+  /** One note per corner stone, in the order of FamilyDef.start (none for an empty-board opening). */
   start: string[]
 }
 
@@ -16,4 +16,6 @@ export const TH_FAMILIES: Record<FamilyId, FamilyHeadTh> = {
   invade33: { name: 'บุก 3-3', start: ['หมากดำที่จุดดาว 4-4'] },
   komoku34: { name: 'โคโมคุ 3-4', start: ['หมากดำที่โคโมคุ 3-4'] },
   sansan33: { name: 'จุด 3-3', start: ['หมากดำที่จุด 3-3'] },
+  'open-h4': { name: 'เปิดเกม ต่อสี่เม็ด', start: ['ดำมีหมากครบสี่จุดดาว ขาวเดินก่อน'] },
+  'open-even': { name: 'เปิดเกม เกมเสมอ', start: [] },
 }

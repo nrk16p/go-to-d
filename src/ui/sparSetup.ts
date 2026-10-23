@@ -1,10 +1,11 @@
-// Turns the Spar route's parameters into a session config (R28): side defaults to defend, mode to
-// drill when a pattern is named (free otherwise), and sym and seed are random unless given.
+// Turns the Spar route's parameters into a session config (R28): side defaults to defend (and to a side
+// the family is played from, R46), mode to drill when a pattern is named (free otherwise), and sym and
+// seed are random unless given.
 
 import { bookIndex } from '../book/siblings'
 import type { Book, FamilyId } from '../book/types'
 import { DEFAULT_THRESHOLDS, type SparConfig } from '../session/controller'
-import { drillableSides, type Side } from '../session/sides'
+import { drillableSides, familySides, type Side } from '../session/sides'
 import { reviewKey, type Progress } from '../progress/srs'
 import type { Sym } from '../go/coords'
 import { COPY } from './copy'
@@ -49,6 +50,9 @@ export function resolveSpar(
 
   const mode: 'drill' | 'free' = params.mode === 'free' || !entry ? 'free' : 'drill'
   let side: Side = params.side === 'attack' ? 'attack' : 'defend'
+  // A family played from one side only (the 4-stone opening is Black's, R46) takes that side, free sparring too.
+  const allowed = familySides(book.families[family].def)
+  if (!allowed.includes(side)) side = allowed[0]
   if (mode === 'drill') {
     const sides = drillableSides(book, patternId!)
     if (sides.length === 0) return { ok: false, error: COPY.spar.noSide }

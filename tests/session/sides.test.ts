@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildBook } from '../../src/book/build'
 import type { FamilyDef } from '../../src/book/types'
-import { drillableSides, ownerColor } from '../../src/session/sides'
+import { drillableSides, familySides, ownerColor } from '../../src/session/sides'
 import { FIXTURE_FAMILY } from '../book/fixture'
 
 /** Corner stone Black. 'white-trick' has White's trick on its main line, 'black-trick' Black's. */
@@ -54,6 +54,44 @@ describe('ownerColor', () => {
     const whiteCorner: FamilyDef = { ...FIXTURE_FAMILY, start: [{ c: 'W', at: 'Q16', note: 'corner' }] }
     expect(ownerColor(whiteCorner, 'defend')).toBe('white')
     expect(ownerColor(whiteCorner, 'attack')).toBe('black')
+  })
+})
+
+/** Whole-board openings (R46): the 4-stone handicap one and the even game on an empty board. */
+const OPEN_H4: FamilyDef = {
+  id: 'open-h4',
+  name: 'four stones',
+  region: 'board',
+  setup: 'handicap4',
+  start: [{ c: 'B', at: 'Q16', note: 'stars' }],
+  patterns: [{ id: 'h4', name: 'h4', difficulty: 1, order: 1, line: [{ c: 'W', at: 'C6', note: 'Approach.' }] }],
+}
+const OPEN_EVEN: FamilyDef = {
+  id: 'open-even',
+  name: 'even',
+  region: 'board',
+  setup: 'empty',
+  start: [],
+  patterns: [{ id: 'even', name: 'even', difficulty: 1, order: 1, line: [{ c: 'B', at: 'Q16', note: 'Corner.' }] }],
+}
+
+describe('openings (R46)', () => {
+  it('on the empty board, defend is Black (who moves first) and attack is White', () => {
+    expect(ownerColor(OPEN_EVEN, 'defend')).toBe('black')
+    expect(ownerColor(OPEN_EVEN, 'attack')).toBe('white')
+    expect(ownerColor(OPEN_H4, 'defend')).toBe('black')
+  })
+
+  it('drills the 4-stone opening as Black only, the even-game opening from both colours', () => {
+    const book = buildBook([OPEN_H4, OPEN_EVEN])
+    expect(familySides(OPEN_H4)).toEqual(['defend'])
+    expect(familySides(OPEN_EVEN)).toEqual(['defend', 'attack'])
+    expect(drillableSides(book, 'h4')).toEqual(['defend'])
+    expect(drillableSides(book, 'even')).toEqual(['defend', 'attack'])
+  })
+
+  it('keeps both sides for corner families in the handicap setup', () => {
+    expect(familySides(FIXTURE_FAMILY)).toEqual(['defend', 'attack'])
   })
 })
 

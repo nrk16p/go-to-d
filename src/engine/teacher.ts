@@ -15,7 +15,7 @@
 // opening, so a tenuki is not fed as a pass: the engine sees the position after it as freshly set
 // up, the same as the setup position itself. Ko is unaffected because a pass clears it anyway.
 
-import { inRegion, type Board, type Color, type Pt, type Region } from '../go/coords'
+import { inRegion, isWholeBoard, type Board, type Color, type Pt, type Region } from '../go/coords'
 import type { Position } from '../go/rules'
 import type { KataGoAnalyzeRequest } from './katago/types'
 import { DEFAULT_MAX_TIME_MS, DEFAULT_VISITS, MODEL_URL } from './model'
@@ -38,6 +38,8 @@ export interface TeacherEngine {
   ready(): Promise<{ backend: string; model: string }>
   /**
    * The best moves inside `region` for the side to move (`pos.toMove`), and the best move outside it.
+   * A region that covers the whole board (an opening, R46) takes one whole-board search and has no
+   * move outside (`tenukiBest` null).
    * Every `scoreLead` is from the side to move's point of view (positive = the side to move leads).
    * `visits` is per search (two searches); `maxTimeMs` is the budget for both together.
    *
@@ -256,6 +258,12 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
       const visits = opts.visits ?? DEFAULT_VISITS
       const budget = opts.maxTimeMs ?? DEFAULT_MAX_TIME_MS
       const cached = cache.get(keyOf(req, komi, visits))?.search
+      // A whole-board opening (R46): the region is the board, so one whole-board search answers both
+      // questions, with the whole budget. Nothing is outside it, so there is no move elsewhere.
+      if (isWholeBoard(region)) {
+        const s = await (cached ?? runWholeBoard(req, komi, visits, budget))
+        return cornerAnalysisFrom(s, s, pos.toMove, region)
+      }
       // Each search gets half the budget. With the whole-board search cached, a scoreFor on this
       // position already spent the other half (the controller's off-book move: scoreFor, then
       // analyzeCorner for the reply), so the pair still fits one budget.

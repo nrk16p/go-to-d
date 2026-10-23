@@ -22,8 +22,10 @@ export interface ReviewState {
 export interface Settings {
   thresholds: Thresholds
   visits: number
-  /** New patterns offered per day. */
+  /** New joseki patterns offered per day. */
   newPerDay: number
+  /** New whole-board openings offered per day, after the joseki (R46). */
+  newOpeningsPerDay: number
   iosHintDismissed: boolean
 }
 

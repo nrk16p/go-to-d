@@ -4,6 +4,7 @@
 // the Library and the book check, and a session looks a move up in its siblings' trees before calling it
 // off book. Node keys are move paths in the same canonical frame, so one position has one key in all of them.
 
+import { familyRegion } from './setups'
 import type { Book, BookNode, FamilyDef, FamilyId } from './types'
 
 export interface BookIndex {
@@ -15,10 +16,14 @@ export interface BookIndex {
   familyOf(node: BookNode): FamilyId | undefined
 }
 
-/** What makes two families start the same way. */
+/**
+ * What makes two families start the same way. The region counts too (R46): the 4-stone opening starts
+ * from the same stones as the 4-4 point, but its moves were checked against the whole board, not the
+ * corner, so neither tree is book for the other.
+ */
 function startOf(def: FamilyDef): string {
   const stones = def.start.map((s) => `${s.c}${s.at}`).sort()
-  return `${def.setup}|${stones.join(' ')}`
+  return `${familyRegion(def)}|${def.setup}|${stones.join(' ')}`
 }
 
 const built = new WeakMap<Book, BookIndex>()

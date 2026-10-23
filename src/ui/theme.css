@@ -127,7 +127,8 @@ body {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   line-height: 1.25;
   margin: 0;
   text-wrap: balance;
@@ -143,12 +144,17 @@ body:lang(th) {
 }
 
 :lang(th) h1,
-:lang(th) h2 {
+:lang(th) h2,
+:lang(th) h3 {
   line-height: 1.4;
 }
 
 h2 {
   font-size: 1rem;
+}
+
+h3 {
+  font-size: 0.9375rem;
 }
 
 p {
@@ -1088,6 +1094,15 @@ a {
 
 .library .family {
   margin-top: 6px;
+}
+
+/* The whole-board openings (R46): a section of their own after the corners, one list per family. */
+.library .openings {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px solid var(--rule-strong);
 }
 
 /* ---------- pattern ---------- */

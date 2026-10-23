@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildBook, familyHash, nodeSetups } from '../../src/book/build'
+import { BOOK } from '../../src/book/data'
 import { SETUPS } from '../../src/book/setups'
 import type { Book, FamilyDef, PatternDef } from '../../src/book/types'
 import { FIXTURE_FAMILY } from './fixture'
@@ -108,6 +109,22 @@ describe('familyHash', () => {
     const book = buildBook([FIXTURE_FAMILY, other])
     expect(familyHash(book, 'star44')).toBe(base)
     expect(familyHash(book, 'komoku34')).not.toBe(base)
+  })
+
+  it('changes with the region (R46): a whole-board family is checked against another best move', () => {
+    const board: FamilyDef = { ...clone(FIXTURE_FAMILY), region: 'board' }
+    expect(hashOf(board)).not.toBe(base)
+    // Saying 'corner' out loud is the same as leaving it out.
+    expect(hashOf({ ...clone(FIXTURE_FAMILY), region: 'corner' })).toBe(base)
+  })
+
+  it('keeps every corner family’s hash as it was before regions existed (their committed checks stay fresh)', () => {
+    // The hashes in src/book/verify/*.json when R46 landed.
+    expect(familyHash(BOOK, 'star44')).toBe('07f685cb7e86ee')
+    expect(familyHash(BOOK, 'invade33')).toBe('1b707e623eaaed')
+    expect(familyHash(BOOK, 'komoku34')).toBe('1899e4cbbf3e9d')
+    expect(familyHash(BOOK, 'sansan33')).toBe('0e1f57133d7ca4')
+    expect(hashOf(FIXTURE_FAMILY)).toBe('1bc4b9f06818c6')
   })
 
   it('throws for a family that is not in the book', () => {

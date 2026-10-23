@@ -1,21 +1,38 @@
 // The home screen: what to play today, in order. Reviews that are due come first, then the day's new
 // patterns in course order (R32): newPerDay less the ones already started today (R44), so the list runs
-// out and the day is done. One more stays a tap away. The very first item carries the Play button so the
-// next step is never in doubt. Below: the streak, how much is mastered, and free sparring ("Teacher's choice").
+// out and the day is done. One more stays a tap away. Then the day's new opening (R46), counted the same
+// way on its own (newOpeningsPerDay). The very first item carries the Play button so the next step is
+// never in doubt. Below: the streak, how much is mastered, and free sparring ("Teacher's choice").
 
 import { useState } from 'react'
 import { BOOK } from '../shownBook'
+import { isBoardFamily } from '../../book/setups'
 import type { FamilyId } from '../../book/types'
-import { currentStreak, dueItems, masteredCount, newItems, newToday, type CourseItem } from '../../progress/course'
+import {
+  currentStreak,
+  dueItems,
+  masteredCount,
+  newItems,
+  newOpeningsToday,
+  newToday,
+  openingOrder,
+  type CourseItem,
+} from '../../progress/course'
 import { loadProgress, saveProgress, todayLocal } from '../../progress/store'
-import type { Side } from '../../session/sides'
+import { familySides, ownerColor, type Side } from '../../session/sides'
 import { CornerThumb } from '../CornerThumb'
 import { COPY } from '../copy'
 import { isInAppBrowser, needsIosInstallHint } from '../install'
 import { Pips } from '../Pips'
 import { href, sparHref } from '../router'
+import { sideLabel } from '../seat'
 
 const T = COPY.today
+
+const FAMILIES = Object.keys(BOOK.families) as FamilyId[]
+const CORNERS = FAMILIES.filter((f) => !isBoardFamily(BOOK.families[f].def))
+const OPENINGS = FAMILIES.filter((f) => isBoardFamily(BOOK.families[f].def))
+const HAS_OPENINGS = openingOrder(BOOK).length > 0
 
 export function Today({ today = todayLocal() }: { today?: string }) {
   const [progress] = useState(loadProgress)
@@ -29,8 +46,10 @@ export function Today({ today = todayLocal() }: { today?: string }) {
   const fresh = newToday(BOOK, progress, today)
   // Today's share is done: the next new one, for "Learn one more".
   const more = fresh.length === 0 ? newItems(BOOK, progress, 1)[0] : undefined
+  const openings = newOpeningsToday(BOOK, progress, today)
+  const moreOpening = openings.length === 0 ? newItems(BOOK, progress, 1, 'openings')[0] : undefined
   const { mastered, total } = masteredCount(BOOK, progress)
-  const first = due[0]?.key ?? fresh[0]?.key
+  const first = due[0]?.key ?? fresh[0]?.key ?? openings[0]?.key
 
   function dismissHint() {
     setHint(false)
@@ -43,7 +62,7 @@ export function Today({ today = todayLocal() }: { today?: string }) {
     <section className="page today">
       <header className="page-head">
         <h1>{T.title}</h1>
-        <p className="lead">{T.lead(due.length, fresh.length)}</p>
+        <p className="lead">{T.lead(due.length, fresh.length, openings.length)}</p>
       </header>
 
       {hint && (
@@ -108,6 +127,30 @@ export function Today({ today = todayLocal() }: { today?: string }) {
         </section>
       )}
 
+      {HAS_OPENINGS && (openings.length > 0 || progress.settings.newOpeningsPerDay > 0) && (
+        <section className="queue" aria-labelledby="openings-title">
+          <h2 id="openings-title">{T.openingsTitle}</h2>
+          {openings.length === 0 ? (
+            moreOpening ? (
+              <p className="muted">
+                {T.doneOpenings}{' '}
+                <a href={sparHref({ family: moreOpening.family, pattern: moreOpening.patternId, side: moreOpening.side })}>
+                  {T.learnOneMore}
+                </a>
+              </p>
+            ) : (
+              <p className="muted">{T.allOpeningsStarted}</p>
+            )
+          ) : (
+            <ul className="queue-list">
+              {openings.map((item) => (
+                <QueueItem key={item.key} item={item} next={item.key === first} />
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       <section className="free" aria-labelledby="free-title">
         <h2 id="free-title">{T.freeTitle}</h2>
         <p className="muted">{T.freeBody}</p>
@@ -126,12 +169,28 @@ export function Today({ today = todayLocal() }: { today?: string }) {
           ))}
         </div>
         <ul className="link-list">
-          {(Object.keys(BOOK.families) as FamilyId[]).map((family) => (
+          {CORNERS.map((family) => (
             <li key={family}>
               <a href={sparHref({ family, side: freeSide, mode: 'free' })}>{BOOK.families[family].def.name}</a>
             </li>
           ))}
         </ul>
+        {OPENINGS.length > 0 && (
+          <>
+            <h3 id="free-openings">{T.freeOpenings}</h3>
+            {/* An opening names its side by colour; the 4-stone one is Black's only (R46). */}
+            <ul className="link-list" aria-labelledby="free-openings">
+              {OPENINGS.flatMap((family) => {
+                const def = BOOK.families[family].def
+                return familySides(def).map((side) => (
+                  <li key={`${family}:${side}`}>
+                    <a href={sparHref({ family, side, mode: 'free' })}>{T.freeOpening(def.name, ownerColor(def, side))}</a>
+                  </li>
+                ))
+              })}
+            </ul>
+          </>
+        )}
       </section>
     </section>
   )
@@ -149,7 +208,7 @@ function QueueItem({ item, next, box }: { item: CourseItem; next: boolean; box?:
         <span className="queue-text">
           <span className="queue-name">{entry.def.name}</span>
           <span className="queue-meta">
-            {COPY.sideName(item.side)}
+            {sideLabel(BOOK.families[item.family].def, item.side)}
             {box !== undefined && <Pips box={box} />}
           </span>
         </span>

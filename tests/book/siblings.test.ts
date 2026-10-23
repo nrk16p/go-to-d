@@ -1,9 +1,11 @@
 // Families that start from the same position are siblings (R42): the same setup and the same corner
-// stones. Found from the definitions, not from a list of names.
+// stones, and the same region (R46: a whole-board opening is not a corner's sibling). Found from the
+// definitions, not from a list of names.
 
 import { describe, expect, it } from 'vitest'
 import { buildBook } from '../../src/book/build'
 import { BOOK } from '../../src/book/data'
+import { familyRegion } from '../../src/book/setups'
 import { bookIndex } from '../../src/book/siblings'
 import type { FamilyDef, FamilyId } from '../../src/book/types'
 import { FIXTURE_FAMILY } from './fixture'
@@ -13,11 +15,11 @@ const sameStart = (a: FamilyId, b: FamilyId) => {
   const da = BOOK.families[a].def
   const db = BOOK.families[b].def
   const stones = (d: FamilyDef) => d.start.map((s) => `${s.c}${s.at}`).sort().join(' ')
-  return da.setup === db.setup && stones(da) === stones(db)
+  return familyRegion(da) === familyRegion(db) && da.setup === db.setup && stones(da) === stones(db)
 }
 
 describe('bookIndex', () => {
-  it('groups every family with the families that share its setup and corner stones, itself first', () => {
+  it('groups every family with the families that share its region, setup and corner stones, itself first', () => {
     const index = bookIndex(BOOK)
     for (const f of ids) {
       const group = index.group(f)
@@ -27,6 +29,16 @@ describe('bookIndex', () => {
     // Today that makes the 4-4 point and the 3-3 invasion under it one pair.
     expect(index.group('star44')).toEqual(['star44', 'invade33'])
     expect(index.group('invade33')).toEqual(['invade33', 'star44'])
+    // The 4-stone opening starts from the same stones, but over the whole board: no sibling of theirs.
+    expect(index.group('open-h4')).toEqual(['open-h4'])
+  })
+
+  it('keeps a whole-board family apart from a corner family with the same start (R46)', () => {
+    const board: FamilyDef = { ...FIXTURE_FAMILY, id: 'open-h4', region: 'board', patterns: [] }
+    const corner: FamilyDef = { ...FIXTURE_FAMILY, id: 'invade33', region: 'corner', patterns: [] }
+    const index = bookIndex(buildBook([FIXTURE_FAMILY, board, corner]))
+    expect(index.group('star44')).toEqual(['star44', 'invade33'])
+    expect(index.group('open-h4')).toEqual(['open-h4'])
   })
 
   it('a family with other corner stones or another setup is on its own', () => {

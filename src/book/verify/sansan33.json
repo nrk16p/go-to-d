@@ -1,5 +1,5 @@
 {
-  "familyHash": "1904343524a0da",
+  "familyHash": "0e1f57133d7ca4",
   "model": "kata1-b18c384nbt-s9996604416-d4316597426",
   "visits": 400,
   "nodes": {
@@ -43,8 +43,98 @@
       "bestAt": "R13",
       "kind": "joseki"
     },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:P17": {
+      "loss": 1.2,
+      "bestAt": "O16",
+      "kind": "alternative"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:P17/B:P18": {
+      "loss": 0,
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:P17/B:P18/W:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:P17/B:P18/W:O17/B:O18": {
+      "loss": 0,
+      "bestAt": "O18",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:P17/B:P18/W:O17/B:O18/W:N17": {
+      "loss": 0,
+      "bestAt": "N17",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:Q17/W:P17/B:P18/W:O17/B:O18/W:N17/B:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:P18": {
+      "loss": 0,
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:P18/W:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:P18/W:R15/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:P18/W:R15/B:O16/W:Q11": {
+      "loss": 0,
+      "bestAt": "Q11",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q15/B:P18/W:R15/B:O16/W:Q11/B:tenuki": {
+      "loss": 0,
+      "bestAt": "R9",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q14": {
+      "loss": 0,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q14/B:P16": {
+      "loss": 0.24,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:R16/W:Q14/B:P16/W:tenuki": {
+      "loss": 0,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:S16": {
+      "loss": 3.31,
+      "bestAt": "R16",
+      "kind": "mistake"
+    },
+    "sansan33:W:Q16/B:S16/W:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:S16/W:Q17/B:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "sansan33:W:Q16/B:S16/W:Q17/B:R14/W:M16": {
+      "loss": 0,
+      "bestAt": "M16",
+      "kind": "joseki"
+    },
     "sansan33:W:O16": {
-      "loss": 0.34,
+      "loss": 0.25,
       "bestAt": "Q16",
       "kind": "joseki"
     },
@@ -61,6 +151,141 @@
     "sansan33:W:O16/B:Q14/W:R12/B:L16": {
       "loss": 0,
       "bestAt": "L16",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:Q14/W:tenuki": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:Q14/W:tenuki/B:M17": {
+      "loss": 0,
+      "bestAt": "M17",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:O17": {
+      "loss": 2.54,
+      "bestAt": "Q14",
+      "kind": "mistake"
+    },
+    "sansan33:W:O16/B:O17/W:P17": {
+      "loss": 0,
+      "bestAt": "P17",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:O17/W:P17/B:N16": {
+      "loss": 0.72,
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "sansan33:W:O16/B:O17/W:P17/B:N16/W:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17": {
+      "loss": 0.25,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:Q14/W:L17": {
+      "loss": 0,
+      "bestAt": "L17",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:Q14/W:L17/B:tenuki": {
+      "loss": 0,
+      "bestAt": "L16",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:L17": {
+      "loss": 0.88,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:L17/W:Q16": {
+      "loss": 0,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:L17/W:Q16/B:R16": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:L17/W:Q16/B:R16/W:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:L17/W:Q16/B:R16/W:Q14/B:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:L17/W:Q16/B:R16/W:Q14/B:R15/W:O14": {
+      "loss": 0,
+      "bestAt": "O14",
+      "kind": "joseki"
+    },
+    "sansan33:W:O17/B:L17/W:Q16/B:R16/W:Q14/B:R15/W:O14/B:R13": {
+      "loss": 0,
+      "bestAt": "R13",
+      "kind": "joseki"
+    },
+    "sansan33:W:N16": {
+      "loss": 0.44,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "sansan33:W:N16/B:tenuki": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "sansan33:W:N16/B:tenuki/W:Q16": {
+      "loss": 0,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "sansan33:W:N16/B:tenuki/W:Q16/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "sansan33:W:tenuki": {
+      "loss": 0,
+      "bestAt": "Q16",
+      "kind": "joseki"
+    },
+    "sansan33:W:tenuki/B:Q14": {
+      "loss": 0.01,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "sansan33:W:tenuki/B:Q14/W:P13": {
+      "loss": 0.26,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "sansan33:W:tenuki/B:Q14/W:P13/B:Q13": {
+      "loss": 0,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "sansan33:W:tenuki/B:Q14/W:P13/B:Q13/W:P11": {
+      "loss": 0,
+      "bestAt": "P11",
+      "kind": "joseki"
+    },
+    "sansan33:W:tenuki/B:Q14/W:P13/B:Q13/W:P11/B:tenuki": {
+      "loss": 0,
+      "bestAt": "P12",
       "kind": "joseki"
     }
   }

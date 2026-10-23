@@ -7,8 +7,12 @@
 // board symmetry. "Under" in the Go sense (between the stones and the edge) is fine.
 //
 // Engine check: always re-run this family with `npx tsx tools/check-book.ts --family komoku34 --visits 800`.
-// The 3-3 attach in komoku34-pincer-33 (W:P17/B:N16/W:R17, an `alternative`) passes at 1.71 at 800 visits;
-// at 400 visits it can land anywhere from about 1.7 to 2.3 and get flagged.
+// Nodes that need 800 visits:
+// - The 3-3 attach in komoku34-pincer-33 (W:P17/B:N16/W:R17, an `alternative`) measured 1.71, 1.59, 1.51 and 1.59
+//   in four 800-visit runs; at 400 visits it can land anywhere from about 1.7 to 2.3 and get flagged.
+// - White's hane under in komoku34-attach-extend (W:P17/B:Q17/W:Q18, a `mistake`) measured 1.90 and 1.98 at
+//   800 visits and 2.11 at 400, so it sits about 0.4 above the 1.5 a mistake needs.
+// The trick in komoku34-cut-trick (B:P16, 1.8-2.0) is not judged by the check.
 
 import type { FamilyDef } from '../types'
 
@@ -204,7 +208,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'Q15',
-          note: 'Black ataris Q16 from the center side. It’s down to one liberty, and Black’s corner is thick either way.',
+          note: 'Black ataris Q16 from the center side. Q16 is down to one liberty, and Black’s corner is thick whatever White does.',
         },
       ],
       branches: [
@@ -242,7 +246,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'Q15',
-          note: 'Black ataris Q16 right away instead of drawing back. Q16 is down to one liberty.',
+          note: 'Black ataris Q16 at once instead of drawing back. Q16 is down to one liberty.',
         },
         { c: 'W', at: 'P16', note: 'White connects. Losing Q16 now would leave P17 crushed.' },
         {
@@ -646,7 +650,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'P14',
-          note: 'Black extends out of atari. Q15 is left with only two liberties.',
+          note: 'Black extends out of atari. Q15 has only two liberties now.',
         },
         {
           c: 'W',
@@ -698,7 +702,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'W',
           at: 'R12',
-          note: 'White approaches on the Q4 side to cut down Black’s base.',
+          note: 'White approaches on the Q4 side to shrink Black’s base.',
         },
         {
           c: 'B',
@@ -748,7 +752,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'L15',
-          note: 'Black hanes right back at the head of M15. M15 has only two liberties.',
+          note: 'Black answers with a hane at the head of M15. M15 has only two liberties.',
         },
         {
           c: 'W',
@@ -787,6 +791,332 @@ export const KOMOKU34: FamilyDef = {
           c: 'B',
           at: 'R13',
           note: 'Black jumps to R13. The group has room for eyes, and White has a wall facing the center.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-hanging-peep',
+      name: 'One-space high approach, hanging connection, Black peeps',
+      difficulty: 2,
+      order: 73,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        { c: 'B', at: 'P17', note: '' },
+        { c: 'W', at: 'O17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        {
+          c: 'W',
+          at: 'N16',
+          note: 'White plays the hanging connection at N16. It’s looser than O16 and reaches further toward D16.',
+        },
+        {
+          c: 'B',
+          at: 'O15',
+          note: 'Black peeps at O16 from O15 first. White will connect, and O15 stays as a foothold toward the center.',
+        },
+        {
+          c: 'W',
+          at: 'O16',
+          note: 'White connects. A Black stone on O16 would cut P16 off.',
+        },
+        {
+          c: 'B',
+          at: 'Q14',
+          note: 'Black jumps to Q14 toward Q4. The group has its base, and O15 keeps an eye on the center.',
+        },
+      ],
+      branches: [
+        {
+          after: 3,
+          move: {
+            c: 'B',
+            at: 'O18',
+            kind: 'mistake',
+            note: 'Black hanes under at O18 instead of drawing back. That leaves the cut at Q17 open.',
+          },
+          then: [
+            { c: 'W', at: 'Q17', note: 'White cuts at Q17, and P17 is in atari.' },
+            { c: 'B', at: 'P18', note: 'Black connects at P18 to save P17.' },
+            {
+              c: 'W',
+              at: 'Q16',
+              note: 'White connects and splits Black in two. The stones on the edge are weak, and R16 is cut off from them.',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-hanging-tenuki',
+      name: 'One-space high approach, hanging connection, Black plays elsewhere',
+      difficulty: 1,
+      order: 74,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        { c: 'B', at: 'P17', note: '' },
+        { c: 'W', at: 'O17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        { c: 'W', at: 'N16', note: '' },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. The corner is settled, and the peep at O15 can wait.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-attach-poke',
+      name: 'One-space high approach, attach underneath, White pokes between the stones',
+      difficulty: 1,
+      order: 75,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        { c: 'B', at: 'P17', note: '' },
+        { c: 'W', at: 'O17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        { c: 'W', at: 'O16', note: '' },
+        { c: 'B', at: 'R14', note: '' },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White pokes at Q15 and threatens to push in between R16 and R14.',
+        },
+        {
+          c: 'B',
+          at: 'R15',
+          note: 'Black connects at R15. Now the group is one piece with a base along the edge.',
+        },
+        {
+          c: 'W',
+          at: 'tenuki',
+          note: 'White plays elsewhere. Q15 added to White’s wall, and Black’s corner needs nothing more.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-diagonal',
+      name: 'One-space high approach, diagonal move toward the edge',
+      difficulty: 1,
+      order: 76,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black plays the diagonal move to Q17. It’s a low, solid answer that keeps the corner.',
+        },
+        {
+          c: 'W',
+          at: 'P17',
+          note: 'White blocks at P17 so Black can’t slide toward D16.',
+        },
+        {
+          c: 'B',
+          at: 'R14',
+          note: 'Black extends to R14. Black has the corner and a base, White has the outside.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-low-extension',
+      name: 'One-space high approach, Black extends low, White takes the 3-3 point',
+      difficulty: 2,
+      order: 77,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        {
+          c: 'B',
+          at: 'R14',
+          note: 'Black leaves P16 alone and takes a base toward Q4 with R14.',
+        },
+        {
+          c: 'W',
+          at: 'R17',
+          note: 'White attaches at the 3-3 point. Black took the side, so White goes for the corner.',
+        },
+        {
+          c: 'B',
+          at: 'S17',
+          note: 'Black hanes underneath at S17 so White can’t take the whole corner.',
+        },
+        {
+          c: 'W',
+          at: 'Q17',
+          note: 'White extends to Q17. It links with P16 and takes the edge on the D16 side.',
+        },
+        {
+          c: 'B',
+          at: 'S18',
+          note: 'Black adds S18 so White can’t hane on the edge. Black’s corner stones get room for an eye.',
+          confidence: 'low',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-outside-attach',
+      name: 'One-space high approach, outside attach',
+      difficulty: 2,
+      order: 78,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        {
+          c: 'B',
+          at: 'P15',
+          note: 'Black attaches on the center side of P16. Black builds toward the center and lets White have the side.',
+        },
+        {
+          c: 'W',
+          at: 'O15',
+          note: 'White hanes at O15, on the D16 side of P15.',
+        },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black extends to Q15. P15 and Q15 make a wall next to R16.',
+        },
+        {
+          c: 'W',
+          at: 'O16',
+          note: 'White connects at O16. Without it, a Black cut there would leave P16 alone.',
+        },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black takes Q17 and keeps the corner. White has the D16 side, Black has the corner and a wall.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-tenuki-33',
+      name: 'One-space high approach, tenuki, White takes the 3-3 point',
+      difficulty: 2,
+      order: 79,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. One high stone doesn’t threaten the corner much yet.',
+        },
+        {
+          c: 'W',
+          at: 'R17',
+          note: 'White attaches at the 3-3 point to take the corner while Black is away.',
+        },
+        {
+          c: 'B',
+          at: 'S17',
+          note: 'Black hanes underneath at S17 to keep part of the corner.',
+        },
+        {
+          c: 'W',
+          at: 'Q17',
+          note: 'White extends to Q17 and links toward P16. The edge on the D16 side is White’s.',
+        },
+        {
+          c: 'B',
+          at: 'R14',
+          note: 'Black extends toward Q4 so R16 has a base along that side.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-attach-push',
+      name: 'One-space high approach, attach underneath, White pushes later',
+      difficulty: 1,
+      order: 80,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        { c: 'B', at: 'P17', note: '' },
+        { c: 'W', at: 'O17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        { c: 'W', at: 'O16', note: '' },
+        { c: 'B', at: 'R14', note: '' },
+        {
+          c: 'W',
+          at: 'Q16',
+          note: 'White pushes at Q16. It threatens to cut at R17, where Q17 and R16 meet.',
+        },
+        {
+          c: 'B',
+          at: 'R17',
+          note: 'Black connects at R17, and the corner is one solid group.',
+        },
+        {
+          c: 'W',
+          at: 'tenuki',
+          note: 'White plays elsewhere. Q16 made the wall thicker, and Black’s corner is safe.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-low-pincer',
+      name: 'One-space high approach, low pincer, White takes the 3-3 point',
+      difficulty: 3,
+      order: 81,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        {
+          c: 'B',
+          at: 'N17',
+          note: 'Black pincers on the third line toward D16. P16 can’t extend along that side now.',
+        },
+        {
+          c: 'W',
+          at: 'R17',
+          note: 'White attaches at the 3-3 point. Against a pincer, settling in the corner is the usual answer.',
+        },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black blocks on the pincer side, so R17 can’t reach P16 along the edge.',
+        },
+        {
+          c: 'W',
+          at: 'Q16',
+          note: 'White pushes at Q16. Q17 and R16 are both down to two liberties.',
+        },
+        {
+          c: 'B',
+          at: 'P17',
+          note: 'Black extends Q17 to P17 so it has more liberties.',
+        },
+        {
+          c: 'W',
+          at: 'O17',
+          note: 'White blocks at O17. Nearly every stone here is short of liberties, so a fight comes next.',
+          confidence: 'low',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-high-tenuki-side',
+      name: 'One-space high approach, tenuki, White attaches on the side',
+      difficulty: 2,
+      order: 82,
+      line: [
+        { c: 'W', at: 'P16', note: '' },
+        { c: 'B', at: 'tenuki', note: '' },
+        {
+          c: 'W',
+          at: 'R15',
+          note: 'White attaches to R16 on the Q4 side. It takes away Black’s base along that side.',
+        },
+        {
+          c: 'B',
+          at: 'S15',
+          note: 'Black hanes under R15 at S15 and keeps the edge.',
+        },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White stands at Q15 and builds a wall facing the center.',
+        },
+        {
+          c: 'B',
+          at: 'S14',
+          note: 'Black extends along the edge. White still has the 3-3 point to aim at, so the corner isn’t settled yet.',
+          confidence: 'low',
         },
       ],
     },

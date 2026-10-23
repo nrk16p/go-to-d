@@ -284,6 +284,13 @@ describe('validateBook: whole-board families and the empty board (R46)', () => {
     expect(board[0]).toMatch(/start is \[\]/)
   })
 
+  it('keeps the empty board to whole-board families', () => {
+    const errors = errorsFor([empty([pattern('p', [mv('B', 'Q16')])], { region: 'corner' })])
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toMatch(/region: 'board'/)
+    expect(errorsFor([empty([pattern('p', [mv('B', 'Q16')])], { region: undefined })])).toHaveLength(1)
+  })
+
   it('keeps start stones out of the empty board', () => {
     const errors = errorsFor([family([pattern('p', [mv('B', 'R14')])], { setup: 'empty' })])
     expect(errors).toHaveLength(1)

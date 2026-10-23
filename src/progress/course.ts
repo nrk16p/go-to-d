@@ -4,7 +4,7 @@
 //
 // Whole-board openings (R46) are a second list next to it, not a part of it: they have their own new
 // item a day (settings.newOpeningsPerDay), so a new opening never waits for every joseki to be started,
-// and joseki keep the R32 order they had. Reviews and the mastered count cover both.
+// and joseki keep the R32 order they had. Reviews cover both; the mastered count is per list (R49).
 
 import { isBoardFamily } from '../book/setups'
 import type { Book, FamilyId } from '../book/types'
@@ -130,11 +130,12 @@ export function dueItems(book: Book, p: Progress, today: string): CourseItem[] {
 }
 
 /**
- * Mastered pattern × sides over all drillable ones, joseki and openings (a pattern with a trick, or an
- * opening from the handicap setup, has one side, not two).
+ * Mastered pattern × sides over all drillable ones of a track, joseki unless told (a pattern with a trick,
+ * or an opening from the handicap setup, has one side, not two). Today shows the two apart (R49): they are
+ * paced apart, and the joseki figure is the one the owner has been watching.
  */
-export function masteredCount(book: Book, p: Progress): { mastered: number; total: number } {
-  const all = [...courseOrder(book), ...openingOrder(book)]
+export function masteredCount(book: Book, p: Progress, track: Track = 'joseki'): { mastered: number; total: number } {
+  const all = trackOrder(book, track)
   const mastered = all.filter((i) => {
     const r = Object.hasOwn(p.reviews, i.key) ? p.reviews[i.key] : undefined
     return r !== undefined && isMastered(r)

@@ -565,6 +565,25 @@ a {
   display: none;
 }
 
+/*
+ * An opening's bar (R46) has no Play elsewhere: "Your move." alone, then "Play Q16" once a point is picked.
+ * The bar keeps one button's height either way and never wraps the button under the text, so the board
+ * above and the words below stay put while the owner picks a point.
+ */
+.bar.bar-board {
+  min-height: 44px;
+  flex-wrap: nowrap;
+}
+
+.bar.bar-board .status {
+  flex: 1;
+  min-width: 0;
+}
+
+.bar.bar-board .btn {
+  flex: none;
+}
+
 .status {
   color: var(--muted);
   font-size: 0.9375rem;
@@ -1088,6 +1107,13 @@ a {
 .segmented input:focus-visible + span {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Teacher's choice: the openings sit under a rule, apart from the corners' side switch (R46). */
+.free .free-sub {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
 }
 
 /* ---------- library ---------- */

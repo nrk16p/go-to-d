@@ -15,8 +15,9 @@ import { Today } from '../../src/ui/screens/Today'
 import { MemoryStorage } from './memoryStorage'
 
 const TODAY = '2026-10-22'
-/** Every pattern × drillable side in the book (it grows; one trick pattern has one side). */
-const TOTAL = Object.keys(BOOK.patterns).reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
+/** Every joseki pattern × drillable side in the book (it grows; one trick pattern has one side). Openings are counted apart (R49). */
+const TOTAL = courseOrder(BOOK).length
+const OPENINGS_TOTAL = openingOrder(BOOK).length
 const IPHONE =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1'
 const IPHONE_LINE = `${IPHONE} Line/14.16.0`
@@ -127,10 +128,12 @@ describe('Today', () => {
     expect(itemsIn(COPY.today.newTitle)).toEqual(course.slice(newPerDay, 2 * newPerDay).map((i) => i.key))
   })
 
-  it('shows the mastered count over every drillable side, and the streak', () => {
-    store(FIXTURE)
+  it('shows the mastered count over every drillable joseki side, the openings apart (R49), and the streak', () => {
+    store({ ...FIXTURE, reviews: { ...FIXTURE.reviews, [openingOrder(BOOK)[0].key]: review(4, '2026-11-01') } })
     render(<Today today={TODAY} />)
     expect(stat(COPY.today.mastered)).toBe(COPY.today.masteredValue(3, TOTAL))
+    expect(stat(COPY.today.openingsStat)).toBe(COPY.today.masteredValue(1, OPENINGS_TOTAL))
+    expect(TOTAL).toBe(Object.keys(BOOK.patterns).reduce((n, id) => n + drillableSides(BOOK, id).length, 0) - OPENINGS_TOTAL)
     expect(stat(COPY.today.streak)).toBe('4')
   })
 

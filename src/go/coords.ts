@@ -61,6 +61,22 @@ export function inverse(sym: Sym): Sym {
   return (sym >= 4 ? sym : (4 - sym) % 4) as Sym
 }
 
+export const SYMS: readonly Sym[] = [0, 1, 2, 3, 4, 5, 6, 7]
+
+/** A point off every axis of symmetry: its 8 images are all different, so it tells the 8 syms apart. */
+const PROBE: Pt = { x: 1, y: 2 }
+
+/** The sym that does `first`, then `then`: transform(p, composeSym(a, b)) = transform(transform(p, a), b). */
+export function composeSym(first: Sym, then: Sym): Sym {
+  const want = transform(transform(PROBE, first), then)
+  const c = SYMS.find((s) => {
+    const got = transform(PROBE, s)
+    return got.x === want.x && got.y === want.y
+  })
+  if (c === undefined) throw new Error(`No sym composes ${first} then ${then}`)
+  return c
+}
+
 /** An inclusive rectangle of points. */
 export type Region = { xMin: number; xMax: number; yMin: number; yMax: number }
 

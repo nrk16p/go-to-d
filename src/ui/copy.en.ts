@@ -151,6 +151,8 @@ export const COPY = {
     },
     streak: 'Day streak',
     mastered: 'Mastered',
+    /** R49: mastered openings, apart from the joseki. */
+    openingsStat: 'Openings',
     masteredValue: (n: number, total: number) => `${n} of ${total}`,
     dueTitle: 'Reviews due',
     newTitle: 'New today',
@@ -161,6 +163,7 @@ export const COPY = {
     doneOpenings: "That's today's opening.",
     allOpeningsStarted: "You've started every opening in the book. From here it's reviews.",
     freeOpenings: 'Openings',
+    freeOpeningsBody: 'Pick a colour here. The switch above is for the corners only.',
     freeOpening: (family: string, c: Color) => `${family}, as ${colorName(c)}`,
     play: 'Play',
     freeTitle: "Teacher's choice",

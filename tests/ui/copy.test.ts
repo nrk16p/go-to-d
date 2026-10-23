@@ -77,8 +77,8 @@ const SAMPLES: Record<string, unknown[][]> = {
     [0, 2, 2],
   ],
   'today.freeOpening': [
-    ['เปิดเกม เกมเสมอ', 'black'],
-    ['เปิดเกม เกมเสมอ', 'white'],
+    ['เปิดเกม ไม่ต่อหมาก', 'black'],
+    ['เปิดเกม ไม่ต่อหมาก', 'white'],
   ],
   colorName: [['black'], ['white']],
   'today.masteredValue': [[0, 186]],

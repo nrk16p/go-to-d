@@ -40,22 +40,27 @@ export function defaultAnalysis(pos: Position, region: Region, corner = 0, tenuk
     toMove: pos.toMove,
     cornerBest: { pt: best, scoreLead: corner },
     tenukiBest: away && { pt: away, scoreLead: tenuki },
-    candidates: [{ pt: best, scoreLead: corner, prior: 0.5 }],
+    candidates: [{ pt: best, scoreLead: corner, prior: 0.5, visits: 50 }],
+    visits: 100,
   }
 }
 
-/** A hand-written analysis; points are GTP strings in the board frame. */
+/**
+ * A hand-written analysis; points are GTP strings in the board frame. Each candidate may say its visits
+ * (of 100 at the root); by default each got 20, a fair share (R48).
+ */
 export function analysisOf(
   toMove: Color,
-  corner: Array<[string, number]>,
+  corner: Array<[string, number, number?]>,
   tenuki: [string, number] | null,
 ): CornerAnalysis {
-  const candidates = corner.map(([at, scoreLead]) => ({ pt: parseGtp(at), scoreLead, prior: 0.1 }))
+  const candidates = corner.map(([at, scoreLead, visits]) => ({ pt: parseGtp(at), scoreLead, prior: 0.1, visits: visits ?? 20 }))
   return {
     toMove,
     cornerBest: { pt: candidates[0].pt, scoreLead: candidates[0].scoreLead },
     tenukiBest: tenuki ? { pt: parseGtp(tenuki[0]), scoreLead: tenuki[1] } : null,
     candidates,
+    visits: 100,
   }
 }
 

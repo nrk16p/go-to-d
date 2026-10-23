@@ -47,7 +47,7 @@ export const COPY: Copy = {
   spar: {
     freeTitle: (family) => `ซ้อมอิสระ ${family}`,
     youAre: (c, side) => `เล่น${colorName(c)} ${side === 'defend' ? 'ฝ่ายรับมุม' : 'ฝ่ายบุกมุม'}`,
-    youAreColor: (c) => `คุณเล่น${colorName(c)}`,
+    youAreColor: (c) => `เล่น${colorName(c)}`,
     teacherThinking: 'ครูกำลังคิด…',
     yourMove: 'ถึงตาคุณ',
     tapAgain: (gtp) => `${gtp} ใช่ไหม แตะซ้ำอีกทีเพื่อวาง`,
@@ -137,6 +137,7 @@ export const COPY: Copy = {
     },
     streak: 'วันติดกัน',
     mastered: 'คล่องแล้ว',
+    openingsStat: 'เปิดเกม',
     masteredValue: (n, total) => `${n} จาก ${total}`,
     dueTitle: 'ถึงรอบทบทวน',
     newTitle: 'ท่าใหม่วันนี้',
@@ -147,6 +148,7 @@ export const COPY: Copy = {
     doneOpenings: 'เปิดเกมของวันนี้ครบแล้ว',
     allOpeningsStarted: 'เล่นเปิดเกมมาครบทุกแบบในตำราแล้ว จากนี้ไปก็ทบทวนอย่างเดียว',
     freeOpenings: 'เปิดเกม',
+    freeOpeningsBody: 'ตรงนี้เลือกสีเอง ปุ่มสลับข้างบนใช้กับท่ามุมเท่านั้น',
     freeOpening: (family, c) => `${family} · เล่น${colorName(c)}`,
     play: 'เล่น',
     freeTitle: 'ครูเลือกให้',
@@ -192,7 +194,7 @@ export const COPY: Copy = {
     drill: (side, c) => (side === 'defend' ? `รับมุม เล่น${colorName(c)}` : `บุกมุม เล่น${colorName(c)}`),
     drillColor: (c) => `เล่น${colorName(c)}`,
     oneSide: 'ท่านี้ซ้อมได้ฝั่งเดียว อีกฝั่งเป็นกล ไม่ใช่ท่าที่ควรจำไปเล่น',
-    blackOnly: 'เกมต่อหมากเราถือดำ แบบนี้เลยซ้อมฝั่งดำอย่างเดียว',
+    blackOnly: 'เกมต่อเราถือดำ แบบนี้เลยซ้อมฝั่งดำอย่างเดียว',
     emptyBoard: 'กระดานว่าง ดำเดินก่อน',
   },
 

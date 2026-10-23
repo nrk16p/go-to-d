@@ -3,7 +3,7 @@ import { buildBook } from '../../src/book/build'
 import type { BookNode, FamilyDef } from '../../src/book/types'
 import type { CornerAnalysis } from '../../src/engine/teacher'
 import { parseGtp } from '../../src/go/coords'
-import { DEFAULT_THRESHOLDS, judgeMove } from '../../src/session/judge'
+import { DEFAULT_THRESHOLDS, judgeMove, scoreAfterNeeded } from '../../src/session/judge'
 import { FIXTURE_FAMILY } from '../book/fixture'
 import { analysisOf } from './fakeEngine'
 
@@ -287,6 +287,19 @@ describe('judgeMove: off book', () => {
           if (v.type === 'mistake') expect(v.better).not.toEqual(played)
         }
       }
+    })
+
+    it('a candidate with under 10% of the root visits is judged from the search after it (R48)', () => {
+      // S12 got 9 of the 100 visits: its 1.6 is noise, so the after-move search decides, as the native check does.
+      const thin = analysisOf('black', [['P13', 2, 60], ['S12', 1.6, 9], ['O14', -1, 10]], null)
+      expect(scoreAfterNeeded({ before: thin, played: P('S12') })).toBe(true)
+      const v = judgeMove({ node: null, played: P('S12'), ...free, before: thin, scoreAfter: -1, thresholds: T })
+      expect(v).toEqual({ type: 'mistake', inBook: false, better: P('P13'), pointsLost: 3, big: false })
+      expect(judgeMove({ node: null, played: P('S12'), ...free, before: thin, scoreAfter: null, thresholds: T }).type).toBe('unjudged')
+      // Exactly 10% is enough: O14's own value stands.
+      expect(scoreAfterNeeded({ before: thin, played: P('O14') })).toBe(false)
+      const o = judgeMove({ node: null, played: P('O14'), ...free, before: thin, scoreAfter: 5, thresholds: T })
+      expect(o).toMatchObject({ type: 'mistake', pointsLost: 3 })
     })
 
     it('an in-book mistake without a checked loss takes its points from the one search too', () => {

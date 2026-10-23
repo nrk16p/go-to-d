@@ -26,6 +26,11 @@ export interface SparState {
   message: string | null
   /** The note on `node`'s move with its coordinates turned to the board; null off book. */
   note: string | null
+  /**
+   * How the book is turned on this board. It starts as the config's and changes when the owner plays a
+   * move that is book with the book turned another way the position allows (R47); the board doesn't change.
+   */
+  sym: Sym
 }
 
 export interface SparConfig {
@@ -41,7 +46,7 @@ export interface SparConfig {
 }
 
 /** The state of a session that hasn't started: the setup position, at the root of the book. */
-export function startState(start: { pos: Position; komi: number; region: Region }, root: BookNode): SparState {
+export function startState(start: { pos: Position; komi: number; region: Region }, root: BookNode, sym: Sym): SparState {
   return {
     pos: start.pos,
     komi: start.komi,
@@ -54,5 +59,6 @@ export function startState(start: { pos: Position; komi: number; region: Region 
     result: null,
     message: null,
     note: null,
+    sym,
   }
 }

@@ -109,7 +109,8 @@ describe('createTeacherFromRunner', () => {
       toMove: 'white',
       cornerBest: { pt: parseGtp('Q14'), scoreLead: -31 },
       tenukiBest: { pt: parseGtp('D10'), scoreLead: -29 },
-      candidates: [{ pt: parseGtp('Q14'), scoreLead: -31, prior: 0.4 }],
+      candidates: [{ pt: parseGtp('Q14'), scoreLead: -31, prior: 0.4, visits: 10 }],
+      visits: 50,
     })
     expect(f.calls).toHaveLength(2)
     const [corner, anywhere] = f.calls

@@ -56,7 +56,7 @@ export class EngineAccess {
   private readonly engine: TeacherEngine
   private readonly komi: number
   private readonly region: Region
-  private readonly sym: Sym
+  private sym: Sym
   private readonly isCurrent: (pos: Position) => boolean
   /** The latest analysis asked for, by position. */
   private cached: { pos: Position; analysis: Promise<CornerAnalysis> } | null = null
@@ -70,6 +70,11 @@ export class EngineAccess {
     this.region = region
     this.sym = sym
     this.isCurrent = isCurrent
+  }
+
+  /** The book turned on the board (R47). Analyses are of board positions, so the ones kept stay good. */
+  setSym(sym: Sym): void {
+    this.sym = sym
   }
 
   /**

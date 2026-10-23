@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { buildBook } from '../../src/book/build'
-import { parseGtp, toGtp, transform, type Pt, type Sym } from '../../src/go/coords'
+import { startPosition } from '../../src/book/setups'
+import { BOARD_REGION, composeSym, CORNER_REGION, parseGtp, toGtp, transform, type Pt, type Sym } from '../../src/go/coords'
 import { emptyPosition, play, type Position } from '../../src/go/rules'
-import { analysisToBook, lineKey, noteOn, toBoardPt, toBookPt, verdictToBoard } from '../../src/session/frame'
+import {
+  analysisToBook,
+  lineKey,
+  noteOn,
+  positionSymmetries,
+  toBoardPt,
+  toBookPt,
+  turnedSym,
+  verdictToBoard,
+} from '../../src/session/frame'
 import type { Verdict } from '../../src/session/judge'
 import { FIXTURE_FAMILY } from '../book/fixture'
 import { analysisOf } from './fakeEngine'
@@ -94,5 +104,48 @@ describe('lineKey', () => {
   it('names the line in the book’s frame, whatever the symmetry', () => {
     for (const sym of SYMS) expect(lineKey(line(sym, ['R14', 'R17', 'J19']), sym)).toBe('W:R14/B:R17/W:J19')
     expect(lineKey(emptyPosition(), 3)).toBe('')
+  })
+})
+
+describe('the symmetries of a position (R47)', () => {
+  const syms = SYMS
+  const pts = [parseGtp('A1'), parseGtp('C7'), parseGtp('Q16'), parseGtp('K10'), parseGtp('T3')]
+
+  it('composeSym is "first, then": the same as turning twice', () => {
+    for (const a of syms) {
+      for (const b of syms) {
+        const c = composeSym(a, b)
+        for (const p of pts) expect(transform(p, c)).toEqual(transform(transform(p, a), b))
+      }
+    }
+  })
+
+  it('an empty board is the same under every turn of the whole board', () => {
+    expect(positionSymmetries(emptyPosition(), 3, BOARD_REGION)).toEqual([1, 2, 3, 4, 5, 6, 7])
+  })
+
+  it('a corner keeps only the diagonal mirror through its 4-4 point, and only while the stones allow it', () => {
+    const corner = startPosition(buildBook([FIXTURE_FAMILY]), 'star44', null, 0).pos
+    expect(positionSymmetries(corner, 0, CORNER_REGION)).toEqual([5])
+    const approached = play(corner, parseGtp('R14'), 'white')
+    if ('illegal' in approached) throw new Error('illegal')
+    expect(positionSymmetries(approached.pos, 0, CORNER_REGION)).toEqual([])
+  })
+
+  it('sees the position in the book’s frame, whatever the board turn', () => {
+    // A lone stone at the book's Q16 under sym 2: only the turns that keep Q16 in place.
+    const q16 = transform(parseGtp('Q16'), 2)
+    const one = play(emptyPosition(), q16, 'black')
+    if ('illegal' in one) throw new Error('illegal')
+    expect(positionSymmetries(one.pos, 2, BOARD_REGION)).toEqual([5])
+  })
+
+  it('turnedSym keeps the board and moves the book: a board point that was q in the book is g(q)', () => {
+    for (const sym of syms) {
+      for (const g of syms) {
+        const turned = turnedSym(sym, g)
+        for (const b of pts) expect(toBookPt(b, turned)).toEqual(transform(toBookPt(b, sym), g))
+      }
+    }
   })
 })

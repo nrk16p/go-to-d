@@ -7,7 +7,7 @@ import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BOOK } from '../../src/book/data'
 import { checkedLoss } from '../../src/book/checkedLoss'
-import { parseGtp, toGtp } from '../../src/go/coords'
+import { parseGtp, toGtp, transform, type Sym } from '../../src/go/coords'
 import { round1 } from '../../src/session/judge'
 import { SparController } from '../../src/session/controller'
 import { STORAGE_KEY } from '../../src/progress/store'
@@ -341,6 +341,23 @@ describe('Spar: a whole-board opening (R46)', () => {
     // A touch tap far from every corner still gets the ghost and its confirm button.
     await touchTap(container, 'K10')
     expect(screen.getByRole('button', { name: COPY.spar.playPoint('K10') })).toBeTruthy()
+  })
+
+  it('an opening on another corner turns the book (R47): good, the reply across from it, notes and address turned', async () => {
+    const { container } = render(<Spar params={params} engine={hub()} gapMs={0} />)
+    await settle()
+    expect(screen.getByRole('link', { name: COPY.watch.watchFirst }).getAttribute('href')).toContain('sym=0')
+    // The book opens on Q16 (sym 0); the owner opens on D4 instead, the same move turned.
+    await tap(container, 'D4')
+    expect(verdict()).toContain(COPY.verdict.good)
+    const reply = parseGtp('Q16')
+    expect(container.querySelector(`.spar-board [data-stone="white"][cx="${reply.x}"][cy="${reply.y}"]`)).toBeTruthy()
+    // The teacher's note says "across from Q16" with Q16 turned to the owner's D4.
+    expect(document.querySelector('.talk .move-line')?.textContent).toContain('D4')
+    // The address keeps the turn, so a reload and Watch first show the book the way it lies now.
+    const sym = new URLSearchParams(window.location.hash.split('?')[1]).get('sym')
+    expect(sym).not.toBe('0')
+    expect(toGtp(transform(parseGtp('Q16'), Number(sym) as Sym))).toBe('D4')
   })
 
   it('a book move is good, and the teacher answers from the book', async () => {

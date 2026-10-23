@@ -13,6 +13,13 @@ export interface Thresholds {
 
 export const DEFAULT_THRESHOLDS: Thresholds = { fine: 1.5, big: 4.0 }
 
+/**
+ * R48: a candidate's value counts only if the search gave it at least this share of the root's visits,
+ * the same guard as the native book check (tools/book-check.ts MIN_VISIT_SHARE). Below it, the move is
+ * judged from a search of the position after it.
+ */
+export const MIN_VISIT_SHARE = 0.1
+
 export type Verdict =
   | { type: 'good'; note: string; kind: 'joseki' | 'alternative' }
   | { type: 'other-joseki'; note: string; patternIds: string[] }
@@ -94,15 +101,18 @@ export function round1(x: number): number {
 
 /**
  * The move's own value in the analysis before it (R40): a corner move the search looked at (one of its
- * candidates), or a tenuki on the very point the search picked elsewhere. Null when the search has none.
+ * candidates), or a tenuki on the very point the search picked elsewhere. Null when the search has none,
+ * or when it gave the move under MIN_VISIT_SHARE of its visits (R48): a value from a handful of visits is
+ * noise, which a whole-board search, spreading its visits over every plausible point, has plenty of.
  */
 function ownValue(a: Pick<JudgeArgs, 'before' | 'played' | 'tenukiAt'>): number | null {
   if (!a.before) return null
-  const { cornerBest, tenukiBest, candidates } = a.before
+  const { cornerBest, tenukiBest, candidates, visits } = a.before
   if (a.played === 'tenuki') return a.tenukiAt && tenukiBest && samePt(a.tenukiAt, tenukiBest.pt) ? tenukiBest.scoreLead : null
   const played = a.played
-  if (samePt(played, cornerBest.pt)) return cornerBest.scoreLead
-  return candidates.find((c) => samePt(c.pt, played))?.scoreLead ?? null
+  const c = candidates.find((m) => samePt(m.pt, played))
+  if (c) return c.visits >= MIN_VISIT_SHARE * visits ? c.scoreLead : null
+  return samePt(played, cornerBest.pt) ? cornerBest.scoreLead : null
 }
 
 /** Whether judging this move needs the second search, the score after it: only when the first one has no value for it. */

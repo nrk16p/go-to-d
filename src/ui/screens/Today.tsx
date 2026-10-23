@@ -49,6 +49,7 @@ export function Today({ today = todayLocal() }: { today?: string }) {
   const openings = newOpeningsToday(BOOK, progress, today)
   const moreOpening = openings.length === 0 ? newItems(BOOK, progress, 1, 'openings')[0] : undefined
   const { mastered, total } = masteredCount(BOOK, progress)
+  const openingsMastered = masteredCount(BOOK, progress, 'openings')
   const first = due[0]?.key ?? fresh[0]?.key ?? openings[0]?.key
 
   function dismissHint() {
@@ -92,6 +93,13 @@ export function Today({ today = todayLocal() }: { today?: string }) {
           <dt>{T.mastered}</dt>
           <dd>{T.masteredValue(mastered, total)}</dd>
         </div>
+        {/* R49: the openings apart, paced apart; only once the book has some. */}
+        {openingsMastered.total > 0 && (
+          <div>
+            <dt>{T.openingsStat}</dt>
+            <dd>{T.masteredValue(openingsMastered.mastered, openingsMastered.total)}</dd>
+          </div>
+        )}
       </dl>
 
       {due.length > 0 && (
@@ -179,7 +187,11 @@ export function Today({ today = todayLocal() }: { today?: string }) {
         </ul>
         {OPENINGS.length > 0 && (
           <>
-            <h3 id="free-openings">{T.freeOpenings}</h3>
+            {/* A rule and a line of its own: the Defending/Attacking switch above doesn't reach down here. */}
+            <h3 id="free-openings" className="free-sub">
+              {T.freeOpenings}
+            </h3>
+            <p className="muted small">{T.freeOpeningsBody}</p>
             {/* An opening names its side by colour; the 4-stone one is Black's only (R46). */}
             <ul className="link-list" aria-labelledby="free-openings">
               {OPENINGS.flatMap((family) => {

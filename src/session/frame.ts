@@ -3,7 +3,7 @@
 
 import type { BookNode } from '../book/types'
 import type { CornerAnalysis } from '../engine/teacher'
-import { inverse, toGtp, transform, type Pt, type Sym } from '../go/coords'
+import { BOARD_SIZE, composeSym, inverse, SYMS, toGtp, transform, transformRegion, type Pt, type Region, type Sym } from '../go/coords'
 import type { Position } from '../go/rules'
 import type { Verdict } from './judge'
 import { orientNote } from './orient'
@@ -23,6 +23,7 @@ export function analysisToBook(a: CornerAnalysis, sym: Sym): CornerAnalysis {
     cornerBest: { ...a.cornerBest, pt: toBookPt(a.cornerBest.pt, sym) },
     tenukiBest: a.tenukiBest && { ...a.tenukiBest, pt: toBookPt(a.tenukiBest.pt, sym) },
     candidates: a.candidates.map((c) => ({ ...c, pt: toBookPt(c.pt, sym) })),
+    visits: a.visits,
   }
 }
 
@@ -54,4 +55,44 @@ export function noteOn(node: BookNode | null, sym: Sym): string | null {
 /** The moves played so far in the book's frame ("W:R14/B:R17"): a name for a position the book doesn't have. */
 export function lineKey(pos: Position, sym: Sym): string {
   return pos.history.map((m) => `${m.player === 'black' ? 'B' : 'W'}:${toGtp(toBookPt(m, sym))}`).join('/')
+}
+
+/**
+ * R47: the symmetries g of the book's frame (identity left out) under which the position, seen in the
+ * book's frame, is the same position: every stone lands on a stone of its colour and the ko point on
+ * itself. Only those that keep `region` (book frame) where it is: in a corner family that leaves the
+ * diagonal mirror through the 4-4 point, so the studied corner stays put; a whole-board region keeps all.
+ */
+export function positionSymmetries(pos: Position, sym: Sym, region: Region): Sym[] {
+  const at = (p: Pt) => {
+    const b = toBoardPt(p, sym)
+    return pos.board[b.y][b.x]
+  }
+  const sameRegion = (g: Sym) => {
+    const r = transformRegion(region, g)
+    return r.xMin === region.xMin && r.xMax === region.xMax && r.yMin === region.yMin && r.yMax === region.yMax
+  }
+  const ko = pos.ko && toBookPt(pos.ko, sym)
+  return SYMS.filter((g) => {
+    if (g === 0 || !sameRegion(g)) return false
+    if (ko) {
+      const k = transform(ko, g)
+      if (k.x !== ko.x || k.y !== ko.y) return false
+    }
+    for (let y = 0; y < BOARD_SIZE; y++) {
+      for (let x = 0; x < BOARD_SIZE; x++) {
+        if (at({ x, y }) !== at(transform({ x, y }, g))) return false
+      }
+    }
+    return true
+  })
+}
+
+/**
+ * The session's sym after the book is turned by `g` (a symmetry of the position, positionSymmetries): the
+ * board stays as it is, and a board point that was `q` in the book is now `g(q)`.
+ */
+export function turnedSym(sym: Sym, g: Sym): Sym {
+  // Board = sym(book) = sym(g⁻¹(g(book))): the new book-to-board map is g⁻¹ then sym.
+  return composeSym(inverse(g), sym)
 }

@@ -31,14 +31,14 @@ function progressWith(reviews: Record<string, ReviewState>, patch: Partial<Progr
 const keys = (items: { key: string }[]) => items.map((i) => i.key)
 
 // The book grows, so totals come from the book itself: every pattern × the sides it can be drilled from.
-// Joseki (corner families) and whole-board openings (R46) are two lists; TOTAL counts both.
+// Joseki (corner families) and whole-board openings (R46) are two lists, and each has its mastered count (R49).
 const ALL_BY_ORDER = Object.keys(BOOK.patterns).sort((a, b) => BOOK.patterns[a].def.order - BOOK.patterns[b].def.order)
 const isOpening = (id: string) => ['open-h4', 'open-even'].includes(BOOK.patterns[id].family)
 const BY_ORDER = ALL_BY_ORDER.filter((id) => !isOpening(id))
 const OPENINGS = ALL_BY_ORDER.filter(isOpening)
 const sides = (ids: string[]) => ids.reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
 const JOSEKI_TOTAL = sides(BY_ORDER)
-const TOTAL = sides(ALL_BY_ORDER)
+const OPENINGS_TOTAL = sides(OPENINGS)
 
 describe('courseOrder', () => {
   const order = keys(courseOrder(BOOK))
@@ -223,7 +223,7 @@ describe('dueItems', () => {
 })
 
 describe('masteredCount', () => {
-  it('counts box 4 and up over every drillable side, joseki and openings (a trick pattern has one side, not two)', () => {
+  it('counts box 4 and up over every drillable joseki side (a trick pattern has one side, not two)', () => {
     const p = progressWith({
       'star44-low-knight-slide:defend': review(4, '2026-11-01'),
       'komoku34-tenuki:defend': review(5, '2026-11-20'),
@@ -232,8 +232,15 @@ describe('masteredCount', () => {
       'star44-low-jump:defend': review(3, '2026-11-02'),
       'gone-pattern:defend': review(5, '2026-11-02'),
     })
-    expect(masteredCount(BOOK, p)).toEqual({ mastered: 3, total: TOTAL })
-    expect(masteredCount(BOOK, defaultProgress())).toEqual({ mastered: 0, total: TOTAL })
+    expect(masteredCount(BOOK, p)).toEqual({ mastered: 3, total: JOSEKI_TOTAL })
+    expect(masteredCount(BOOK, defaultProgress())).toEqual({ mastered: 0, total: JOSEKI_TOTAL })
+  })
+
+  it('counts openings on their own (R49), and leaves them out of the joseki count', () => {
+    const opening = keys(openingOrder(BOOK))[0]
+    const p = progressWith({ [opening]: review(4, '2026-11-01'), 'star44-low-jump:defend': review(5, '2026-11-02') })
+    expect(masteredCount(BOOK, p, 'openings')).toEqual({ mastered: 1, total: OPENINGS_TOTAL })
+    expect(masteredCount(BOOK, p)).toEqual({ mastered: 1, total: JOSEKI_TOTAL })
   })
 })
 

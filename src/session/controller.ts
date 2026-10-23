@@ -9,20 +9,34 @@
 // book's moves are the session tree's own plus those its siblings have there. A move found in a sibling
 // tree is judged as book, and the session goes on in that tree, so its patterns get the credit.
 //
+// A position can look the same turned (the empty board, the four handicap stones and the diagonal through
+// the 4-4 point). Then the owner can't know which way the book is turned, so a move that is book once the
+// book is turned that way counts as book, and the session's sym turns with it (R47): the board stays as it
+// is and the book follows, notes and markers included.
+//
 // A whole-board opening (R46) works the same way with the board as its region: every tap is a move on
 // the board (never a tenuki, there is no elsewhere), the engine's best is the best anywhere, and the
 // teacher never leaves to play elsewhere. Six moves off the book still end the session.
 
 import { nodeSetups } from '../book/build'
 import type { CheckedLoss } from '../book/checkedLoss'
-import { isBoardFamily, startPosition } from '../book/setups'
+import { canonicalRegion, isBoardFamily, startPosition } from '../book/setups'
 import { bookIndex, type BookIndex } from '../book/siblings'
 import type { Book, BookNode, SetupId } from '../book/types'
 import type { TeacherEngine } from '../engine/teacher'
-import { BOARD_SIZE, inRegion, withMargin, type Pt } from '../go/coords'
+import { BOARD_SIZE, inRegion, transform, withMargin, type Pt, type Region, type Sym } from '../go/coords'
 import { otherColor, play, type Color, type Position } from '../go/rules'
 import { EngineAccess, legal } from './engineAccess'
-import { analysisToBook, lineKey, noteOn, toBoardPt, toBookPt, verdictToBoard } from './frame'
+import {
+  analysisToBook,
+  lineKey,
+  noteOn,
+  positionSymmetries,
+  toBoardPt,
+  toBookPt,
+  turnedSym,
+  verdictToBoard,
+} from './frame'
 import { bookChild, isSound, judgeMove, scoreAfterNeeded, type Verdict } from './judge'
 import { mulberry32, pickTeacherMove } from './pick'
 import { countOwnerMove, newTally, sessionResult, switchablePatterns, type SessionResult, type Tally } from './result'
@@ -45,7 +59,7 @@ const NEAR_BEST = 0.5
 /** The book was checked with KataGo's Chinese rules, which give White +4 in the 4-stone setup (R9). */
 const HANDICAP_BONUS = 4
 
-type Undo = Pick<SparState, 'pos' | 'node' | 'offBookMoves' | 'log' | 'note'> & { lastBook: BookNode | null }
+type Undo = Pick<SparState, 'pos' | 'node' | 'offBookMoves' | 'log' | 'note' | 'sym'> & { lastBook: BookNode | null }
 
 export interface SparOptions {
   /**
@@ -75,6 +89,8 @@ export class SparController {
   private setup!: SetupId
   /** A whole-board opening (R46): no tenuki, for either side. */
   private wholeBoard = false
+  /** The family's region in the book's frame, for R47's symmetries. */
+  private bookRegion!: Region
   private eng!: EngineAccess
   private drillPath: BookNode[] | undefined
   private rng!: () => number
@@ -130,7 +146,6 @@ export class SparController {
     // An opening has no elsewhere: the screen shows no Play elsewhere button, and one is ignored.
     if (p === 'tenuki' && this.wholeBoard) return
     const { pos, node, region, log, offBookMoves, note } = this.s
-    const { sym } = this.cfg
     const gen = this.gen
     let after: Position | null = null
     if (p !== 'tenuki') {
@@ -145,8 +160,19 @@ export class SparController {
     // A tap in the corner, its margin line included, is a corner move (R43): the margin looks and plays
     // like the corner. Only the Play elsewhere button, or a tap beyond the margin on the full board, is a
     // tenuki played on that point.
-    const played = p !== 'tenuki' && inRegion(p, withMargin(region)) ? toBookPt(p, sym) : 'tenuki'
-    const undo: Undo = { pos, node, offBookMoves, log, note, lastBook: this.lastBook }
+    let played: Pt | 'tenuki' = p !== 'tenuki' && inRegion(p, withMargin(region)) ? toBookPt(p, this.cfg.sym) : 'tenuki'
+    const undo: Undo = { pos, node, offBookMoves, log, note, sym: this.cfg.sym, lastBook: this.lastBook }
+    let child = node ? bookChild(this.withSiblings(node), played) : null
+    // R47: not book as the book is turned now, but book turned another way the position allows.
+    if (!child && node && played !== 'tenuki') {
+      const turned = this.turnedMatch(pos, node, played)
+      if (turned) {
+        this.setSym(turned.sym)
+        played = turned.played
+        child = turned.child
+      }
+    }
+    const { sym } = this.cfg
     const engineState = this.engine.status()
     // The stone shows at once; its verdict follows.
     this.set({ status: 'teacher-thinking', message: null, lastVerdict: null, ...(after ? { pos: after } : {}) })
@@ -156,7 +182,6 @@ export class SparController {
       after = this.place(pos, this.eng.tenukiPoint(pos, a, this.owner), this.owner)
       this.set({ pos: after })
     }
-    const child = node ? bookChild(this.withSiblings(node), played) : null
     const tenukiAt = played === 'tenuki' ? toBookPt(lastMove(after), sym) : undefined
     const verdict = await this.judge(gen, node && this.withSiblings(node), child, played, tenukiAt, pos, after, engineState)
     if (gen !== this.gen) return
@@ -186,6 +211,8 @@ export class SparController {
     const { lastBook, ...state } = this.undo
     this.undo = null
     this.lastBook = lastBook
+    // A move matched by turning the book (R47) is taken back with its turn.
+    this.setSym(state.sym)
     this.ownerTurn({ ...state, lastVerdict: null, message: null })
   }
 
@@ -237,6 +264,7 @@ export class SparController {
     this.owner = ownerColor(fam.def, cfg.side)
     this.setup = setup
     this.wholeBoard = isBoardFamily(fam.def)
+    this.bookRegion = canonicalRegion(fam.def)
     const komi = start.komi + (setup === 'handicap4' ? HANDICAP_BONUS : 0)
     const isCurrent = (pos: Position) => gen === this.gen && this.s.pos === pos && this.s.status === 'owner-to-move'
     this.eng = new EngineAccess(this.engine, komi, start.region, cfg.sym, isCurrent)
@@ -246,8 +274,33 @@ export class SparController {
     this.undo = null
     this.lastBook = null
     this.leftDrill = false
-    this.s = startState(start, fam.root)
+    this.s = startState(start, fam.root, cfg.sym)
     this.emit()
+  }
+
+  /**
+   * R47: the owner's move `played` (book frame) is no book move, but the position looks the same turned by
+   * some g, and turned by g the move is one. The turn that keeps to the drilled line wins, then a sound
+   * move, then any. Null when no turn makes it book.
+   */
+  private turnedMatch(pos: Position, node: BookNode, played: Pt): { sym: Sym; played: Pt; child: BookNode } | null {
+    const book = this.withSiblings(node)
+    const found: Array<{ sym: Sym; played: Pt; child: BookNode }> = []
+    for (const g of positionSymmetries(pos, this.cfg.sym, this.bookRegion)) {
+      const q = transform(played, g)
+      const child = bookChild(book, q)
+      if (child) found.push({ sym: turnedSym(this.cfg.sym, g), played: q, child })
+    }
+    const onDrill = this.drillPath && !this.leftDrill ? found.find((f) => this.drillPath!.includes(f.child)) : undefined
+    return onDrill ?? found.find((f) => isSound(f.child)) ?? found[0] ?? null
+  }
+
+  /** Turns the book on the board (R47): the engine's frame and the published state follow. */
+  private setSym(sym: Sym): void {
+    if (sym === this.cfg.sym) return
+    this.cfg = { ...this.cfg, sym }
+    this.eng.setSym(sym)
+    this.set({ sym })
   }
 
   private set(patch: Partial<SparState>): void {

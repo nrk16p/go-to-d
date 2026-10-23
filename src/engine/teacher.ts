@@ -28,7 +28,10 @@ export interface CornerAnalysis {
   toMove: Color
   cornerBest: { pt: Pt; scoreLead: number }
   tenukiBest: { pt: Pt; scoreLead: number } | null
-  candidates: Array<{ pt: Pt; scoreLead: number; prior: number }>
+  /** `visits`: how many of the search's visits went into each move, so a barely searched value can be told apart (R48). */
+  candidates: Array<{ pt: Pt; scoreLead: number; prior: number; visits: number }>
+  /** The root visits of the search the candidates come from. */
+  visits: number
 }
 
 export interface TeacherEngine {
@@ -120,7 +123,7 @@ export function cornerAnalysisFrom(corner: EngineSearch, anywhere: EngineSearch,
   const candidates = corner.moves
     .filter((m) => isPoint(m) && inRegion(m, region))
     .sort(byOrder)
-    .map((m) => ({ pt: { x: m.x, y: m.y }, scoreLead: mine(m.scoreLead), prior: m.prior }))
+    .map((m) => ({ pt: { x: m.x, y: m.y }, scoreLead: mine(m.scoreLead), prior: m.prior, visits: m.visits }))
   if (candidates.length === 0) throw new Error('The engine found no move inside the region')
 
   const outside = anywhere.moves.filter((m) => isPoint(m) && !inRegion(m, region)).sort(byOrder)[0]
@@ -129,6 +132,7 @@ export function cornerAnalysisFrom(corner: EngineSearch, anywhere: EngineSearch,
     cornerBest: { pt: candidates[0].pt, scoreLead: candidates[0].scoreLead },
     tenukiBest: outside ? { pt: { x: outside.x, y: outside.y }, scoreLead: mine(outside.scoreLead) } : null,
     candidates,
+    visits: corner.rootVisits,
   }
 }
 
@@ -259,7 +263,9 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
       const budget = opts.maxTimeMs ?? DEFAULT_MAX_TIME_MS
       const cached = cache.get(keyOf(req, komi, visits))?.search
       // A whole-board opening (R46): the region is the board, so one whole-board search answers both
-      // questions, with the whole budget. Nothing is outside it, so there is no move elsewhere.
+      // questions. A new search gets the whole budget; a cached one (a scoreFor on this position, which
+      // ran on half the budget) is taken as it is, as the corner path below takes it for its second
+      // search. Nothing is outside the board, so there is no move elsewhere.
       if (isWholeBoard(region)) {
         const s = await (cached ?? runWholeBoard(req, komi, visits, budget))
         return cornerAnalysisFrom(s, s, pos.toMove, region)

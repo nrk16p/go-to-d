@@ -89,7 +89,9 @@ describe('cornerAnalysisFrom', () => {
     expect(a.toMove).toBe('white')
     expect(a.cornerBest).toEqual({ pt: parseGtp('Q14'), scoreLead: 18 })
     expect(a.candidates.map((c) => c.pt)).toEqual([parseGtp('Q14'), parseGtp('R14')])
-    expect(a.candidates[1]).toEqual({ pt: parseGtp('R14'), scoreLead: 20, prior: 0.1 })
+    expect(a.candidates[1]).toEqual({ pt: parseGtp('R14'), scoreLead: 20, prior: 0.1, visits: 10 })
+    // R48: each candidate's visits, and the root's, to tell a barely searched value apart.
+    expect(a.visits).toBe(100)
     expect(a.tenukiBest).toEqual({ pt: parseGtp('D10'), scoreLead: 17.5 })
   })
 

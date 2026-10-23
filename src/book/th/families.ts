@@ -16,6 +16,6 @@ export const TH_FAMILIES: Record<FamilyId, FamilyHeadTh> = {
   invade33: { name: 'บุก 3-3', start: ['หมากดำที่จุดดาว 4-4'] },
   komoku34: { name: 'โคโมคุ 3-4', start: ['หมากดำที่โคโมคุ 3-4'] },
   sansan33: { name: 'จุด 3-3', start: ['หมากดำที่จุด 3-3'] },
-  'open-h4': { name: 'เปิดเกม ต่อสี่เม็ด', start: ['ดำมีหมากครบสี่จุดดาว ขาวเดินก่อน'] },
-  'open-even': { name: 'เปิดเกม เกมเสมอ', start: [] },
+  'open-h4': { name: 'เปิดเกม ต่อ 4 ตัว', start: ['ดำมีหมากครบสี่จุดดาว ขาวเดินก่อน'] },
+  'open-even': { name: 'เปิดเกม ไม่ต่อหมาก', start: [] },
 }

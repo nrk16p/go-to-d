@@ -1565,3 +1565,145 @@ describe('SparController: whole-board openings (R46)', () => {
     expect(c.state.node).toBeNull()
   })
 })
+
+// ---------------------------------------------------------------------------------------------
+// R47: a position that looks the same turned. The owner can't know which way the book is turned, so a move
+// that is book with the book turned another way counts as book, and the session's sym turns with it.
+
+/** The board point diagonally across the board from `p`. */
+const across = (p: Pt): Pt => ({ x: 18 - p.x, y: 18 - p.y })
+
+describe('SparController: the book turns with a symmetric position (R47)', () => {
+  it.each(['Q16', 'D16', 'D4', 'Q4'])('empty board: Black opening on %s stays in book, and the book follows', async (gtp) => {
+    const c = makeOpening({ sym: 0 })
+    await c.start()
+    const mine = parseGtp(gtp)
+    await c.ownerPlay(mine)
+    expect(c.state.lastVerdict).toMatchObject({ type: 'good' })
+    // The teacher answered from the book.
+    expect(c.state.node?.key).toBe('B:Q16/W:D4')
+    // The book's Q16 is where the owner played; the board did not move.
+    expect(transform(parseGtp('Q16'), c.state.sym)).toEqual(mine)
+    expect(c.state.pos.board[mine.y][mine.x]).toBe('black')
+    // The teacher's D4 is across from it, and its note names the owner's point for Q16.
+    const reply = across(mine)
+    expect(c.state.pos.board[reply.y][reply.x]).toBe('white')
+    expect(c.state.note).toBe(orientNote('White takes the corner across from Q16.', c.state.sym))
+    expect(c.state.note).toContain(gtp)
+    if (gtp === 'Q16') expect(c.state.sym).toBe(0)
+  })
+
+  it('the third corner: either of the two left is book, and the drill ends clean', async () => {
+    for (const third of ['D16', 'Q4']) {
+      const c = makeOpening({ sym: 0 })
+      await c.start()
+      await c.ownerPlay(parseGtp('Q16'))
+      // B Q16, W D4: the diagonal through them is a mirror, so D16 and Q4 are the same move.
+      await c.ownerPlay(parseGtp(third))
+      expect(c.state.lastVerdict).toMatchObject({ type: 'good' })
+      expect(c.state.status).toBe('done')
+      expect(c.state.result).toMatchObject({ patternIds: ['even-stars'], clean: true, mistakes: 0 })
+    }
+  })
+
+  it('star44, attacking: the approach mirrored across the 4-4 point’s diagonal (O17 for R14) stays in book', async () => {
+    const c = make({ side: 'attack', sym: 0 })
+    await c.start()
+    await c.ownerPlay(parseGtp('O17'))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'good' })
+    expect(c.state.node?.key).toBe('W:R14/B:Q14')
+    // The diagonal mirror through Q16 (sym 5 maps (x, y) to (18 - y, 18 - x)) keeps the corner where it is.
+    expect(c.state.sym).toBe(5)
+    expect(c.state.region).toEqual(CORNER_REGION)
+    // The teacher's Q14 lands on the mirrored point, O16.
+    expect(stoneAt(c, 'Q14', 5)).toBe('black')
+    expect(toGtp(at('Q14', 5))).toBe('O16')
+
+    // A book mistake from here: the better point and the note are in the turned frame too.
+    await c.ownerPlay(at('T19', 5))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'mistake', inBook: true, better: at('Q13', 5) })
+    expect(toGtp(at('Q13', 5))).toBe('N16')
+    // Retry, then the drilled line in the turned frame.
+    c.retry()
+    expect(c.state.sym).toBe(5)
+    await c.ownerPlay(at('Q13', 5))
+    await c.ownerPlay(at('R13', 5))
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toMatchObject({ patternIds: ['fixture-hane'], side: 'attack' })
+  })
+
+  it('Retry takes a turned move back with its turn', async () => {
+    // O17 matched by turning the book, but in this book it is a mistake: Retry puts the book back.
+    const turnedMistake: FamilyDef = {
+      ...FIXTURE_FAMILY,
+      patterns: [
+        {
+          id: 'only',
+          name: 'only',
+          difficulty: 1,
+          order: 1,
+          line: [
+            { c: 'W', at: 'R17', note: 'The 3-3 invasion.' },
+            { c: 'B', at: 'Q17', note: 'Block.' },
+          ],
+          branches: [{ after: 0, move: { c: 'W', at: 'R14', kind: 'mistake', note: 'Too close to Q4.' } }],
+        },
+      ],
+    }
+    const c = make({ side: 'attack', sym: 0, patternId: 'only' }, new FakeEngine(), buildBook([turnedMistake]))
+    await c.start()
+    await c.ownerPlay(parseGtp('O17'))
+    expect(c.state.sym).toBe(5)
+    expect(c.state.lastVerdict).toMatchObject({ type: 'mistake', inBook: true, better: at('R17', 5), note: orientNote('Too close to Q4.', 5) })
+    c.retry()
+    expect(c.state.sym).toBe(0)
+    await c.ownerPlay(parseGtp('R17'))
+    expect(c.state.lastVerdict).toMatchObject({ type: 'good' })
+  })
+
+  it('never turns the studied corner away: a corner family only takes the turn that keeps the corner in place', async () => {
+    // C14 approaches D16, which the four handicap stones make the same, but it is not the studied corner.
+    // The rotation that would make it R14 also moves the corner, so it isn't tried: C14 stays a move elsewhere.
+    const c = make({ side: 'attack', sym: 0 })
+    await c.start()
+    await c.ownerPlay(parseGtp('C14'))
+    expect(c.state.sym).toBe(0)
+    expect(c.state.node).toBeNull()
+    expect(c.state.log[0].move).toEqual({ tenuki: 'white' })
+  })
+
+  it('does not turn when the position has no symmetry', async () => {
+    const c = make({ side: 'defend', sym: 0 })
+    await c.start()
+    // After W R14 nothing mirrors; O16 (the mirror of the book's Q14) is just off book.
+    await c.ownerPlay(parseGtp('O16'))
+    expect(c.state.sym).toBe(0)
+    expect(c.state.node).toBeNull()
+  })
+})
+
+describe('SparController: barely searched values (R48)', () => {
+  it('an opening move the search gave under 10% of its visits is judged from the search after it', async () => {
+    const engine = new FakeEngine({
+      analyze: (pos) => analysisOf(pos.toMove, [['Q16', 1, 70], ['K10', 0.8, 4]], null),
+      score: () => -2.5,
+    })
+    const c = makeOpening({ sym: 0 }, engine)
+    await c.start()
+    await c.ownerPlay(parseGtp('K10'))
+    expect(engine.scoreCalls).toHaveLength(1)
+    expect(c.state.lastVerdict).toEqual({ type: 'mistake', better: parseGtp('Q16'), pointsLost: 3.5, big: false, inBook: false })
+  })
+
+  it('in a corner too', async () => {
+    const engine = new FakeEngine({
+      analyze: (pos) => (pos.toMove === 'black' ? analysisOf('black', [['Q14', 1, 60], ['P17', 0.9, 5]], ['D10', -10]) : defaultAnalysis(pos, CORNER_REGION)),
+      score: () => -1,
+    })
+    const c = make({}, engine)
+    await c.start()
+    await c.ownerPlay(parseGtp('P17'))
+    expect(engine.scoreCalls).toHaveLength(1)
+    expect(c.state.lastVerdict).toMatchObject({ type: 'mistake', pointsLost: 2, inBook: false })
+  })
+})

@@ -19,12 +19,14 @@ function message(e: unknown): string {
 }
 
 /**
- * The start stones and a setup go together (R46): no start stones means the empty board, and the empty
- * board means no start stones. Null when they fit, else what is wrong.
+ * The start stones, a setup and the region go together (R46): no start stones means the empty board, the
+ * empty board means no start stones, and an empty board has no corner to study, so it is a whole-board
+ * family's. Null when they fit, else what is wrong.
  */
 function startMismatch(def: FamilyDef, setup: SetupId): string | null {
   if (def.start.length === 0 && setup !== 'empty') return `start is [], which only setup "empty" allows (this is "${setup}")`
   if (def.start.length > 0 && setup === 'empty') return `setup "empty" is an empty board, so start must be []`
+  if (setup === 'empty' && !isBoardFamily(def)) return `setup "empty" has no corner to study, so the family needs region: 'board'`
   return null
 }
 

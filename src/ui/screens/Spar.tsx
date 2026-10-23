@@ -144,6 +144,19 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
     setGhost(null)
   }
   const reported = useRef(false)
+  // The sym the address shows. When the owner's move turns the book (R47), the address follows, so a
+  // reload, Watch first and switching keep the book the way it is turned now.
+  const shownSym = useRef(config.sym)
+  useEffect(() => {
+    if (state.sym === shownSym.current) return
+    shownSym.current = state.sym
+    const seed = String(config.seed)
+    replaceQuietly(
+      drill.mode === 'drill' && drill.patternId
+        ? sparHref({ family: drill.family, pattern: drill.patternId, side: config.side, sym: String(state.sym), seed })
+        : sparHref({ family: drill.family, side: config.side, mode: 'free', sym: String(state.sym), seed }),
+    )
+  }, [state.sym, drill, config.side, config.seed])
   const pendingDispose = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
@@ -222,7 +235,10 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
     const entry = BOOK.patterns[id]
     setDrill({ mode: 'drill', family: entry.family, patternId: id })
     reported.current = false
-    replaceQuietly(sparHref({ family: entry.family, pattern: id, side, sym: String(config.sym), seed: String(config.seed) }))
+    // The book may have been turned during the session (R47): the new drill keeps that turn.
+    const sym = controller.state.sym
+    shownSym.current = sym
+    replaceQuietly(sparHref({ family: entry.family, pattern: id, side, sym: String(sym), seed: String(config.seed) }))
   }
 
   function toggleFull() {
@@ -261,7 +277,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
         {drill.mode === 'drill' && drill.patternId && !movedOnce.current && (
           <a
             className="btn watch-first"
-            href={phaseHref({ family: drill.family, pattern: drill.patternId, side, sym: String(config.sym), seed: String(config.seed) }, 'watch')}
+            href={phaseHref({ family: drill.family, pattern: drill.patternId, side, sym: String(state.sym), seed: String(config.seed) }, 'watch')}
           >
             {COPY.watch.watchFirst}
           </a>
@@ -283,7 +299,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
       </div>
 
       <div className="spar-panel">
-        <div className={`bar${status || canPlay ? '' : ' bar-empty'}`}>
+        <div className={`bar${opening ? ' bar-board' : ''}${status || canPlay ? '' : ' bar-empty'}`}>
           <p className="status" role="status">
             {status}
           </p>

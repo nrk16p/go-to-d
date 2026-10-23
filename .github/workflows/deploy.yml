@@ -28,6 +28,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The same gate as CI, so a broken main (a bad book edit included) never goes live.
+      - run: npm run lint
+      - run: npm test
       # prebuild copies TF.js's .wasm files and checks the network is in public/models/.
       - run: npm run build
       - uses: actions/configure-pages@v6

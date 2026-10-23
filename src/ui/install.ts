@@ -13,6 +13,18 @@ export function isIos(): boolean {
   }
 }
 
+/**
+ * A browser built into another app (LINE, Facebook, Messenger, Instagram, TikTok, WeChat). On iOS these
+ * have no Add to Home Screen, and their storage is their own.
+ */
+export function isInAppBrowser(): boolean {
+  try {
+    return /\bLine\/|FBAN|FBAV|FBIOS|Instagram|musical_ly|BytedanceWebview|MicroMessenger/.test(navigator.userAgent)
+  } catch {
+    return false
+  }
+}
+
 export function isStandalone(): boolean {
   try {
     if ((navigator as Navigator & { standalone?: boolean }).standalone === true) return true

@@ -4,16 +4,24 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type FormEvent } from 'react'
 import type { Progress, Settings as SettingsData } from '../../progress/srs'
-import { defaultProgress, exportProgress, importProgress, loadProgress, saveProgress, todayLocal } from '../../progress/store'
+import {
+  defaultProgress,
+  exportProgress,
+  importProgress,
+  loadProgress,
+  saveProgress,
+  SETTING_LIMITS,
+  todayLocal,
+} from '../../progress/store'
 import { COPY } from '../copy'
 import { EngineChip } from '../EngineChip'
 import type { EngineHub } from '../engine'
+import { isIos } from '../install'
 
 const S = COPY.settings
 
-const VISITS_MIN = 16
-const VISITS_MAX = 400
-const NEW_PER_DAY_MAX = 10
+const VISITS = SETTING_LIMITS.visits
+const NEW_PER_DAY = SETTING_LIMITS.newPerDay
 
 type Message = { error: boolean; text: string } | null
 
@@ -65,9 +73,11 @@ function readForm(f: { fine: string; big: string; visits: string; newPerDay: str
   const visits = num(f.visits)
   const newPerDay = num(f.newPerDay)
   if (![fine, big, visits, newPerDay].every(Number.isFinite)) return { ok: false, error: S.notNumber }
-  if (fine < 0 || fine >= big) return { ok: false, error: S.fineBelowBig }
-  if (!Number.isInteger(visits) || visits < VISITS_MIN || visits > VISITS_MAX) return { ok: false, error: S.visitsRange }
-  if (!Number.isInteger(newPerDay) || newPerDay < 0 || newPerDay > NEW_PER_DAY_MAX) return { ok: false, error: S.newRange }
+  if (fine < 0) return { ok: false, error: S.fineNegative }
+  if (fine >= big) return { ok: false, error: S.fineBelowBig }
+  if (!Number.isInteger(visits) || visits < VISITS.min || visits > VISITS.max) return { ok: false, error: S.visitsRange }
+  if (!Number.isInteger(newPerDay) || newPerDay < NEW_PER_DAY.min || newPerDay > NEW_PER_DAY.max)
+    return { ok: false, error: S.newRange }
   return { ok: true, values: { thresholds: { fine, big }, visits, newPerDay } }
 }
 
@@ -121,7 +131,7 @@ function TeacherForm({ initial }: { initial: SettingsData }) {
         <div className="field">
           <label htmlFor="set-visits">{S.visits}</label>
           <div className="input-row">
-            <input id="set-visits" type="number" inputMode="numeric" step="1" min={VISITS_MIN} max={VISITS_MAX} value={form.visits} onChange={set('visits')} aria-describedby="set-visits-help" />
+            <input id="set-visits" type="number" inputMode="numeric" step="1" min={VISITS.min} max={VISITS.max} value={form.visits} onChange={set('visits')} aria-describedby="set-visits-help" />
           </div>
           <p id="set-visits-help" className="help">
             {S.visitsHelp}
@@ -130,7 +140,7 @@ function TeacherForm({ initial }: { initial: SettingsData }) {
         <div className="field">
           <label htmlFor="set-new">{S.newPerDay}</label>
           <div className="input-row">
-            <input id="set-new" type="number" inputMode="numeric" step="1" min="0" max={NEW_PER_DAY_MAX} value={form.newPerDay} onChange={set('newPerDay')} />
+            <input id="set-new" type="number" inputMode="numeric" step="1" min={NEW_PER_DAY.min} max={NEW_PER_DAY.max} value={form.newPerDay} onChange={set('newPerDay')} />
           </div>
         </div>
         <div className="actions">
@@ -168,7 +178,6 @@ function EngineInfo({ engine }: { engine: EngineHub }) {
     <section className="settings-group" aria-labelledby="engine-title">
       <h2 id="engine-title">{S.engineTitle}</h2>
       <EngineChip engine={engine} />
-      {status === 'failed' && <p className="help">{COPY.engine.offHelp}</p>}
       {status === 'ready' && info && (
         <dl className="facts">
           <div>
@@ -186,6 +195,24 @@ function EngineInfo({ engine }: { engine: EngineHub }) {
 }
 
 // ---------- backup ----------
+
+/**
+ * Saves the backup file. On iPhone and iPad it goes through the share sheet ("Save to Files"), because a
+ * download link can do nothing in a Home Screen app; elsewhere, or if sharing isn't offered, a download.
+ */
+async function saveFile(name: string, text: string): Promise<void> {
+  const file = new File([text], name, { type: 'application/json' })
+  if (isIos() && typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] })
+      return
+    } catch (err) {
+      // Closing the share sheet is a choice, not a failure.
+      if (err instanceof DOMException && err.name === 'AbortError') return
+    }
+  }
+  download(name, text)
+}
 
 function download(name: string, text: string): void {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
@@ -255,7 +282,7 @@ function Backup({ today, onReplaced }: { today: string; onReplaced: () => void }
       <h2 id="backup-title">{S.backupTitle}</h2>
       <p className="help">{S.backupBody}</p>
       <div className="actions">
-        <button type="button" className="btn" onClick={() => download(`go-to-d-progress-${today}.json`, exportProgress(loadProgress()))}>
+        <button type="button" className="btn" onClick={() => void saveFile(`go-to-d-progress-${today}.json`, exportProgress(loadProgress()))}>
           {S.export}
         </button>
         <label className="btn file-btn">

@@ -5,6 +5,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BOOK } from '../../src/book/data'
+import { drillableSides } from '../../src/session/sides'
 import { COPY } from '../../src/ui/copy'
 import { Library } from '../../src/ui/screens/Library'
 import { Pattern } from '../../src/ui/screens/Pattern'
@@ -75,7 +76,8 @@ describe('Library', () => {
     render(<Library />)
     const rows = document.querySelectorAll('a.queue-item')
     expect(rows).toHaveLength(Object.keys(BOOK.patterns).length)
-    expect(document.querySelectorAll('.side-level')).toHaveLength(39)
-    expect(screen.getAllByRole('img', { name: COPY.level(0) })).toHaveLength(39)
+    const sides = Object.keys(BOOK.patterns).reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
+    expect(document.querySelectorAll('.side-level')).toHaveLength(sides)
+    expect(screen.getAllByRole('img', { name: COPY.level(0, false) })).toHaveLength(sides)
   })
 })

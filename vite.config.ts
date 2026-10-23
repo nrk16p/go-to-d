@@ -13,8 +13,8 @@ export default defineConfig({
   plugins: [
     react(),
     // An installable app that opens offline after the first visit. The service worker precaches the app
-    // shell (HTML, JS including the engine worker, CSS, fonts, icons). The KataGo network (3.8 MB) and
-    // TF.js's .wasm files are cached the first time the engine fetches them, then served from the cache.
+    // shell (HTML, JS including the engine worker, CSS, fonts, icons) and TF.js's two .wasm files. The
+    // KataGo network (3.8 MB) is cached the first time the engine fetches it, then served from the cache.
     VitePWA({
       registerType: 'autoUpdate',
       // A plain register script: a new version takes over quietly and shows on the next load. No forced
@@ -39,7 +39,15 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,woff2,svg,png,webmanifest}'],
+        // The plugin adds manifest.webmanifest itself.
+        globPatterns: [
+          '**/*.{js,css,html,woff2,svg,png}',
+          // TF.js's .wasm files have no version in their names, so they are precached: Workbox revisions
+          // them by content, and a TF.js upgrade replaces them. The threaded build is left out; it needs
+          // cross-origin isolation, which GitHub Pages doesn't give.
+          'tfjs/tfjs-backend-wasm.wasm',
+          'tfjs/tfjs-backend-wasm-simd.wasm',
+        ],
         // autoUpdate: a new version takes over at once (the plugin only sets these itself with
         // injectRegister 'auto'). The first visit is controlled straight away too, so the network the
         // engine fetches at start can already land in the cache.
@@ -56,15 +64,6 @@ export default defineConfig({
               cacheName: 'go-to-d-models',
               // The file name changes with the network, so the old one just ages out.
               expiration: { maxEntries: 2 },
-              cacheableResponse: { statuses: [200] },
-            },
-          },
-          {
-            urlPattern: /\/tfjs\/[^/?#]+\.wasm$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'go-to-d-tfjs',
-              expiration: { maxEntries: 6 },
               cacheableResponse: { statuses: [200] },
             },
           },

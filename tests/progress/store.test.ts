@@ -291,6 +291,22 @@ describe('loadProgress', () => {
     })
   })
 
+  it('holds settings to the limits the Settings form allows, on load and on import', () => {
+    const withSettings = (settings: unknown) => JSON.stringify({ ...defaultProgress(), settings })
+    const d = defaultProgress().settings
+
+    storage.data.set(STORAGE_KEY, withSettings({ visits: 5000, newPerDay: 50 }))
+    expect(loadProgress().settings).toMatchObject({ visits: 400, newPerDay: 10 })
+    expect(importProgress(withSettings({ visits: 3 })).settings.visits).toBe(16)
+    expect(importProgress(withSettings({ visits: 16.5 })).settings.visits).toBe(d.visits)
+
+    // fine must stay below big; otherwise the pair goes back to the defaults.
+    expect(importProgress(withSettings({ thresholds: { fine: 5, big: 3 } })).settings.thresholds).toEqual(d.thresholds)
+    expect(importProgress(withSettings({ thresholds: { fine: 4, big: 4 } })).settings.thresholds).toEqual(d.thresholds)
+    expect(importProgress(withSettings({ thresholds: { fine: 6 } })).settings.thresholds).toEqual(d.thresholds)
+    expect(importProgress(withSettings({ thresholds: { fine: 0.5, big: 2 } })).settings.thresholds).toEqual({ fine: 0.5, big: 2 })
+  })
+
   it('does not touch the stored text', () => {
     saveProgress(defaultProgress())
     storage.setItem.mockClear()

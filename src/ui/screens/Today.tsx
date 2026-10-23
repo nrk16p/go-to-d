@@ -10,15 +10,18 @@ import { loadProgress, saveProgress, todayLocal } from '../../progress/store'
 import type { Side } from '../../session/sides'
 import { CornerThumb } from '../CornerThumb'
 import { COPY } from '../copy'
-import { needsIosInstallHint } from '../install'
+import { isInAppBrowser, needsIosInstallHint } from '../install'
 import { Pips } from '../Pips'
-import { sparHref } from '../router'
+import { href, sparHref } from '../router'
 
 const T = COPY.today
 
 export function Today({ today = todayLocal() }: { today?: string }) {
   const [progress] = useState(loadProgress)
   const [hint, setHint] = useState(() => needsIosInstallHint(progress.settings.iosHintDismissed))
+  const [inApp] = useState(isInAppBrowser)
+  // The Home Screen app has storage of its own, so progress made here has to be carried over by hand.
+  const hasProgress = Object.keys(progress.reviews).length > 0
   const [freeSide, setFreeSide] = useState<Side>('defend')
 
   const due = dueItems(BOOK, progress, today)
@@ -43,9 +46,15 @@ export function Today({ today = todayLocal() }: { today?: string }) {
       {hint && (
         <aside className="install-hint" aria-labelledby="install-title">
           <h2 id="install-title">{T.iosHintTitle}</h2>
-          <p>{T.iosHintBody}</p>
+          <p>{inApp ? T.iosHintInApp : T.iosHintBody}</p>
+          {hasProgress && <p>{T.iosHintMove}</p>}
           <div className="actions">
-            <button type="button" className="btn" onClick={dismissHint}>
+            {hasProgress && (
+              <a className="btn" href={href.settings}>
+                {T.iosHintExport}
+              </a>
+            )}
+            <button type="button" className={hasProgress ? 'btn btn-quiet' : 'btn'} onClick={dismissHint}>
               {T.iosHintDismiss}
             </button>
           </div>

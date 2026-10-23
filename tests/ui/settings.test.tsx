@@ -158,6 +158,35 @@ describe('Settings › Export', () => {
   })
 })
 
+describe('Settings › Export on iPhone', () => {
+  it('hands the file to the share sheet instead of a download link', async () => {
+    storage.setItem(STORAGE_KEY, JSON.stringify(progressWith(2)))
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1',
+    )
+    const shared: File[] = []
+    const nav = navigator as unknown as Record<string, unknown>
+    Object.defineProperty(nav, 'canShare', { value: () => true, configurable: true })
+    Object.defineProperty(nav, 'share', {
+      value: async (d: { files: File[] }) => {
+        shared.push(...d.files)
+      },
+      configurable: true,
+    })
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    try {
+      render(<Settings engine={hub()} today={TODAY} />)
+      await press(S.export)
+      expect(shared.map((f) => f.name)).toEqual(['go-to-d-progress-2026-10-22.json'])
+      expect(Object.keys((JSON.parse(await shared[0].text()) as Progress).reviews)).toHaveLength(2)
+      expect(click).not.toHaveBeenCalled()
+    } finally {
+      delete nav.canShare
+      delete nav.share
+    }
+  })
+})
+
 describe('Settings › Reset', () => {
   it('clears reviews and streak after an in-page confirm, and keeps the settings', async () => {
     const p = progressWith(3)
@@ -189,8 +218,12 @@ describe('Settings › Teacher', () => {
     expect(screen.getByText(S.saved)).toBeTruthy()
   })
 
-  it('refuses fine at or above big, and visits outside 16 to 400', async () => {
+  it('refuses fine below 0, fine at or above big, and visits outside 16 to 400', async () => {
     render(<Settings engine={hub()} today={TODAY} />)
+    fireEvent.change(field(S.fine), { target: { value: '-1' } })
+    await press(S.save)
+    expect(screen.getByRole('alert').textContent).toBe(S.fineNegative)
+
     fireEvent.change(field(S.fine), { target: { value: '4' } })
     fireEvent.change(field(S.big), { target: { value: '4' } })
     await press(S.save)
@@ -206,6 +239,12 @@ describe('Settings › Teacher', () => {
 })
 
 describe('Settings › Engine', () => {
+  it('says once what an engine that is off means', async () => {
+    render(<Settings engine={hub('failed')} today={TODAY} />)
+    await settle()
+    expect(screen.getAllByText(COPY.engine.offHelp)).toHaveLength(1)
+  })
+
   it('shows the backend and network once the engine is ready', async () => {
     render(<Settings engine={hub('ready')} today={TODAY} />)
     await settle()

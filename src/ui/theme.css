@@ -1223,7 +1223,9 @@ a {
   border: 1px solid var(--rule-strong);
 }
 
-.confirm:focus:not(:focus-visible) {
+/* It takes focus when it opens so a screen reader reads the question; Tab goes on to its buttons, which
+   show their own ring. The panel itself needs none. */
+.confirm:focus {
   outline: none;
 }
 

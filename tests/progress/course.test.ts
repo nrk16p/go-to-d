@@ -5,6 +5,7 @@ import { BOOK } from '../../src/book/data'
 import { courseOrder, currentStreak, dueItems, masteredCount, newItems } from '../../src/progress/course'
 import type { Progress, ReviewState } from '../../src/progress/srs'
 import { defaultProgress } from '../../src/progress/store'
+import { drillableSides } from '../../src/session/sides'
 
 const TODAY = '2026-10-22'
 
@@ -17,6 +18,10 @@ function progressWith(reviews: Record<string, ReviewState>, patch: Partial<Progr
 }
 
 const keys = (items: { key: string }[]) => items.map((i) => i.key)
+
+// The book grows, so totals come from the book itself: every pattern × the sides it can be drilled from.
+const BY_ORDER = Object.keys(BOOK.patterns).sort((a, b) => BOOK.patterns[a].def.order - BOOK.patterns[b].def.order)
+const TOTAL = BY_ORDER.reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
 
 describe('courseOrder', () => {
   const order = keys(courseOrder(BOOK))
@@ -50,17 +55,21 @@ describe('courseOrder', () => {
       'star44-high-knight:attack',
       'star44-double-approach:attack',
     ])
-    expect(order.slice(-4)).toEqual([
-      'sansan33-shoulder-hit:defend',
-      'sansan33-shoulder-hit:attack',
-      'sansan33-fourth-line-approach:defend',
-      'sansan33-fourth-line-approach:attack',
-    ])
+    // From there on: pattern by pattern in order, defend before attack, the last pattern last.
+    const last = BY_ORDER[BY_ORDER.length - 1]
+    expect(order.slice(-2)).toEqual([`${last}:defend`, `${last}:attack`])
+    const rest = order.slice(14).map((k) => {
+      const [id, side] = k.split(':')
+      return BOOK.patterns[id].def.order * 2 + (side === 'attack' ? 1 : 0)
+    })
+    expect(rest).toEqual([...rest].sort((a, b) => a - b))
   })
 
   it('holds each drillable side once and leaves out the trick side', () => {
-    expect(order).toHaveLength(39)
-    expect(new Set(order).size).toBe(39)
+    expect(order).toHaveLength(TOTAL)
+    expect(new Set(order).size).toBe(TOTAL)
+    // One pattern has a trick in its main line, so it has one side, not two.
+    expect(TOTAL).toBe(2 * BY_ORDER.length - 1)
     expect(order).not.toContain('invade33-cut-trick:attack')
     const k = order.indexOf('komoku34-attach-drawback:defend')
     expect(order[k + 1]).toBe('komoku34-attach-drawback:attack')
@@ -104,7 +113,7 @@ describe('dueItems', () => {
 })
 
 describe('masteredCount', () => {
-  it('counts box 4 and up over every drillable side (39, not 40: a trick pattern has one side)', () => {
+  it('counts box 4 and up over every drillable side (a trick pattern has one side, not two)', () => {
     const p = progressWith({
       'star44-low-knight-slide:defend': review(4, '2026-11-01'),
       'komoku34-tenuki:defend': review(5, '2026-11-20'),
@@ -113,8 +122,8 @@ describe('masteredCount', () => {
       'star44-low-jump:defend': review(3, '2026-11-02'),
       'gone-pattern:defend': review(5, '2026-11-02'),
     })
-    expect(masteredCount(BOOK, p)).toEqual({ mastered: 3, total: 39 })
-    expect(masteredCount(BOOK, defaultProgress())).toEqual({ mastered: 0, total: 39 })
+    expect(masteredCount(BOOK, p)).toEqual({ mastered: 3, total: TOTAL })
+    expect(masteredCount(BOOK, defaultProgress())).toEqual({ mastered: 0, total: TOTAL })
   })
 })
 

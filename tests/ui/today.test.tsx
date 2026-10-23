@@ -4,15 +4,22 @@
 
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { BOOK } from '../../src/book/data'
 import type { Progress, ReviewState } from '../../src/progress/srs'
 import { defaultProgress, loadProgress, STORAGE_KEY } from '../../src/progress/store'
+import { drillableSides } from '../../src/session/sides'
 import { COPY } from '../../src/ui/copy'
 import { Today } from '../../src/ui/screens/Today'
 import { MemoryStorage } from './memoryStorage'
 
 const TODAY = '2026-10-22'
+/** Every pattern × drillable side in the book (it grows; one trick pattern has one side). */
+const TOTAL = Object.keys(BOOK.patterns).reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
 const IPHONE =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1'
+const IPHONE_LINE = `${IPHONE} Line/14.16.0`
+const IPAD_DESKTOP =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15'
 const ANDROID =
   'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36'
 
@@ -90,7 +97,7 @@ describe('Today', () => {
   it('shows the mastered count over every drillable side, and the streak', () => {
     store(FIXTURE)
     render(<Today today={TODAY} />)
-    expect(stat(COPY.today.mastered)).toBe(COPY.today.masteredValue(3, 39))
+    expect(stat(COPY.today.mastered)).toBe(COPY.today.masteredValue(3, TOTAL))
     expect(stat(COPY.today.streak)).toBe('4')
   })
 
@@ -98,7 +105,7 @@ describe('Today', () => {
     render(<Today today={TODAY} />)
     expect(screen.queryByRole('region', { name: COPY.today.dueTitle })).toBeNull()
     expect(itemsIn(COPY.today.newTitle)).toEqual(['star44-low-knight-slide:defend', 'star44-low-attach-extend:defend'])
-    expect(stat(COPY.today.mastered)).toBe(COPY.today.masteredValue(0, 39))
+    expect(stat(COPY.today.mastered)).toBe(COPY.today.masteredValue(0, TOTAL))
     expect(stat(COPY.today.streak)).toBe('0')
   })
 
@@ -124,6 +131,43 @@ describe('Today', () => {
     cleanup()
     render(<Today today={TODAY} />)
     expect(screen.queryByText(COPY.today.iosHintTitle)).toBeNull()
+  })
+
+  it('with progress to carry over, says to Export it first and links to Settings', () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(IPHONE)
+    render(<Today today={TODAY} />)
+    // A new owner has nothing to move.
+    expect(screen.getByText(COPY.today.iosHintBody)).toBeTruthy()
+    expect(screen.queryByText(COPY.today.iosHintMove)).toBeNull()
+    cleanup()
+
+    store(FIXTURE)
+    render(<Today today={TODAY} />)
+    expect(screen.getByText(COPY.today.iosHintTitle)).toBeTruthy()
+    expect(screen.getByText(COPY.today.iosHintMove)).toBeTruthy()
+    expect(screen.getByRole('link', { name: COPY.today.iosHintExport }).getAttribute('href')).toBe('#/settings')
+  })
+
+  it("inside an app's browser (LINE), says to open the page in Safari first", () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(IPHONE_LINE)
+    render(<Today today={TODAY} />)
+    expect(screen.getByText(COPY.today.iosHintInApp)).toBeTruthy()
+    expect(screen.queryByText(COPY.today.iosHintBody)).toBeNull()
+  })
+
+  it('counts an iPad that asks for desktop pages as iOS, but not a Mac', () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(IPAD_DESKTOP)
+    render(<Today today={TODAY} />)
+    expect(screen.queryByText(COPY.today.iosHintTitle)).toBeNull()
+    cleanup()
+
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 5, configurable: true })
+    try {
+      render(<Today today={TODAY} />)
+      expect(screen.getByText(COPY.today.iosHintTitle)).toBeTruthy()
+    } finally {
+      delete (navigator as { maxTouchPoints?: number }).maxTouchPoints
+    }
   })
 
   it('shows no install hint on Android, or when already installed on iOS', () => {

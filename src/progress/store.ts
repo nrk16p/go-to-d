@@ -63,17 +63,29 @@ function finite(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v)
 }
 
-/** Settings from whatever was saved: each field that is missing or the wrong type falls back to its default. */
+/** The range the Settings form allows, and that load and import hold saved values to. */
+export const SETTING_LIMITS = {
+  visits: { min: 16, max: 400 },
+  newPerDay: { min: 0, max: 10 },
+} as const
+
+const clamp = (n: number, r: { min: number; max: number }) => Math.min(r.max, Math.max(r.min, n))
+
+/**
+ * Settings from whatever was saved: each field that is missing or the wrong type falls back to its default.
+ * Visits and new per day are held to SETTING_LIMITS. Thresholds where fine isn't below big go back to
+ * the default pair, as the form would never have saved them.
+ */
 function settingsFrom(raw: Obj): Settings {
   const d = defaultProgress().settings
   const t = isObj(raw.thresholds) ? raw.thresholds : {}
+  const fine = finite(t.fine) && t.fine >= 0 ? t.fine : d.thresholds.fine
+  const big = finite(t.big) && t.big >= 0 ? t.big : d.thresholds.big
   return {
-    thresholds: {
-      fine: finite(t.fine) && t.fine >= 0 ? t.fine : d.thresholds.fine,
-      big: finite(t.big) && t.big >= 0 ? t.big : d.thresholds.big,
-    },
-    visits: finite(raw.visits) && Number.isInteger(raw.visits) && raw.visits >= 1 ? raw.visits : d.visits,
-    newPerDay: isCount(raw.newPerDay) ? raw.newPerDay : d.newPerDay,
+    thresholds: fine < big ? { fine, big } : { ...d.thresholds },
+    visits:
+      finite(raw.visits) && Number.isInteger(raw.visits) ? clamp(raw.visits, SETTING_LIMITS.visits) : d.visits,
+    newPerDay: isCount(raw.newPerDay) ? clamp(raw.newPerDay, SETTING_LIMITS.newPerDay) : d.newPerDay,
     iosHintDismissed: typeof raw.iosHintDismissed === 'boolean' ? raw.iosHintDismissed : d.iosHintDismissed,
   }
 }

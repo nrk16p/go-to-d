@@ -145,11 +145,16 @@ export const COPY = {
     iosHintTitle: "Add to Home Screen so your progress isn't wiped",
     iosHintBody:
       "Safari can clear a site's saved data after a week without a visit. Tap Share, then Add to Home Screen, and open Go-to-D from the icon.",
+    iosHintInApp: "Open this page in Safari first. The browser inside apps like LINE can't add it to the Home Screen.",
+    iosHintMove:
+      "The Home Screen app can't see Safari's data, so it starts empty. Export your progress in Settings first, then Import it in the app.",
+    iosHintExport: 'Export in Settings',
     iosHintDismiss: 'Got it',
   },
 
   /** The 0-5 review box, as dots. */
-  level: (box: number) => (box === 0 ? 'Not played yet' : box >= 4 ? `Mastered, level ${box} of 5` : `Level ${box} of 5`),
+  level: (box: number, mastered: boolean) =>
+    box === 0 ? 'Not played yet' : mastered ? `Mastered, level ${box} of 5` : `Level ${box} of 5`,
   sideName: (side: Side) => (side === 'defend' ? 'Defending' : 'Attacking'),
 
   library: {
@@ -190,6 +195,7 @@ export const COPY = {
     saveFailed: "This browser wouldn't save it.",
     notNumber: 'Every box needs a number.',
     fineBelowBig: 'Fine has to be smaller than big mistake.',
+    fineNegative: "Fine can't be below 0.",
     visitsRange: 'Visits go from 16 to 400.',
     newRange: 'New patterns a day go from 0 to 10.',
 
@@ -200,11 +206,12 @@ export const COPY = {
       b === 'webgpu' ? 'Graphics chip (WebGPU)' : b === 'wasm' ? 'Processor (WebAssembly)' : b === 'cpu' ? 'Processor, slow mode' : b,
 
     backupTitle: 'Backup',
-    backupBody: 'Your progress lives in this browser only. Export a copy now and then, and import it on a new phone.',
+    backupBody:
+      'Your progress lives in this browser only, and on iPhone the Home Screen app counts as a separate browser. Export a copy now and then, and Import it wherever you play next.',
     export: 'Export progress',
     import: 'Import progress',
     importConfirm: (inFile: number, now: number) =>
-      `This file has ${count(inFile, 'review')}. You have ${count(now, 'review')} now. Replace yours with the file's?`,
+      `This file has ${count(inFile, 'review')}. You have ${count(now, 'review')} now. Replace your reviews and settings with the file's?`,
     importReplace: 'Replace my progress',
     cancel: 'Cancel',
     imported: (n: number) => `Imported. You now have ${count(n, 'review')}.`,

@@ -37,7 +37,7 @@ const TOP_BOX = BOX_DAYS.length - 1
 /** A miss goes back here, due tomorrow. */
 const MISS_BOX = 1
 /** Boxes from here up count as mastered. */
-const MASTERED_BOX = 4
+export const MASTERED_BOX = 4
 const MAX_MISSED_KEYS = 20
 
 export function reviewKey(patternId: string, side: Side): string {

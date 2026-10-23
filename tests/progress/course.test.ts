@@ -26,50 +26,42 @@ const TOTAL = BY_ORDER.reduce((n, id) => n + drillableSides(BOOK, id).length, 0)
 describe('courseOrder', () => {
   const order = keys(courseOrder(BOOK))
 
+  // The handicap-game families lead: the defend side of every 4-4 point and 3-3 invasion pattern.
+  const LEAD = BY_ORDER.filter(
+    (id) => ['star44', 'invade33'].includes(BOOK.patterns[id].family) && drillableSides(BOOK, id).includes('defend'),
+  ).map((id) => `${id}:defend`)
+  const rank = (k: string) => {
+    const [id, side] = k.split(':')
+    return BOOK.patterns[id].def.order * 2 + (side === 'attack' ? 1 : 0)
+  }
+
   it('starts with the defend side of every 4-4 point and 3-3 invasion pattern, by order', () => {
-    expect(order.slice(0, 14)).toEqual([
-      'star44-low-knight-slide:defend',
-      'star44-low-attach-extend:defend',
-      'star44-low-jump:defend',
-      'star44-low-pincer:defend',
-      'star44-high-attach:defend',
-      'star44-high-knight:defend',
-      'star44-double-approach:defend',
-      'star44-low-tenuki:defend',
-      'invade33-hane-hane:defend',
-      'invade33-other-side-jump:defend',
-      'invade33-stand:defend',
-      'invade33-after-knight:defend',
-      'invade33-wrong-side:defend',
-      'invade33-cut-trick:defend',
-    ])
+    expect(order[0]).toBe('star44-low-knight-slide:defend')
+    expect(order.slice(0, LEAD.length)).toEqual(LEAD)
+    expect(LEAD).toContain('invade33-cut-trick:defend')
   })
 
   it('then every other pattern and side by order, defend before attack', () => {
-    expect(order.slice(14, 21)).toEqual([
-      'star44-low-knight-slide:attack',
-      'star44-low-attach-extend:attack',
-      'star44-low-jump:attack',
-      'star44-low-pincer:attack',
-      'star44-high-attach:attack',
-      'star44-high-knight:attack',
-      'star44-double-approach:attack',
-    ])
-    // From there on: pattern by pattern in order, defend before attack, the last pattern last.
+    const rest = order.slice(LEAD.length)
+    expect(rest[0]).toBe('star44-low-knight-slide:attack')
+    expect(rest.map(rank)).toEqual(rest.map(rank).sort((a, b) => a - b))
+    // The last pattern comes last, with every side it can be drilled from.
     const last = BY_ORDER[BY_ORDER.length - 1]
-    expect(order.slice(-2)).toEqual([`${last}:defend`, `${last}:attack`])
-    const rest = order.slice(14).map((k) => {
-      const [id, side] = k.split(':')
-      return BOOK.patterns[id].def.order * 2 + (side === 'attack' ? 1 : 0)
-    })
-    expect(rest).toEqual([...rest].sort((a, b) => a - b))
+    const lastSides = drillableSides(BOOK, last).map((s) => `${last}:${s}`)
+    expect(rest.slice(-lastSides.length)).toEqual(lastSides)
   })
 
   it('holds each drillable side once and leaves out the trick side', () => {
     expect(order).toHaveLength(TOTAL)
     expect(new Set(order).size).toBe(TOTAL)
-    // One pattern has a trick in its main line, so it has one side, not two.
-    expect(TOTAL).toBe(2 * BY_ORDER.length - 1)
+    // A pattern with a trick in its main line has one side, not two.
+    const oneSided = BY_ORDER.filter((id) => drillableSides(BOOK, id).length === 1)
+    expect(oneSided).toContain('invade33-cut-trick')
+    expect(TOTAL).toBe(2 * BY_ORDER.length - oneSided.length)
+    for (const id of oneSided) {
+      const other = drillableSides(BOOK, id)[0] === 'defend' ? 'attack' : 'defend'
+      expect(order).not.toContain(`${id}:${other}`)
+    }
     expect(order).not.toContain('invade33-cut-trick:attack')
     const k = order.indexOf('komoku34-attach-drawback:defend')
     expect(order[k + 1]).toBe('komoku34-attach-drawback:attack')

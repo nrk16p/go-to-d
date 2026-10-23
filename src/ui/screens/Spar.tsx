@@ -9,7 +9,7 @@
 import { Component, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { checkedLoss } from '../../book/checkedLoss'
 import { BOOK } from '../shownBook'
-import { toGtp, type Board as Grid, type Color, type Pt } from '../../go/coords'
+import { inRegion, toGtp, withMargin, type Board as Grid, type Color, type Pt, type Region } from '../../go/coords'
 import { otherColor } from '../../go/rules'
 import { loadProgress } from '../../progress/store'
 import { SparController, type SparConfig, type SparState, type Verdict } from '../../session/controller'
@@ -290,6 +290,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
           {ownerLine && v && (
             <VerdictView
               v={v}
+              region={state.region}
               low={ownerLine.low}
               stopped={stopped}
               onRetry={() => controller.retry()}
@@ -336,6 +337,8 @@ function Low() {
 
 interface VerdictProps {
   v: Verdict
+  /** The session's corner: a better point away from it reads as playing elsewhere there. */
+  region: Region
   low: boolean
   stopped: boolean
   onRetry: () => void
@@ -343,7 +346,7 @@ interface VerdictProps {
   onSwitch: (patternId: string) => void
 }
 
-function VerdictView({ v, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictProps) {
+function VerdictView({ v, region, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictProps) {
   const C = COPY.verdict
   switch (v.type) {
     case 'good':
@@ -379,7 +382,9 @@ function VerdictView({ v, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictPr
             : C.costOnly(v.pointsLost)
           : v.better === 'tenuki'
             ? C.betterElsewhere(v.pointsLost)
-            : C.better(toGtp(v.better), v.pointsLost)
+            : inRegion(v.better, withMargin(region))
+              ? C.better(toGtp(v.better), v.pointsLost)
+              : C.betterElsewhereAt(toGtp(v.better), v.pointsLost)
       return (
         <div className="verdict verdict-mistake">
           <p>

@@ -83,6 +83,7 @@ export const COPY: Copy = {
     bigMistake: 'ตานี้พลาดหนัก',
     better: (gtp, lost) => (lost === null ? `${gtp} ดีกว่า` : `${gtp} ดีกว่าราว ${points(lost)}`),
     betterElsewhere: (lost) => (lost === null ? 'เทนุกิดีกว่า' : `เทนุกิดีกว่าราว ${points(lost)}`),
+    betterElsewhereAt: (gtp, lost) => (lost === null ? `เทนุกิไป ${gtp} ดีกว่า` : `เทนุกิไป ${gtp} ดีกว่าราว ${points(lost)}`),
     costOnly: (lost) => `เสียไปราว ${points(lost)}`,
     retry: 'ลองใหม่',
     playOn: 'เล่นต่อ',

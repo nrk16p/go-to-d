@@ -17,7 +17,7 @@ import { getLastReport } from '../../src/ui/reportStore'
 import { parseRoute, sparHref } from '../../src/ui/router'
 import { Spar } from '../../src/ui/screens/Spar'
 import { Report } from '../../src/ui/screens/Report'
-import { FakeEngine, type EngineStatus } from '../session/fakeEngine'
+import { analysisOf, defaultAnalysis, FakeEngine, type EngineStatus } from '../session/fakeEngine'
 
 /** The book check's loss for the S17 mistake in the knight's-move drill, as the verdict shows it (R29). */
 function s17Loss(): number {
@@ -235,6 +235,26 @@ describe('Spar', () => {
     await tap(container, 'O15')
     expect(verdict()).toContain(COPY.verdict.fineNoBook)
     expect(verdict()).not.toContain(COPY.verdict.fineOffbook)
+  })
+
+  it('a better point elsewhere is named as playing elsewhere there, not as a point on the corner (M10)', async () => {
+    // Black's turn after W S16: the engine's best corner move is worth 0, its best point elsewhere (D10) +3.
+    const engine = new EngineHub(
+      () =>
+        new FakeEngine({
+          status: 'ready',
+          analyze: (pos, _komi, region) =>
+            pos.toMove === 'black' && pos.history.length === 3 ? analysisOf('black', [['O16', 0]], ['D10', 3]) : defaultAnalysis(pos, region),
+          score: () => -2,
+        }),
+    )
+    hubs.push(engine.start())
+    const { container } = await startKnight(engine)
+    await tap(container, 'O17')
+    await press(COPY.spar.fullBoard)
+    // Elsewhere, but not on the engine's point: it costs 5 against D10.
+    await tap(container, 'K4')
+    expect(verdict()).toContain(`${COPY.verdict.bigMistake} ${COPY.verdict.betterElsewhereAt('D10', 5)}`)
   })
 
   it('an off-book move with the engine loading is not checked, and says so', async () => {

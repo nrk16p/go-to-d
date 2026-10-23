@@ -90,6 +90,9 @@ export const COPY = {
       lost === null ? `${gtp} was better.` : `${gtp} was better, by about ${points(lost)}.`,
     betterElsewhere: (lost: number | null) =>
       lost === null ? 'Playing elsewhere was better.' : `Playing elsewhere was better, by about ${points(lost)}.`,
+    /** The better move is a point away from the corner. */
+    betterElsewhereAt: (gtp: string, lost: number | null) =>
+      lost === null ? `Playing elsewhere at ${gtp} was better.` : `Playing elsewhere at ${gtp} was better, by about ${points(lost)}.`,
     costOnly: (lost: number) => `It costs about ${points(lost)}.`,
     retry: 'Retry',
     playOn: 'Play on',

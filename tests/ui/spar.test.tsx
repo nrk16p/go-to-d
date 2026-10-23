@@ -11,6 +11,7 @@ import { STORAGE_KEY } from '../../src/progress/store'
 import { COPY } from '../../src/ui/copy'
 import { EngineHub } from '../../src/ui/engine'
 import { getLastReport } from '../../src/ui/reportStore'
+import { parseRoute, sparHref } from '../../src/ui/router'
 import { Spar } from '../../src/ui/screens/Spar'
 import { Report } from '../../src/ui/screens/Report'
 import { FakeEngine, type EngineStatus } from '../session/fakeEngine'
@@ -299,6 +300,44 @@ describe('Spar on touch', () => {
     const panel = container.querySelector('.spar-panel')!
     expect(panel.firstElementChild?.classList.contains('bar')).toBe(true)
     expect(panel.firstElementChild?.textContent).toContain(COPY.spar.playPoint('O17'))
+  })
+})
+
+describe('Spar address', () => {
+  const LINK = { family: 'star44', pattern: 'star44-low-knight-slide', side: 'defend' }
+
+  it('a link without sym and seed gets the ones picked written into the address, so a reload replays the same board', async () => {
+    // 0.5 picks sym 4 (mirrored: the teacher's R14 lands on C14) and seed 2^31.
+    vi.spyOn(Math, 'random').mockReturnValue(0.5)
+    window.location.hash = sparHref(LINK)
+    const { container, unmount } = render(<Spar params={LINK} engine={hub()} gapMs={0} />)
+    await settle()
+    const c14 = parseGtp('C14')
+    expect(container.querySelector(`[data-last="${c14.x},${c14.y}"]`)).not.toBeNull()
+    expect(window.location.hash).toBe(sparHref({ ...LINK, sym: '4', seed: '2147483648' }))
+
+    // The reload: the address now names sym and seed, Math.random is no longer asked.
+    unmount()
+    vi.mocked(Math.random).mockReturnValue(0)
+    const route = parseRoute(window.location.hash)
+    if (route.name !== 'spar') throw new Error('not a spar route')
+    const again = render(<Spar params={route.params} engine={hub()} gapMs={0} />)
+    await settle()
+    expect(again.container.querySelector(`[data-last="${c14.x},${c14.y}"]`)).not.toBeNull()
+    expect(window.location.hash).toBe(sparHref({ ...LINK, sym: '4', seed: '2147483648' }))
+  })
+
+  it('a link that names sym and seed is left as it is', async () => {
+    window.location.hash = sparHref(KNIGHT)
+    await startKnight()
+    expect(window.location.hash).toBe(sparHref(KNIGHT))
+  })
+
+  it('switching to another pattern keeps sym and seed in the address', async () => {
+    const { container } = await startKnight()
+    await tap(container, 'Q14')
+    await press(COPY.verdict.switchOne)
+    expect(window.location.hash).toBe(sparHref({ family: 'star44', pattern: 'star44-low-attach-extend', side: 'defend', sym: '0', seed: '1' }))
   })
 })
 

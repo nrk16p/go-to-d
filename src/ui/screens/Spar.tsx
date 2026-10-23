@@ -33,6 +33,14 @@ export interface SparProps {
 
 export function Spar({ params, engine, gapMs }: SparProps) {
   const [setup] = useState(() => resolveSpar(params, BOOK, loadProgress()))
+  // The board turn and seed picked for a link without them go into the address, so a reload
+  // replays the same session instead of a freshly turned board.
+  const [address] = useState(() =>
+    setup.ok ? sparHref({ ...params, sym: String(setup.config.sym), seed: String(setup.config.seed) }) : null,
+  )
+  useEffect(() => {
+    if (address) replaceQuietly(address)
+  }, [address])
   // "Start again" after an error mounts a fresh session with the same setup.
   const [run, setRun] = useState(0)
   if (!setup.ok) {
@@ -206,7 +214,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
     const entry = BOOK.patterns[id]
     setDrill({ mode: 'drill', family: entry.family, patternId: id })
     reported.current = false
-    replaceQuietly(sparHref({ family: entry.family, pattern: id, side }))
+    replaceQuietly(sparHref({ family: entry.family, pattern: id, side, sym: String(config.sym), seed: String(config.seed) }))
   }
 
   function toggleFull() {

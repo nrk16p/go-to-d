@@ -1,5 +1,5 @@
 {
-  "familyHash": "04b1ed4cd4cc49",
+  "familyHash": "1b707e623eaaed",
   "model": "kata1-b18c384nbt-s9996604416-d4316597426",
   "visits": 400,
   "nodes": {
@@ -19,7 +19,7 @@
       "kind": "joseki"
     },
     "invade33:W:R17/B:Q17/W:R16/B:R15": {
-      "loss": 0.32,
+      "loss": 0.31,
       "bestAt": "R14",
       "kind": "joseki"
     },
@@ -43,8 +43,148 @@
       "bestAt": "R13",
       "kind": "joseki"
     },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:Q18": {
+      "loss": 0.83,
+      "bestAt": "S13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:Q18/B:P18": {
+      "loss": 0,
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:Q18/B:P18/W:R18": {
+      "loss": 0,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:Q18/B:P18/W:R18/B:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:Q18/B:P18/W:R18/B:P17": {
+      "loss": 3.23,
+      "bestAt": "O17",
+      "kind": "mistake"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:Q18/B:P18/W:R18/B:P17/W:J17": {
+      "loss": 0,
+      "bestAt": "J17",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:S13": {
+      "loss": 0,
+      "bestAt": "S13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:S13/B:R12": {
+      "loss": 0.03,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:S13/B:R18": {
+      "loss": 0,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:S13/B:R18/W:S18": {
+      "loss": 0,
+      "bestAt": "S18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:S13/B:R18/W:S18/B:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:tenuki": {
+      "loss": 0.07,
+      "bestAt": "S13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:tenuki/B:Q18": {
+      "loss": 0.02,
+      "bestAt": "K16",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:tenuki/B:Q18/W:S13": {
+      "loss": 0,
+      "bestAt": "S13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:tenuki/B:Q18/W:S13/B:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:R13/W:tenuki/B:Q18/W:S13/B:R12/W:R18": {
+      "loss": 0,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:tenuki": {
+      "loss": 4.36,
+      "bestAt": "R13",
+      "kind": "mistake"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:tenuki/W:R13": {
+      "loss": 0,
+      "bestAt": "R13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:tenuki/W:R13/B:Q13": {
+      "loss": 0.46,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:S14/B:tenuki/W:R13/B:Q13/W:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18": {
+      "loss": 0.79,
+      "bestAt": "S14",
+      "kind": "alternative"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18/B:P18": {
+      "loss": 0,
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18/B:P18/W:S14": {
+      "loss": 0,
+      "bestAt": "S14",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18/B:P18/W:S14/B:R13": {
+      "loss": 0,
+      "bestAt": "R13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18/B:P18/W:S14/B:R13/W:R18": {
+      "loss": 0,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18/B:P18/W:S14/B:R13/W:R18/B:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18/B:P18/W:R18": {
+      "loss": 4.18,
+      "bestAt": "S14",
+      "kind": "mistake"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:R15/W:S15/B:R14/W:Q18/B:P18/W:R18/B:S14": {
+      "loss": 0,
+      "bestAt": "S14",
+      "kind": "joseki"
+    },
     "invade33:W:R17/B:Q17/W:R16/B:R15/W:Q15": {
-      "loss": 3.33,
+      "loss": 3.27,
       "bestAt": "S15",
       "kind": "trick"
     },
@@ -74,7 +214,7 @@
       "kind": "joseki"
     },
     "invade33:W:R17/B:Q17/W:R16/B:Q15": {
-      "loss": 0.35,
+      "loss": 0.18,
       "bestAt": "R14",
       "kind": "joseki"
     },
@@ -84,8 +224,53 @@
       "kind": "joseki"
     },
     "invade33:W:R17/B:Q17/W:R16/B:Q15/W:S14/B:R13": {
-      "loss": 0,
+      "loss": 0.22,
       "bestAt": "K16",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:Q15/W:S14/B:R13/W:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:Q15/W:S14/B:R13/W:R14/B:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:Q15/W:S14/B:R13/W:R14/B:Q14/W:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:Q15/W:S14/B:R13/W:R14/B:Q14/W:R12/B:Q13": {
+      "loss": 0,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:Q15/W:S14/B:R13/W:R14/B:Q14/W:R12/B:Q13/W:S13": {
+      "loss": 0,
+      "bestAt": "S13",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:S16": {
+      "loss": 8.47,
+      "bestAt": "R14",
+      "kind": "mistake"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:S16/W:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:S16/W:R15/B:Q15": {
+      "loss": 1.12,
+      "bestAt": "R18",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:Q17/W:R16/B:S16/W:R15/B:Q15/W:R14": {
+      "loss": 0,
+      "bestAt": "R14",
       "kind": "joseki"
     },
     "invade33:W:R17/B:R16": {
@@ -128,18 +313,48 @@
       "bestAt": "S18",
       "kind": "joseki"
     },
+    "invade33:W:R17/B:R16/W:Q17/B:O17/W:P16": {
+      "loss": 3.3,
+      "bestAt": "P17",
+      "kind": "trick"
+    },
+    "invade33:W:R17/B:R16/W:Q17/B:O17/W:P16/B:P17": {
+      "loss": 0,
+      "bestAt": "P17",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:R16/W:Q17/B:O17/W:P16/B:P17/W:S16": {
+      "loss": 0,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:R16/W:Q17/B:O17/W:P16/B:P17/W:S16/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:R16/W:Q17/B:O17/W:P16/B:P17/W:S16/B:S15/W:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "invade33:W:R17/B:R16/W:Q17/B:O17/W:P16/B:P17/W:S16/B:S15/W:S17/B:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
     "invade33:W:R14": {
       "loss": 0,
       "bestAt": "O17",
       "kind": "joseki"
     },
     "invade33:W:R14/B:O17": {
-      "loss": 0.58,
-      "bestAt": "R12",
+      "loss": 0.94,
+      "bestAt": "Q12",
       "kind": "joseki"
     },
     "invade33:W:R14/B:O17/W:R11": {
-      "loss": 0.09,
+      "loss": 0.14,
       "bestAt": "Q10",
       "kind": "joseki"
     },
@@ -149,8 +364,8 @@
       "kind": "joseki"
     },
     "invade33:W:R14/B:O17/W:R11/B:tenuki/W:R17": {
-      "loss": 1,
-      "bestAt": "J15",
+      "loss": 1.14,
+      "bestAt": "J13",
       "kind": "joseki"
     },
     "invade33:W:R14/B:O17/W:R11/B:tenuki/W:R17/B:R16": {
@@ -189,7 +404,7 @@
       "kind": "joseki"
     },
     "invade33:W:R14/B:O17/W:R11/B:tenuki/W:R17/B:Q17": {
-      "loss": 2.41,
+      "loss": 2.32,
       "bestAt": "R16",
       "kind": "mistake"
     },
@@ -209,17 +424,17 @@
       "kind": "joseki"
     },
     "invade33:W:tenuki": {
-      "loss": 0.09,
+      "loss": 0.02,
       "bestAt": "O17",
       "kind": "joseki"
     },
     "invade33:W:tenuki/B:O17": {
-      "loss": 1.03,
-      "bestAt": "R13",
+      "loss": 0.73,
+      "bestAt": "N17",
       "kind": "joseki"
     },
     "invade33:W:tenuki/B:O17/W:R17": {
-      "loss": 1.45,
+      "loss": 1.46,
       "bestAt": "R14",
       "kind": "joseki"
     },
@@ -228,8 +443,23 @@
       "bestAt": "R16",
       "kind": "joseki"
     },
+    "invade33:W:tenuki/B:O17/W:R17/B:R16/W:Q17": {
+      "loss": 0.36,
+      "bestAt": "R9",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O17/W:R17/B:R16/W:Q17/B:P17": {
+      "loss": 0,
+      "bestAt": "P17",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O17/W:R17/B:R16/W:Q17/B:P17/W:tenuki": {
+      "loss": 0,
+      "bestAt": "R9",
+      "kind": "joseki"
+    },
     "invade33:W:tenuki/B:O17/W:R17/B:Q17": {
-      "loss": 3.65,
+      "loss": 3.78,
       "bestAt": "R16",
       "kind": "mistake"
     },
@@ -251,6 +481,36 @@
     "invade33:W:tenuki/B:O17/W:R17/B:Q17/W:R16/B:R14/W:R15/B:Q14": {
       "loss": 0,
       "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O16": {
+      "loss": 0.75,
+      "bestAt": "N17",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O16/W:R17": {
+      "loss": 1.33,
+      "bestAt": "R10",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O16/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O16/W:R17/B:R16/W:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O16/W:R17/B:R16/W:R14/B:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "invade33:W:tenuki/B:O16/W:R17/B:R16/W:R14/B:Q17/W:R11": {
+      "loss": 0.08,
+      "bestAt": "R10",
       "kind": "joseki"
     }
   }

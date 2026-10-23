@@ -1,6 +1,10 @@
 // The Go board, drawn in SVG. It shows the session's corner (with one line of margin) or the whole
 // board, and turns taps into moves: a mouse click plays at once; on touch, the first tap puts a ghost
 // stone down and a second tap on it plays, because a finger covers more than one point.
+//
+// The ghost goes away whenever `board` changes, even back to a position shown before (Retry restores
+// the very same object). A parent that confirms the ghost itself (a "Play O17" button) passes
+// `ghost` and `onGhost` and owns it.
 
 import { useId, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import { inRegion, toGtp, type Board as Grid, type Color, type Pt, type Region } from '../go/coords'
@@ -24,8 +28,12 @@ export interface BoardProps {
   disabled?: boolean
   /** The colour a tap would play, for the ghost stone. */
   toPlay?: Color
-  /** Told when a touch tap puts a ghost stone down. The ghost goes when `board` changes. */
-  onPreview?: (p: Pt) => void
+  /**
+   * Controlled ghost: the point a touch tap has picked, and the setter the board calls (null when it
+   * plays or drops the ghost). Without `onGhost` the board keeps the ghost itself.
+   */
+  ghost?: Pt | null
+  onGhost?: (p: Pt | null) => void
   /** What a screen reader hears for the board. */
   label?: string
 }
@@ -40,19 +48,28 @@ const ARROWS: Record<string, [number, number]> = {
   ArrowDown: [0, 1],
 }
 
-export function Board({ board, region, lastMove, markers = [], onPlay, disabled = false, toPlay, onPreview, label }: BoardProps) {
+export function Board(props: BoardProps) {
+  const { board, region, lastMove, markers = [], onPlay, disabled = false, toPlay, label } = props
   const view = shownRegion(region)
   const L = layoutFor(view)
   const playable = !!onPlay && !disabled
   const pointer = useRef('mouse')
-  // The ghost belongs to the position it was put on, so a new position drops it without an effect.
-  const [ghost, setGhost] = useState<{ pt: Pt; board: Grid } | null>(null)
+  const [ownGhost, setOwnGhost] = useState<Pt | null>(null)
+  // Any new `board`, even one seen before, drops the board's own ghost (set during render, no effect).
+  const [ghostBoard, setGhostBoard] = useState(board)
+  if (ghostBoard !== board) {
+    setGhostBoard(board)
+    setOwnGhost(null)
+  }
+  const controlled = props.onGhost !== undefined
+  const ghost = controlled ? (props.ghost ?? null) : ownGhost
+  const setGhost = (p: Pt | null) => (controlled ? props.onGhost!(p) : setOwnGhost(p))
   const [cursor, setCursor] = useState<Pt | null>(null)
   const hintId = useId()
 
   const sx = (x: number) => x - view.xMin
   const sy = (y: number) => y - view.yMin
-  const shownGhost = playable && ghost && ghost.board === board && inRegion(ghost.pt, view) ? ghost.pt : null
+  const shownGhost = playable && ghost && inRegion(ghost, view) && board[ghost.y][ghost.x] === null ? ghost : null
   const cur = cursor && inRegion(cursor, view) ? cursor : (lastMove && inRegion(lastMove, view) ? lastMove : centre(view))
 
   function tap(p: Pt, touch: boolean) {
@@ -67,8 +84,7 @@ export function Board({ board, region, lastMove, markers = [], onPlay, disabled 
       setGhost(null)
       onPlay!(p)
     } else {
-      setGhost({ pt: p, board })
-      onPreview?.(p)
+      setGhost(p)
     }
   }
 
@@ -87,6 +103,8 @@ export function Board({ board, region, lastMove, markers = [], onPlay, disabled 
   }
 
   function onKeyDown(e: KeyboardEvent<SVGSVGElement>) {
+    // The board keeps focus while the teacher thinks, so keys are ignored rather than the focus lost.
+    if (!playable) return
     const d = ARROWS[e.key]
     if (d) {
       e.preventDefault()
@@ -120,10 +138,10 @@ export function Board({ board, region, lastMove, markers = [], onPlay, disabled 
       aria-label={label ?? COPY.board.label}
       aria-describedby={onPlay ? hintId : undefined}
       aria-disabled={onPlay ? disabled : undefined}
-      tabIndex={playable ? 0 : undefined}
+      tabIndex={onPlay ? 0 : undefined}
       onPointerDown={onPointerDown}
       onClick={onClick}
-      onKeyDown={playable ? onKeyDown : undefined}
+      onKeyDown={onPlay ? onKeyDown : undefined}
     >
       {onPlay && (
         <desc id={hintId}>
@@ -213,18 +231,20 @@ export function Board({ board, region, lastMove, markers = [], onPlay, disabled 
 
 function Marker({ m, at, stone }: { m: BoardMarker; at: [number, number]; stone: Color | null }) {
   const props = { 'data-marker': m.kind, 'data-at': keyOf(m.pt), transform: `translate(${at[0]} ${at[1]})` }
+  // The pen gets an edge (the halo) in a colour that sets it off from what it is drawn on; the theme
+  // decides which edges show (theme.css --halo-*).
   if (m.kind === 'better') {
     return (
       <g {...props}>
+        <path className="pen-halo on-board drawn" d={PEN_LOOP} pathLength={1} />
         <path className="pen drawn" d={PEN_LOOP} pathLength={1} />
       </g>
     )
   }
   if (m.kind === 'mistake') {
-    // On a black stone the red cross gets a light edge so it doesn't sink into the stone.
     return (
       <g {...props}>
-        {stone === 'black' && <path className="pen-halo drawn" d={PEN_CROSS} pathLength={1} />}
+        <path className={`pen-halo on-${stone ?? 'board'} drawn`} d={PEN_CROSS} pathLength={1} />
         <path className="pen drawn" d={PEN_CROSS} pathLength={1} />
       </g>
     )

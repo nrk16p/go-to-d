@@ -62,7 +62,10 @@ export const COPY = {
     lowConfidence: 'Not 100% sure about this one. Check with a stronger player.',
     unknownPattern: (id: string) => `There's no pattern called "${id}".`,
     unknownFamily: "That corner isn't in the book.",
+    noSide: "This pattern can't be drilled from either side yet.",
     backToToday: 'Back to Today',
+    failed: 'Something went wrong and this session stopped.',
+    startAgain: 'Start again',
   },
 
   verdict: {
@@ -111,6 +114,8 @@ export const COPY = {
     none: 'No session to report yet.',
     pickDrill: 'Pick a drill',
     side: (side: Side) => (side === 'defend' ? 'defending' : 'attacking'),
+    subtitle: (title: string, side: Side) => `${title}, ${side === 'defend' ? 'defending' : 'attacking'}.`,
+    dueSide: (side: Side) => `, ${side === 'defend' ? 'defending' : 'attacking'}`,
   },
 
   placeholder: {

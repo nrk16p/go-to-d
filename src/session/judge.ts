@@ -41,6 +41,11 @@ export interface JudgeArgs {
   /** The mover's score after the move. */
   scoreAfter: number | null
   thresholds: Thresholds
+  /**
+   * R29: the native book check's points lost for the book move played, when the book has it. An in-book
+   * mistake reports this rather than the browser engine's (weaker) number.
+   */
+  checkedLoss?: number | null
 }
 
 function samePt(a: Pt | 'tenuki', b: Pt | 'tenuki'): boolean {
@@ -111,10 +116,12 @@ export function judgeMove(args: JudgeArgs): Verdict {
       if (drilled && !onDrill) return { type: 'other-joseki', note: child.note, patternIds: [...child.patternIds] }
       return { type: 'good', note: child.note, kind: child.kind }
     }
-    // A book mistake, or a trick the owner tried: wrong either way, the book says why.
+    // A book mistake, or a trick the owner tried: wrong either way, the book says why. Its points come
+    // from the book check when there are any (R29), else from the engine.
     const loss = engineLoss(args)
     const better = moveOf(bookAnswer(node, args)) ?? loss?.better ?? null
-    const pointsLost = loss ? loss.loss : null
+    const checked = args.checkedLoss ?? null
+    const pointsLost = checked !== null ? round1(Math.max(0, checked)) : loss ? loss.loss : null
     return { type: 'mistake', better, pointsLost, big: pointsLost !== null && pointsLost > thresholds.big, note: child.note, inBook: true }
   }
 

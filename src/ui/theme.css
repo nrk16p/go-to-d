@@ -23,6 +23,10 @@
   --stone-white-rim: #46524c;
 
   --pen: #b9301b;
+  /* Edges under the red pen: on black stones always; on white stones and the board only in dark mode. */
+  --halo-on-black: #fdfefc;
+  --halo-on-white: transparent;
+  --halo-on-board: transparent;
   --good: #2e6b52;
   --hint: #2b4c8c;
   --focus: #2b4c8c;
@@ -44,10 +48,11 @@
     --rule: #2a3531;
     --rule-strong: #5d6b65;
 
-    /* A mid-tone board, so black stones and white stones both stand out from it. */
-    --board: #4a5b53;
-    --board-line: #1c2622;
-    --board-edge: #0f1513;
+    /* A mid-tone board, so black stones and white stones both stand out from it. Lines are at least
+       3:1 against it (#121a17 on #5a6d63 is about 3.2:1). */
+    --board: #5a6d63;
+    --board-line: #121a17;
+    --board-edge: #070a09;
     --label: #a9b6b0;
 
     --stone-black: #0b0e0d;
@@ -56,6 +61,9 @@
     --stone-white-rim: #e9efeb;
 
     --pen: #ff8c72;
+    --halo-on-black: #e9efeb;
+    --halo-on-white: #0b0e0d;
+    --halo-on-board: #0b0e0d;
     --good: #86d3b2;
     --hint: #a8c2ff;
     --focus: #a8c2ff;
@@ -72,15 +80,18 @@
   --muted: #9eaba5;
   --rule: #2a3531;
   --rule-strong: #5d6b65;
-  --board: #4a5b53;
-  --board-line: #1c2622;
-  --board-edge: #0f1513;
+  --board: #5a6d63;
+  --board-line: #121a17;
+  --board-edge: #070a09;
   --label: #a9b6b0;
   --stone-black: #0b0e0d;
   --stone-black-rim: #93a39b;
   --stone-white: #e9efeb;
   --stone-white-rim: #e9efeb;
   --pen: #ff8c72;
+  --halo-on-black: #e9efeb;
+  --halo-on-white: #0b0e0d;
+  --halo-on-board: #0b0e0d;
   --good: #86d3b2;
   --hint: #a8c2ff;
   --focus: #a8c2ff;
@@ -398,8 +409,19 @@ a {
 }
 
 .pen-halo {
-  stroke: var(--stone-white);
   stroke-width: 0.17;
+}
+
+.pen-halo.on-black {
+  stroke: var(--halo-on-black);
+}
+
+.pen-halo.on-white {
+  stroke: var(--halo-on-white);
+}
+
+.pen-halo.on-board {
+  stroke: var(--halo-on-board);
 }
 
 .drawn {
@@ -457,13 +479,30 @@ a {
   min-width: 0;
 }
 
+/* Right under the board: what's happening now and the one button for it. */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-height: 44px;
+}
+
+.bar-empty {
+  display: none;
+}
+
 .status {
   color: var(--muted);
   font-size: 0.9375rem;
 }
 
-.status:empty {
-  display: none;
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
 }
 
 .talk {
@@ -538,10 +577,21 @@ a {
 }
 
 .engine {
+  display: grid;
+  gap: 2px;
+}
+
+.engine-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: 4px 12px;
+}
+
+.engine-help {
+  font-size: 0.875rem;
+  color: var(--muted);
+  max-width: 46ch;
 }
 
 .engine-chip {

@@ -140,3 +140,15 @@ How to read it:
 - Answers to a mistake after Play on are quick (about 1.1 s at full speed): the scoring for the verdict already did the whole-board search, so only the corner search is left.
 
 Rerun with `npm run e2e:answer-time` (it builds first). Stop other GPU and CPU work before timing.
+
+## Judging from one search (R40, after the final review)
+
+Until now an off-book verdict subtracted two searches: the best corner move's value from the search of the position before the move, minus a fresh whole-board search of the position after it. On a slow phone both searches stop at the budget after a few visits, and they don't agree closely enough to subtract. In the handicap setups the search after the move came out lower, so the owner's own best move could show as a mistake, sometimes a 5-point one.
+
+Now, when the move is one the search before it looked at (one of `analyzeCorner`'s candidates), the loss is the difference inside that one search: best candidate minus this candidate, 0 when it is the best. A tenuki on the engine's own point elsewhere is read from the same analysis. Only a move the search didn't look at still gets the search of the position after it (`scoreFor`). The played move is never named as the better one.
+
+What it does to the times above (not re-measured on a device):
+
+- **Verdict.** Most moves are candidates, so the verdict needs only the look-ahead the app starts on each owner turn. "At once" no longer waits for a second search queued behind it, which was the 3.5 s at full speed in the table above. The verdict now comes as soon as the look-ahead ends.
+- **Reply.** Unchanged in total. The teacher's `analyzeCorner` on the new position now runs both of its searches itself, where before it reused the whole-board search the verdict had just done. It is the same pair of searches inside the same 2 s budget.
+- **Reply after Play on.** A mistake judged from one search leaves no whole-board search to reuse, so the reply after Play on takes a full `analyzeCorner`, about the reply time above instead of the 1.1 s measured here.

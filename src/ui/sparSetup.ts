@@ -1,6 +1,7 @@
 // Turns the Spar route's parameters into a session config (R28): side defaults to defend, mode to
 // drill when a pattern is named (free otherwise), and sym and seed are random unless given.
 
+import { bookIndex } from '../book/siblings'
 import type { Book, FamilyId } from '../book/types'
 import { DEFAULT_THRESHOLDS, type SparConfig } from '../session/controller'
 import { drillableSides, type Side } from '../session/sides'
@@ -17,12 +18,16 @@ function intIn(s: string | undefined, min: number, max: number): number | null {
   return n >= min && n <= max ? n : null
 }
 
-/** The positions this family's reviews on `side` list as missed: free sparring steers toward them. */
+/**
+ * The positions the reviews on `side` list as missed, in this family and the ones that start the same way
+ * (R42: free sparring walks their trees too). Free sparring steers toward them.
+ */
 export function missedKeys(book: Book, progress: Progress | null, family: FamilyId, side: Side): Set<string> {
   const out = new Set<string>()
   if (!progress) return out
+  const group = bookIndex(book).group(family)
   for (const [id, entry] of Object.entries(book.patterns)) {
-    if (entry.family !== family) continue
+    if (!group.includes(entry.family)) continue
     const r = progress.reviews[reviewKey(id, side)]
     for (const k of r?.missedKeys ?? []) out.add(k)
   }

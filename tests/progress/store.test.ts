@@ -162,6 +162,21 @@ describe('loadProgress', () => {
       expect(p.streak).toEqual({ count: 1, lastDay: '2026-03-10' })
     })
 
+    it('keeps a review’s first day, and treats a missing or unreadable one as unknown (R44)', () => {
+      saved({
+        reviews: {
+          'a:defend': { ...good(2), firstDay: '2026-03-01' },
+          'b:defend': good(2),
+          'c:defend': { ...good(2), firstDay: 'last week' },
+        },
+      })
+      const p = loadProgress()
+      expect(p.reviews['a:defend']).toEqual({ ...good(2), firstDay: '2026-03-01' })
+      expect(p.reviews['b:defend']).toEqual(good(2))
+      expect(p.reviews['c:defend']).toEqual(good(2))
+      expect(p.reviews['c:defend']).not.toHaveProperty('firstDay')
+    })
+
     it.each([
       ['a streak of the wrong shape', { count: 'x', lastDay: 3 }],
       ['a streak with a bad day', { count: 4, lastDay: 'yesterday' }],
@@ -366,6 +381,7 @@ describe('recordSession', () => {
       runs: 1,
       cleanRuns: 1,
       missedKeys: [],
+      firstDay: day1,
     })
   })
 

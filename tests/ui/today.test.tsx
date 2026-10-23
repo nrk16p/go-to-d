@@ -5,10 +5,12 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BOOK } from '../../src/book/data'
+import { courseOrder } from '../../src/progress/course'
 import type { Progress, ReviewState } from '../../src/progress/srs'
 import { defaultProgress, loadProgress, STORAGE_KEY } from '../../src/progress/store'
 import { drillableSides } from '../../src/session/sides'
 import { COPY } from '../../src/ui/copy'
+import { sparHref } from '../../src/ui/router'
 import { Today } from '../../src/ui/screens/Today'
 import { MemoryStorage } from './memoryStorage'
 
@@ -92,6 +94,35 @@ describe('Today', () => {
     expect(firstDue).toBeGreaterThanOrEqual(0)
     expect(firstDue).toBeLessThan(firstNew)
     expect(within(screen.getByRole('region', { name: COPY.today.dueTitle })).getAllByText(COPY.today.play)).toHaveLength(1)
+  })
+
+  it('offers newPerDay less the new ones already started today (R44)', () => {
+    const course = courseOrder(BOOK)
+    const newPerDay = defaultProgress().settings.newPerDay
+    store({ ...defaultProgress(), reviews: { [course[0].key]: { ...review(1, '2026-10-23'), firstDay: TODAY } } })
+    render(<Today today={TODAY} />)
+    expect(itemsIn(COPY.today.newTitle)).toEqual(course.slice(1, newPerDay).map((i) => i.key))
+    expect(screen.getByText(COPY.today.lead(0, newPerDay - 1))).toBeTruthy()
+  })
+
+  it('once today’s new ones are started, says so, the list is done, and one more is a tap away', () => {
+    const course = courseOrder(BOOK)
+    const newPerDay = defaultProgress().settings.newPerDay
+    const started = Object.fromEntries(course.slice(0, newPerDay).map((i) => [i.key, { ...review(1, '2026-10-23'), firstDay: TODAY }]))
+    store({ ...defaultProgress(), reviews: started })
+    render(<Today today={TODAY} />)
+    expect(screen.getByText(COPY.today.lead(0, 0))).toBeTruthy()
+    const region = screen.getByRole('region', { name: COPY.today.newTitle })
+    expect(within(region).getByText(COPY.today.doneNew)).toBeTruthy()
+    const next = course[newPerDay]
+    const more = within(region).getByRole('link', { name: COPY.today.learnOneMore })
+    expect(more.getAttribute('href')).toBe(sparHref({ family: next.family, pattern: next.patternId, side: next.side }))
+    expect(within(region).queryByText(COPY.today.play)).toBeNull()
+
+    // Tomorrow the day's share is back.
+    cleanup()
+    render(<Today today="2026-10-23" />)
+    expect(itemsIn(COPY.today.newTitle)).toEqual(course.slice(newPerDay, 2 * newPerDay).map((i) => i.key))
   })
 
   it('shows the mastered count over every drillable side, and the streak', () => {

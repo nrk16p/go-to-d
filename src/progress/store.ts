@@ -102,7 +102,9 @@ function progressFrom(raw: unknown): Progress | null {
   const entries: Array<[string, ReviewState]> = []
   for (const [key, r] of Object.entries(raw.reviews)) {
     if (!isReview(r)) continue
-    entries.push([key, { box: r.box, due: r.due, runs: r.runs, cleanRuns: r.cleanRuns, missedKeys: [...r.missedKeys] }])
+    // A missing or unreadable first day is unknown (R44): the review itself is still good.
+    const firstDay = isDay(r.firstDay) ? { firstDay: r.firstDay } : {}
+    entries.push([key, { box: r.box, due: r.due, runs: r.runs, cleanRuns: r.cleanRuns, missedKeys: [...r.missedKeys], ...firstDay }])
   }
   const s = raw.streak
   const streak =

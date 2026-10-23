@@ -36,9 +36,14 @@ export interface JudgeArgs {
   drillPatternId?: string
   /** The drilled pattern's main line, so "the drilled path's move" is exact. Optional: without it the pattern id decides. */
   drillPath?: BookNode[]
+  /** For a tenuki: the point its stone went on, when the board has one (the Play elsewhere button, or a far tap). */
+  tenukiAt?: Pt
   /** The engine's view of the position before the move, from the mover's side. */
   before: CornerAnalysis | null
-  /** The mover's score after the move. */
+  /**
+   * The mover's score after the move, from a second search. Only needed when `before` has no value for the
+   * move itself (scoreAfterNeeded); the controller doesn't ask for it otherwise.
+   */
   scoreAfter: number | null
   thresholds: Thresholds
   /**
@@ -88,15 +93,39 @@ export function round1(x: number): number {
 }
 
 /**
- * Points lost by the move and the move the engine liked better, or null without engine data.
- * A corner move is measured against the best corner move. A tenuki is measured against the best
- * move elsewhere, unless the best corner move is bigger still: then not answering in the corner is the loss.
+ * The move's own value in the analysis before it (R40): a corner move the search looked at (one of its
+ * candidates), or a tenuki on the very point the search picked elsewhere. Null when the search has none.
  */
-function engineLoss(a: JudgeArgs): { loss: number; better: Pt } | null {
-  if (!a.before || a.scoreAfter === null) return null
+function ownValue(a: Pick<JudgeArgs, 'before' | 'played' | 'tenukiAt'>): number | null {
+  if (!a.before) return null
+  const { cornerBest, tenukiBest, candidates } = a.before
+  if (a.played === 'tenuki') return a.tenukiAt && tenukiBest && samePt(a.tenukiAt, tenukiBest.pt) ? tenukiBest.scoreLead : null
+  const played = a.played
+  if (samePt(played, cornerBest.pt)) return cornerBest.scoreLead
+  return candidates.find((c) => samePt(c.pt, played))?.scoreLead ?? null
+}
+
+/** Whether judging this move needs the second search, the score after it: only when the first one has no value for it. */
+export function scoreAfterNeeded(a: Pick<JudgeArgs, 'before' | 'played' | 'tenukiAt'>): boolean {
+  return a.before !== null && ownValue(a) === null
+}
+
+/**
+ * Points lost by the move and the move the engine liked better (null when that would be the move played),
+ * or null without engine data. The reference is the best corner move; for a tenuki it is the best move
+ * elsewhere, unless the best corner move is bigger still (R19). When the search before the move has a value
+ * for the move itself, the loss comes from that one search (R40): two short searches don't agree closely
+ * enough to subtract, and a slow phone made the owner's own best move look like a mistake. Otherwise the
+ * score after the move stands in for its value.
+ */
+function engineLoss(a: JudgeArgs): { loss: number; better: Pt | null } | null {
+  if (!a.before) return null
   const { cornerBest, tenukiBest } = a.before
   const ref = a.played === 'tenuki' && tenukiBest && tenukiBest.scoreLead > cornerBest.scoreLead ? tenukiBest : cornerBest
-  return { loss: round1(Math.max(0, ref.scoreLead - a.scoreAfter)), better: ref.pt }
+  const value = ownValue(a) ?? a.scoreAfter
+  if (value === null) return null
+  const at = a.played === 'tenuki' ? a.tenukiAt : a.played
+  return { loss: round1(Math.max(0, ref.scoreLead - value)), better: at && samePt(at, ref.pt) ? null : ref.pt }
 }
 
 function moveOf(n: BookNode | null): Pt | 'tenuki' | null {

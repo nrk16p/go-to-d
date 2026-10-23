@@ -1,7 +1,7 @@
 {
-  "familyHash": "13ddd159669afc",
+  "familyHash": "07f685cb7e86ee",
   "model": "kata1-b18c384nbt-s9996604416-d4316597426",
-  "visits": 400,
+  "visits": 800,
   "nodes": {
     "star44:W:R14": {
       "loss": 0,
@@ -9,18 +9,18 @@
       "kind": "joseki"
     },
     "star44:W:R14/B:O17": {
-      "loss": 0.25,
-      "bestAt": "R10",
+      "loss": 0.41,
+      "bestAt": "R12",
       "kind": "joseki"
     },
     "star44:W:R14/B:O17/W:S16": {
-      "loss": 0.49,
+      "loss": 0.56,
       "bestAt": "Q10",
       "kind": "joseki"
     },
     "star44:W:R14/B:O17/W:S16/B:R17": {
-      "loss": 0.53,
-      "bestAt": "R12",
+      "loss": 0.48,
+      "bestAt": "Q13",
       "kind": "joseki"
     },
     "star44:W:R14/B:O17/W:S16/B:R17/W:R11": {
@@ -29,8 +29,8 @@
       "kind": "joseki"
     },
     "star44:W:R14/B:O17/W:S16/B:S17": {
-      "loss": 5.12,
-      "bestAt": "R12",
+      "loss": 4.83,
+      "bestAt": "Q13",
       "kind": "mistake"
     },
     "star44:W:R14/B:O17/W:S16/B:S17/W:R17": {
@@ -48,9 +48,34 @@
       "bestAt": "S18",
       "kind": "joseki"
     },
+    "star44:W:R14/B:O17/W:S16/B:R12": {
+      "loss": 0,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O17/W:S16/B:R12/W:P14": {
+      "loss": 0,
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O17/W:S16/B:R12/W:P14/B:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O17/W:R11": {
+      "loss": 0.03,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O17/W:R11/B:R15": {
+      "loss": 0.08,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
     "star44:W:R14/B:Q14": {
-      "loss": 1.2,
-      "bestAt": "R10",
+      "loss": 1.27,
+      "bestAt": "R12",
       "kind": "joseki"
     },
     "star44:W:R14/B:Q14/W:Q13": {
@@ -74,17 +99,17 @@
       "kind": "joseki"
     },
     "star44:W:R14/B:O16": {
-      "loss": 0.22,
-      "bestAt": "R10",
+      "loss": 0.46,
+      "bestAt": "R12",
       "kind": "joseki"
     },
     "star44:W:R14/B:O16/W:S16": {
-      "loss": 0.69,
+      "loss": 0.83,
       "bestAt": "Q10",
       "kind": "joseki"
     },
     "star44:W:R14/B:O16/W:S16/B:R17": {
-      "loss": 0.94,
+      "loss": 0.64,
       "bestAt": "R12",
       "kind": "joseki"
     },
@@ -93,9 +118,49 @@
       "bestAt": "R11",
       "kind": "joseki"
     },
+    "star44:W:R14/B:O16/W:R17": {
+      "loss": 0.76,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O16/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O16/W:R17/B:R16/W:S16": {
+      "loss": 0,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O16/W:R17/B:R16/W:S16/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O16/W:R17/B:R16/W:S16/B:S15/W:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O16/W:R17/B:R16/W:S16/B:S15/W:S17/B:S14": {
+      "loss": 0,
+      "bestAt": "S14",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O16/W:R11": {
+      "loss": 0.25,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:O16/W:R11/B:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
     "star44:W:R14/B:R12": {
       "loss": 0,
-      "bestAt": "R10",
+      "bestAt": "R12",
       "kind": "joseki"
     },
     "star44:W:R14/B:R12/W:R17": {
@@ -143,9 +208,39 @@
       "bestAt": "O17",
       "kind": "joseki"
     },
-    "star44:W:R14/B:tenuki": {
+    "star44:W:R14/B:R12/W:P14": {
       "loss": 0,
-      "bestAt": "R10",
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R12/W:P14/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R12/W:P14/B:O16/W:R10": {
+      "loss": 0.23,
+      "bestAt": "Q11",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R12/W:P14/B:O16/W:R10/B:Q11": {
+      "loss": 0,
+      "bestAt": "Q11",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R12/W:O17": {
+      "loss": 0,
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R12/W:O17/B:Q14": {
+      "loss": 0.03,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:tenuki": {
+      "loss": 0.23,
+      "bestAt": "R12",
       "kind": "joseki"
     },
     "star44:W:R14/B:tenuki/W:O17": {
@@ -154,8 +249,8 @@
       "kind": "joseki"
     },
     "star44:W:R14/B:tenuki/W:O17/B:Q14": {
-      "loss": 0,
-      "bestAt": "Q14",
+      "loss": 0.41,
+      "bestAt": "O15",
       "kind": "joseki"
     },
     "star44:W:R14/B:tenuki/W:O17/B:Q14/W:Q13": {
@@ -178,8 +273,23 @@
       "bestAt": "R16",
       "kind": "joseki"
     },
+    "star44:W:R14/B:tenuki/W:O17/B:P14": {
+      "loss": 0.11,
+      "bestAt": "O15",
+      "kind": "alternative"
+    },
+    "star44:W:R14/B:tenuki/W:O17/B:P14/W:R12": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:tenuki/W:O17/B:P14/W:R12/B:M17": {
+      "loss": 0,
+      "bestAt": "M17",
+      "kind": "joseki"
+    },
     "star44:W:R14/B:tenuki/W:R17": {
-      "loss": 0.78,
+      "loss": 0.72,
       "bestAt": "O17",
       "kind": "joseki"
     },
@@ -200,7 +310,7 @@
     },
     "star44:W:R14/B:tenuki/W:R17/B:R16/W:Q17/B:P16/W:S16": {
       "loss": 0,
-      "bestAt": "S16",
+      "bestAt": "O18",
       "kind": "joseki"
     },
     "star44:W:R14/B:tenuki/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15": {
@@ -218,13 +328,313 @@
       "bestAt": "S14",
       "kind": "joseki"
     },
+    "star44:W:R14/B:Q12": {
+      "loss": 0.66,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16/W:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16/W:Q17/B:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16/W:Q17/B:P16/W:S16": {
+      "loss": 0,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17/B:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q12/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17/B:R15/W:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11": {
+      "loss": 0.11,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16": {
+      "loss": 0,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17/B:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17/B:R15/W:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17/B:R15/W:O17/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17/B:R15/W:O17/B:O16/W:P18": {
+      "loss": 0,
+      "bestAt": "P18",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17/B:R15/W:O17/B:O16/W:P18/B:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17/B:R15/W:O17/B:O16/W:P18/B:P16/W:N17": {
+      "loss": 0,
+      "bestAt": "N17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:R17/B:R16/W:Q17/B:P17/W:S16/B:S15/W:S17/B:R15/W:O17/B:O16/W:P18/B:P16/W:N17/B:N16": {
+      "loss": 0,
+      "bestAt": "N16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:O17": {
+      "loss": 0.89,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:O17/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:O17/B:O16/W:N16": {
+      "loss": 0,
+      "bestAt": "N16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R11/W:O17/B:O16/W:N16/B:O15": {
+      "loss": 0,
+      "bestAt": "O15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11": {
+      "loss": 0.6,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:O17": {
+      "loss": 0.83,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:O17/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:O17/B:O16/W:N16": {
+      "loss": 0,
+      "bestAt": "N16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:O17/B:O16/W:N16/B:O15": {
+      "loss": 0,
+      "bestAt": "O15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16/W:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16/W:Q17/B:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16/W:Q17/B:P16/W:S16": {
+      "loss": 0,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17/B:S14": {
+      "loss": 0,
+      "bestAt": "S14",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:Q11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17/B:S14/W:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17": {
+      "loss": 0.4,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:S16": {
+      "loss": 0.98,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:S16/B:R17": {
+      "loss": 0.74,
+      "bestAt": "Q12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:S16/B:R17/W:R11": {
+      "loss": 0.03,
+      "bestAt": "Q11",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17": {
+      "loss": 0.35,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16/W:Q17": {
+      "loss": 0.3,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16/W:Q17/B:P16": {
+      "loss": 0,
+      "bestAt": "P16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16/W:Q17/B:P16/W:S16": {
+      "loss": 0,
+      "bestAt": "S16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17/B:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:N17/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17/B:R15/W:P17": {
+      "loss": 0,
+      "bestAt": "P17",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R15": {
+      "loss": 0.84,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R15/W:Q14": {
+      "loss": 0,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R15/W:Q14/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:R14/B:R15/W:Q14/B:O16/W:Q10": {
+      "loss": 0,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
     "star44:W:Q14": {
-      "loss": 0.58,
+      "loss": 0.78,
       "bestAt": "O17",
       "kind": "joseki"
     },
     "star44:W:Q14/B:R14": {
-      "loss": 1.16,
+      "loss": 1.25,
       "bestAt": "O16",
       "kind": "joseki"
     },
@@ -239,8 +649,8 @@
       "kind": "joseki"
     },
     "star44:W:Q14/B:R14/W:R13/B:R15/W:Q13": {
-      "loss": 0,
-      "bestAt": "Q13",
+      "loss": 0.26,
+      "bestAt": "Q12",
       "kind": "joseki"
     },
     "star44:W:Q14/B:R14/W:R13/B:R15/W:Q13/B:O16": {
@@ -248,8 +658,28 @@
       "bestAt": "O16",
       "kind": "joseki"
     },
+    "star44:W:Q14/B:R14/W:R13/B:R12": {
+      "loss": 4.92,
+      "bestAt": "R15",
+      "kind": "mistake"
+    },
+    "star44:W:Q14/B:R14/W:R13/B:R12/W:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:R14/W:R13/B:R12/W:R15/B:S14": {
+      "loss": 0,
+      "bestAt": "S14",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:R14/W:R13/B:R12/W:R15/B:S14/W:Q15": {
+      "loss": 0,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
     "star44:W:Q14/B:O17": {
-      "loss": 0.55,
+      "loss": 0.59,
       "bestAt": "O16",
       "kind": "joseki"
     },
@@ -259,8 +689,8 @@
       "kind": "joseki"
     },
     "star44:W:Q14/B:O17/W:Q11/B:R14": {
-      "loss": 0.1,
-      "bestAt": "R9",
+      "loss": 0,
+      "bestAt": "R14",
       "kind": "joseki"
     },
     "star44:W:Q14/B:O17/W:Q11/B:R14/W:R13": {
@@ -271,6 +701,176 @@
     "star44:W:Q14/B:O17/W:Q11/B:R14/W:R13/B:R15": {
       "loss": 0,
       "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:O16": {
+      "loss": 0,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:O16/W:R10": {
+      "loss": 0,
+      "bestAt": "R10",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:O16/W:R10/B:tenuki": {
+      "loss": 0,
+      "bestAt": "Q12",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:O16/W:R10/B:tenuki/W:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:O16/W:R10/B:tenuki/W:R16/B:R17": {
+      "loss": 0,
+      "bestAt": "R17",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:O16/W:R10/B:tenuki/W:R16/B:R17/W:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:O16/W:R10/B:tenuki/W:R16/B:R17/W:R15/B:S17": {
+      "loss": 0,
+      "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:Q15": {
+      "loss": 3.04,
+      "bestAt": "O16",
+      "kind": "mistake"
+    },
+    "star44:W:Q14/B:Q15/W:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:Q15/W:R14/B:S15": {
+      "loss": 0,
+      "bestAt": "S15",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:Q15/W:R14/B:S15/W:O14": {
+      "loss": 0,
+      "bestAt": "O14",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:R12": {
+      "loss": 0.47,
+      "bestAt": "O16",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:R12/W:O17": {
+      "loss": 0,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:Q14/B:R12/W:O17/B:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "star44:W:R10": {
+      "loss": 0.27,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:R10/B:Q11": {
+      "loss": 0,
+      "bestAt": "Q11",
+      "kind": "joseki"
+    },
+    "star44:W:R10/B:Q11/W:Q10": {
+      "loss": 0,
+      "bestAt": "Q10",
+      "kind": "joseki"
+    },
+    "star44:W:R10/B:Q11/W:Q10/B:P11": {
+      "loss": 0,
+      "bestAt": "P11",
+      "kind": "joseki"
+    },
+    "star44:W:R10/B:Q11/W:Q10/B:P11/W:R11": {
+      "loss": 0,
+      "bestAt": "R11",
+      "kind": "joseki"
+    },
+    "star44:W:R10/B:Q11/W:Q10/B:P11/W:R11/B:Q13": {
+      "loss": 0,
+      "bestAt": "Q13",
+      "kind": "joseki"
+    },
+    "star44:W:Q10": {
+      "loss": 0.12,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:Q10/B:R13": {
+      "loss": 0,
+      "bestAt": "R12",
+      "kind": "joseki"
+    },
+    "star44:W:Q10/B:R13/W:P14": {
+      "loss": 0,
+      "bestAt": "P14",
+      "kind": "joseki"
+    },
+    "star44:W:Q10/B:R13/W:P14/B:Q12": {
+      "loss": 0.08,
+      "bestAt": "Q14",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki": {
+      "loss": 0.03,
+      "bestAt": "O17",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16": {
+      "loss": 0.58,
+      "bestAt": "L11",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17": {
+      "loss": 0.18,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17/B:Q17": {
+      "loss": 0,
+      "bestAt": "Q17",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17/B:Q17/W:R16": {
+      "loss": 0,
+      "bestAt": "R16",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17/B:Q17/W:R16/B:R14": {
+      "loss": 0,
+      "bestAt": "R14",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17/B:Q17/W:R16/B:R14/W:R15": {
+      "loss": 0,
+      "bestAt": "R15",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17/B:Q17/W:R16/B:R14/W:R15/B:Q15": {
+      "loss": 0,
+      "bestAt": "Q15",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17/B:Q17/W:R16/B:R14/W:R15/B:Q15/W:S14": {
+      "loss": 0,
+      "bestAt": "S14",
+      "kind": "joseki"
+    },
+    "star44:W:tenuki/B:K16/W:R17/B:Q17/W:R16/B:R14/W:R15/B:Q15/W:S14/B:R13": {
+      "loss": 0,
+      "bestAt": "R13",
       "kind": "joseki"
     }
   }

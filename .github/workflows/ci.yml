@@ -1,0 +1,30 @@
+# Lint, test and build on every push and pull request.
+# The book check in the tests reads the committed engine results (src/book/verify/*.json); it doesn't
+# need native KataGo. The build fetches nothing: the network is committed under public/models/.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

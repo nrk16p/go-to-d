@@ -758,3 +758,435 @@ a {
 .link-list a:hover {
   text-decoration: underline;
 }
+
+/* ---------- shared bits for Today, Library, Pattern, Settings ---------- */
+
+.page-head {
+  display: grid;
+  gap: 4px;
+}
+
+.small,
+.help {
+  font-size: 0.875rem;
+}
+
+.help {
+  color: var(--muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The settled shape of a pattern, small. The inner lines fade so the stones carry the picture. */
+.thumb {
+  display: block;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.thumb .grid line:not(.edge) {
+  opacity: 0.4;
+}
+
+/* A review box as five dots; green from four up (mastered). */
+.pips {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.pips i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.25px solid var(--rule-strong);
+}
+
+.pips i.on {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.pips.mastered i.on {
+  background: var(--good);
+  border-color: var(--good);
+}
+
+/* ---------- today ---------- */
+
+.stats-small dd {
+  font-size: 1.375rem;
+}
+
+.queue,
+.free,
+.family {
+  display: grid;
+  gap: 8px;
+}
+
+.queue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.queue-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.queue-name {
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.queue-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.side-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .queue-item:hover .queue-name {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}
+
+/* The first thing to play today: the one place on the page with a filled button. */
+.queue-play {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.install-hint {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+}
+
+.install-hint p {
+  font-size: 0.9375rem;
+}
+
+.segmented {
+  display: inline-flex;
+  justify-self: start;
+  gap: 2px;
+  padding: 2px;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: var(--radius);
+}
+
+.segmented label {
+  position: relative;
+  display: flex;
+}
+
+.segmented input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmented span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.segmented input:checked + span {
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+}
+
+.segmented input:focus-visible + span {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- library ---------- */
+
+.library .family {
+  margin-top: 6px;
+}
+
+/* ---------- pattern ---------- */
+
+.pattern {
+  display: grid;
+  gap: 14px;
+  padding-top: 0;
+}
+
+.pattern-head .who {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  margin-top: 2px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+
+.back::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.pattern-board {
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+}
+
+.pattern-panel {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stepper .btn {
+  min-width: 96px;
+}
+
+.step-count {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.step {
+  display: grid;
+  gap: 6px;
+}
+
+.tag {
+  display: inline-block;
+  margin-right: 2px;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.tag-mistake,
+.tag-trick {
+  color: var(--pen);
+}
+
+.tag-alternative {
+  color: var(--hint);
+}
+
+.drill {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+@media (min-width: 900px) {
+  .pattern {
+    grid-template-columns: minmax(0, 640px) minmax(300px, 380px);
+    grid-template-areas:
+      'board head'
+      'board panel';
+    grid-template-rows: auto 1fr;
+    column-gap: 40px;
+    row-gap: 16px;
+    justify-content: center;
+    padding-top: 12px;
+  }
+
+  .pattern-head {
+    grid-area: head;
+  }
+
+  .pattern-board {
+    grid-area: board;
+  }
+
+  .pattern-panel {
+    grid-area: panel;
+  }
+}
+
+/* ---------- settings ---------- */
+
+.settings-group {
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.fields {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+.field label {
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+/* 17px text: iOS zooms into any field under 16px. */
+.input-row input {
+  width: 6.5em;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--rule-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.form-msg {
+  font-size: 0.9375rem;
+}
+
+.form-msg.is-error {
+  color: var(--pen);
+}
+
+.facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.facts div {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr);
+  gap: 8px;
+}
+
+.facts dt {
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.confirm {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+}
+
+.confirm:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.btn-danger {
+  border-color: var(--pen);
+  color: var(--pen);
+}
+
+.file-btn {
+  position: relative;
+}
+
+.file-btn:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}

@@ -1,29 +1,32 @@
 // The app shell: the top bar with the main links, and whichever screen the hash names.
-// Task 8 swaps the placeholders for the real Today, Library, Pattern and Settings screens.
 
 import { useEffect } from 'react'
 import { COPY } from './ui/copy'
 import type { EngineHub } from './ui/engine'
 import { href, parseRoute, useHash, type Route } from './ui/router'
-import { LibraryPlaceholder, NotFound, PatternPlaceholder, SettingsPlaceholder, TodayPlaceholder } from './ui/screens/Placeholders'
+import { Library } from './ui/screens/Library'
+import { NotFound } from './ui/screens/NotFound'
+import { Pattern } from './ui/screens/Pattern'
 import { Report } from './ui/screens/Report'
+import { Settings } from './ui/screens/Settings'
 import { Spar } from './ui/screens/Spar'
+import { Today } from './ui/screens/Today'
 
 function Screen({ route, hash, engine }: { route: Route; hash: string; engine: EngineHub }) {
   switch (route.name) {
     case 'today':
-      return <TodayPlaceholder />
+      return <Today />
     case 'spar':
       // A new address is a new session.
       return <Spar key={hash} params={route.params} engine={engine} />
     case 'report':
       return <Report key={hash} />
     case 'library':
-      return <LibraryPlaceholder />
+      return <Library />
     case 'pattern':
-      return <PatternPlaceholder id={route.id} />
+      return <Pattern id={route.id} />
     case 'settings':
-      return <SettingsPlaceholder />
+      return <Settings engine={engine} />
     case 'not-found':
       return <NotFound />
   }

@@ -5,6 +5,11 @@
 import type { Side } from '../session/sides'
 import type { Color } from '../go/coords'
 
+/** "no reviews", "1 review", "3 reviews". */
+export function count(n: number, noun: string): string {
+  return n === 0 ? `no ${noun}s` : n === 1 ? `1 ${noun}` : `${n} ${noun}s`
+}
+
 /** "1 point", "0.5 points", "3.2 points". */
 export function points(n: number): string {
   const s = Number.isInteger(n) ? String(n) : n.toFixed(1)
@@ -113,16 +118,106 @@ export const COPY = {
     side: (side: Side) => (side === 'defend' ? 'defending' : 'attacking'),
   },
 
-  placeholder: {
-    todayTitle: 'Today',
-    todayBody: 'The full home screen comes next. For now, start with one of these.',
-    free: (family: string) => `Free sparring, ${family}`,
-    libraryTitle: 'Library',
-    patternTitle: 'Pattern',
-    drill: (side: Side) => (side === 'defend' ? 'Drill it, defending' : 'Drill it, attacking'),
-    settingsTitle: 'Settings',
-    settingsBody: 'Thresholds, backup and engine details come next.',
-    notFoundTitle: "There's nothing here.",
-    notFoundBody: 'That link points nowhere in this app.',
+  today: {
+    title: 'Today',
+    lead: (due: number, fresh: number) => {
+      if (due === 0 && fresh === 0) return 'Nothing left on the list today. Spar below, or look through the Library.'
+      const parts = [due > 0 ? `${count(due, 'review')} due` : '', fresh > 0 ? count(fresh, 'new pattern') : '']
+      return `${parts.filter(Boolean).join(', then ')}. Start at the top.`
+    },
+    streak: 'Day streak',
+    mastered: 'Mastered',
+    masteredValue: (n: number, total: number) => `${n} of ${total}`,
+    dueTitle: 'Reviews due',
+    newTitle: 'New today',
+    allStarted: "You've started every pattern in the book. From here it's reviews.",
+    play: 'Play',
+    freeTitle: "Teacher's choice",
+    freeBody: 'The teacher picks the line, any branch in the book. Good as a warm-up, or once the list is done.',
+    sideGroup: 'Your side',
+    sideDefend: 'Defending',
+    sideAttack: 'Attacking',
+    iosHintTitle: "Add to Home Screen so your progress isn't wiped",
+    iosHintBody:
+      "Safari can clear a site's saved data after a week without a visit. Tap Share, then Add to Home Screen, and open Go-to-D from the icon.",
+    iosHintDismiss: 'Got it',
+  },
+
+  /** The 0-5 review box, as dots. */
+  level: (box: number) => (box === 0 ? 'Not played yet' : box >= 4 ? `Mastered, level ${box} of 5` : `Level ${box} of 5`),
+  sideName: (side: Side) => (side === 'defend' ? 'Defending' : 'Attacking'),
+
+  library: {
+    title: 'Library',
+    lead: (n: number) => `${n} patterns. Tap one to step through its main line.`,
+    legend: 'The dots fill up each time a pattern comes back and you play it clean. Four dots counts as mastered.',
+    sideShort: (side: Side) => (side === 'defend' ? 'Defend' : 'Attack'),
+  },
+
+  pattern: {
+    back: 'Library',
+    start: 'Start position',
+    step: (i: number, n: number) => `Move ${i} of ${n}`,
+    prev: 'Previous',
+    next: 'Next',
+    move: (c: Color, gtp: string) => `${colorName(c)} ${gtp}`,
+    elsewhere: (c: Color) => `${colorName(c)} plays elsewhere`,
+    kind: { mistake: 'Mistake', trick: 'Trick', alternative: 'Also fine' } as Record<string, string>,
+    meta: (family: string, difficulty: number) =>
+      `${family}, ${difficulty === 1 ? 'easy' : difficulty === 2 ? 'medium' : 'hard'}`,
+    drillTitle: 'Drill it',
+    drill: (side: Side, c: Color) => (side === 'defend' ? `Defend as ${colorName(c)}` : `Attack as ${colorName(c)}`),
+    oneSide: "Only one side to drill here. The other side's line is a trick, not something to copy.",
+  },
+
+  settings: {
+    title: 'Settings',
+    teacherTitle: 'Teacher',
+    fine: 'Fine up to',
+    fineHelp: 'An off-book move that loses this much or less passes.',
+    big: 'Big mistake over',
+    pointsLost: 'points lost',
+    visits: 'Engine visits per search',
+    visitsHelp: 'More is a bit stronger and slower. A slow phone stops at about 2 seconds anyway.',
+    newPerDay: 'New patterns a day',
+    save: 'Save',
+    saved: 'Saved.',
+    saveFailed: "This browser wouldn't save it.",
+    notNumber: 'Every box needs a number.',
+    fineBelowBig: 'Fine has to be smaller than big mistake.',
+    visitsRange: 'Visits go from 16 to 400.',
+    newRange: 'New patterns a day go from 0 to 10.',
+
+    engineTitle: 'Engine',
+    backend: 'Runs on',
+    model: 'Network',
+    backendName: (b: string) =>
+      b === 'webgpu' ? 'Graphics chip (WebGPU)' : b === 'wasm' ? 'Processor (WebAssembly)' : b === 'cpu' ? 'Processor, slow mode' : b,
+
+    backupTitle: 'Backup',
+    backupBody: 'Your progress lives in this browser only. Export a copy now and then, and import it on a new phone.',
+    export: 'Export progress',
+    import: 'Import progress',
+    importConfirm: (inFile: number, now: number) =>
+      `This file has ${count(inFile, 'review')}. You have ${count(now, 'review')} now. Replace yours with the file's?`,
+    importReplace: 'Replace my progress',
+    cancel: 'Cancel',
+    imported: (n: number) => `Imported. You now have ${count(n, 'review')}.`,
+    importBad: (why: string) => `${why}. Your progress is unchanged.`,
+    importUnreadable: "That file couldn't be opened. Your progress is unchanged.",
+    importSaveFailed: "This browser wouldn't save it. Your progress is unchanged.",
+
+    resetTitle: 'Start over',
+    resetBody: 'Clears every review and the streak. These settings stay.',
+    reset: 'Reset progress',
+    resetConfirm: (n: number) => `Clear ${count(n, 'review')} and the streak? Export first if you might want them back.`,
+    resetYes: 'Clear it all',
+    resetDone: 'Progress cleared.',
+    resetFailed: "This browser wouldn't save it. Nothing was cleared.",
+  },
+
+  notFound: {
+    title: "There's nothing here.",
+    body: 'That link points nowhere in this app.',
   },
 }

@@ -4,8 +4,12 @@
 // The engine has no events, so the hub notices changes itself: when ready() settles, on every status()
 // a session asks for, and every few seconds while someone is watching. A failed engine is disposed at
 // once (its worker would otherwise linger). There is no automatic respawn: only the "Try again" button.
+//
+// The hub also applies the owner's visits setting to every search that doesn't name its own, so the
+// sessions don't have to carry it.
 
 import { createTeacherEngine, type TeacherEngine } from '../engine/teacher'
+import { loadProgress } from '../progress/store'
 
 export type EngineStatus = ReturnType<TeacherEngine['status']>
 
@@ -17,9 +21,12 @@ export class EngineHub implements TeacherEngine {
   private readonly listeners = new Set<() => void>()
   private seen: EngineStatus = 'loading'
   private timer: ReturnType<typeof setInterval> | null = null
+  private readonly visits: (() => number | undefined) | undefined
 
-  constructor(make: () => TeacherEngine) {
+  /** `visits` is read at every search, so a change in Settings counts from the next move. */
+  constructor(make: () => TeacherEngine, opts: { visits?: () => number | undefined } = {}) {
     this.make = make
+    this.visits = opts.visits
   }
 
   /** Starts loading the engine if it hasn't started yet. */
@@ -46,11 +53,13 @@ export class EngineHub implements TeacherEngine {
   }
 
   analyzeCorner(...args: Parameters<TeacherEngine['analyzeCorner']>): ReturnType<TeacherEngine['analyzeCorner']> {
-    return this.current().analyzeCorner(...args)
+    const [pos, komi, region, opts] = args
+    return this.current().analyzeCorner(pos, komi, region, this.withVisits(opts))
   }
 
   scoreFor(...args: Parameters<TeacherEngine['scoreFor']>): ReturnType<TeacherEngine['scoreFor']> {
-    return this.current().scoreFor(...args)
+    const [pos, komi, color, opts] = args
+    return this.current().scoreFor(pos, komi, color, this.withVisits(opts))
   }
 
   dispose(): void {
@@ -72,6 +81,12 @@ export class EngineHub implements TeacherEngine {
         this.timer = null
       }
     }
+  }
+
+  private withVisits<T extends { visits?: number }>(opts: T | undefined): T | undefined {
+    if (opts?.visits !== undefined || !this.visits) return opts
+    const visits = this.visits()
+    return visits === undefined ? opts : ({ ...opts, visits } as T)
   }
 
   private current(): TeacherEngine {
@@ -103,6 +118,6 @@ let hub: EngineHub | null = null
 
 /** The shared engine. The first call starts loading it; call it at app start, not during render. */
 export function appEngine(): EngineHub {
-  hub ??= new EngineHub(() => createTeacherEngine()).start()
+  hub ??= new EngineHub(() => createTeacherEngine(), { visits: () => loadProgress().settings.visits }).start()
   return hub
 }

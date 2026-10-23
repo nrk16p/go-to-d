@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "predev": "node scripts/copy-tfjs-wasm.mjs && node scripts/fetch-model.mjs",
     "dev": "vite",
@@ -14,7 +17,8 @@
     "test:watch": "vitest",
     "check-book": "tsx tools/check-book.ts",
     "fetch-model": "node scripts/fetch-model.mjs",
-    "bench-engine": "tsx tools/engine-bench/run.ts"
+    "bench-engine": "tsx tools/engine-bench/run.ts",
+    "make-icons": "node scripts/make-icons.mjs"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible-next": "^5.3.0",
@@ -45,6 +49,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.72.0",
     "vite": "^7.3.7",
+    "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.12"
   }
 }

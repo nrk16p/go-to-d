@@ -163,7 +163,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'W',
           at: 'P16',
-          note: 'White extends to P16 instead of haning. There’s nothing to cut, and both stones face the center.',
+          note: 'White extends to P16 instead of playing the hane at Q16. There’s nothing to cut, and both stones face the center.',
         },
         {
           c: 'B',
@@ -248,7 +248,7 @@ export const KOMOKU34: FamilyDef = {
           at: 'Q15',
           note: 'Black ataris Q16 at once instead of drawing back. Q16 is down to one liberty.',
         },
-        { c: 'W', at: 'P16', note: 'White connects. Losing Q16 now would leave P17 crushed.' },
+        { c: 'W', at: 'P16', note: 'White connects. Losing Q16 now would leave P17 alone.' },
         {
           c: 'B',
           at: 'R17',
@@ -326,7 +326,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'tenuki',
-          note: 'Black plays elsewhere. R16 and Q14 make a solid shape, so nothing here is urgent.',
+          note: 'Black plays elsewhere. R16 and Q14 already hold the corner and that side, so nothing here is urgent.',
         },
       ],
     },
@@ -345,7 +345,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'W',
           at: 'P14',
-          note: 'White jumps two spaces toward the center. Running out is easier than living under the pincer.',
+          note: 'White jumps two spaces toward the center. Running out is easier than living with the pincer there.',
         },
         {
           c: 'B',
@@ -360,7 +360,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'tenuki',
-          note: 'Black plays elsewhere. N17 has done its job, so Black doesn’t mind if White takes it.',
+          note: 'Black plays elsewhere. N17 is hard to kill, so there is no rush.',
           confidence: 'low',
         },
       ],
@@ -386,7 +386,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'W',
           at: 'M16',
-          note: 'White hits N17 on the shoulder from the center side, so the pincer has to stay low.',
+          note: 'White hits N17 on the shoulder from the center side, so N17 stays on the third line.',
         },
         {
           c: 'B',
@@ -421,7 +421,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'tenuki',
-          note: 'Black plays elsewhere. N16 is light: if White attacks it, Black can give it up.',
+          note: 'Black plays elsewhere. N16 is light and hard to attack, so there is no rush.',
           confidence: 'low',
         },
       ],
@@ -447,12 +447,12 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'W',
           at: 'Q15',
-          note: 'White hits R16 on the shoulder. Its stones face the center and the M17 pincer.',
+          note: 'White hits R16 on the shoulder and the stones head for the center.',
         },
         {
           c: 'B',
           at: 'R17',
-          note: 'Black takes the 3-3 point. The corner can’t be attacked now.',
+          note: 'Black takes the 3-3 point. The corner is safe enough for now.',
         },
         {
           c: 'W',
@@ -487,7 +487,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'R17',
-          note: 'Black takes the 3-3 point, so White can’t get into the corner.',
+          note: 'Black takes the 3-3 point. The corner is safe enough for now.',
         },
         {
           c: 'W',
@@ -512,7 +512,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'Q15',
-          note: 'Black jumps toward the center between the two White stones, so neither can press Black low.',
+          note: 'Black plays diagonally to Q15, between the two White stones, so neither can press Black low.',
         },
         {
           c: 'W',
@@ -592,7 +592,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'O16',
-          note: 'Black hits P17 on the shoulder first. Pressing it low builds a wall that points at R12.',
+          note: 'Black hits P17 on the shoulder first. Pressing it low builds a wall facing the center.',
         },
         { c: 'W', at: 'O17', note: 'White stays on the third line to keep a base.' },
         { c: 'B', at: 'N16', note: 'Black pushes once more on the fourth line, and the wall gets longer.' },
@@ -600,7 +600,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'R10',
-          note: 'Black pincers R12 from the Q4 side. With the wall nearby, R12 has to run toward the center.',
+          note: 'Black pincers R12 from the Q4 side. R12 has to run toward the center.',
           confidence: 'low',
         },
       ],
@@ -655,7 +655,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'W',
           at: 'N16',
-          note: 'White guards the cut at O16 and leans on N17 at the same time. The fight moves to the center.',
+          note: 'White guards the cut at O16 and leans on N17 at the same time. Q15 still has two liberties.',
         },
       ],
     },
@@ -812,7 +812,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'O15',
-          note: 'Black peeps at O16 from O15 first. White will connect, and O15 stays as a foothold toward the center.',
+          note: 'Black peeps at O15, next to the cut point at O16. White will connect, and O15 stays as a foothold toward the center.',
         },
         {
           c: 'W',
@@ -884,12 +884,12 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'R15',
-          note: 'Black connects at R15. Now the group is one piece with a base along the edge.',
+          note: 'Black connects at R15. R16, R15 and R14 now make one solid line along the edge.',
         },
         {
           c: 'W',
           at: 'tenuki',
-          note: 'White plays elsewhere. Q15 added to White’s wall, and Black’s corner needs nothing more.',
+          note: 'White plays elsewhere. Q15 adds to White’s wall, and Black’s corner needs nothing more.',
         },
       ],
     },
@@ -903,7 +903,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'Q17',
-          note: 'Black plays the diagonal move to Q17. It’s a low, solid answer that keeps the corner.',
+          note: 'Black plays the diagonal move to Q17. It’s a low, safe answer that keeps the corner.',
         },
         {
           c: 'W',
@@ -947,7 +947,7 @@ export const KOMOKU34: FamilyDef = {
         {
           c: 'B',
           at: 'S18',
-          note: 'Black adds S18 so White can’t hane on the edge. Black’s corner stones get room for an eye.',
+          note: 'Black adds S18 so White can’t hane on the edge.',
           confidence: 'low',
         },
       ],
@@ -1046,46 +1046,6 @@ export const KOMOKU34: FamilyDef = {
           c: 'W',
           at: 'tenuki',
           note: 'White plays elsewhere. Q16 made the wall thicker, and Black’s corner is safe.',
-        },
-      ],
-    },
-    {
-      id: 'komoku34-high-low-pincer',
-      name: 'One-space high approach, low pincer, White takes the 3-3 point',
-      difficulty: 3,
-      order: 81,
-      line: [
-        { c: 'W', at: 'P16', note: '' },
-        {
-          c: 'B',
-          at: 'N17',
-          note: 'Black pincers on the third line toward D16. P16 can’t extend along that side now.',
-        },
-        {
-          c: 'W',
-          at: 'R17',
-          note: 'White attaches at the 3-3 point. Against a pincer, settling in the corner is the usual answer.',
-        },
-        {
-          c: 'B',
-          at: 'Q17',
-          note: 'Black blocks on the pincer side, so R17 can’t reach P16 along the edge.',
-        },
-        {
-          c: 'W',
-          at: 'Q16',
-          note: 'White pushes at Q16. Q17 and R16 are both down to two liberties.',
-        },
-        {
-          c: 'B',
-          at: 'P17',
-          note: 'Black extends Q17 to P17 so it has more liberties.',
-        },
-        {
-          c: 'W',
-          at: 'O17',
-          note: 'White blocks at O17. Nearly every stone here is short of liberties, so a fight comes next.',
-          confidence: 'low',
         },
       ],
     },

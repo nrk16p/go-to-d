@@ -125,6 +125,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
     return { controller: c, view: new SessionView(c, { gapMs }) }
   })
   const { state, feed, lastMove } = useSyncExternalStore(view.subscribe, view.snapshot)
+  const movedOnce = useRef(false)
   const [drill, setDrill] = useState({ mode: config.mode, family: config.family, patternId: config.patternId })
   const [saveFailed, setSaveFailed] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -241,13 +242,16 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
           ? COPY.spar.done
           : null
 
+  // Once the owner has moved, Watch first stays hidden, even after Retry: a miss must not be dropped by peeking.
+  if (state.log.some((e) => e.by === 'owner')) movedOnce.current = true
+
   return (
     <div className="spar">
       <header className="spar-head">
         <h1>{title}</h1>
         <p className="who">{COPY.spar.youAre(owner, side)}</p>
         {/* R45: before the first move, the drill's line can be watched first on this same board. */}
-        {drill.mode === 'drill' && drill.patternId && !state.log.some((e) => e.by === 'owner') && (
+        {drill.mode === 'drill' && drill.patternId && !movedOnce.current && (
           <a
             className="btn watch-first"
             href={phaseHref({ family: drill.family, pattern: drill.patternId, side, sym: String(config.sym), seed: String(config.seed) }, 'watch')}

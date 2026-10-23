@@ -505,23 +505,345 @@ export const KOMOKU34: FamilyDef = {
           note: 'Black jumps to R13. The group has room for eyes, and White has a wall facing the center.',
         },
       ],
+      // The "Black tenukis a second time" mistake branch was removed in Task 13b: at 800 visits its loss
+      // swung between 1.52 and 1.12 (it depends on which outside move replaces the first tenuki), so it
+      // couldn't hold the 1.5 floor for a mistake.
+    },
+
+    // ---- Two-space approaches (orders 83-92) ----
+
+    {
+      id: 'komoku34-two-high-knight',
+      name: "Two-space high approach, knight's move answer",
+      difficulty: 1,
+      order: 83,
+      line: [
+        {
+          c: 'W',
+          at: 'O16',
+          note: 'The two-space high approach. O16 is far from R16, so it’s hard to attack, but it doesn’t press the corner much either.',
+        },
+        {
+          c: 'B',
+          at: 'Q14',
+          note: 'Black makes a knight’s move toward Q4. The corner and that side stay Black’s.',
+        },
+        {
+          c: 'W',
+          at: 'L16',
+          note: 'White extends two spaces toward D16 and gets a base. O16 is safe now.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. Both groups are settled.',
+        },
+      ],
       branches: [
         {
-          after: 3,
+          after: 1,
           move: {
             c: 'B',
-            at: 'tenuki',
+            at: 'O17',
             kind: 'mistake',
-            note: 'Black plays elsewhere a second time. R16 already took one extra White move, and a third one takes its base.',
+            note: 'Black attaches under O16, as it would against the one-space high approach. Here O17 is too far from R16, and a White hane at P17 cuts the two apart.',
           },
           then: [
+            { c: 'W', at: 'P17', note: 'White hanes at P17, between O17 and the corner. O17 can’t reach R16 now.' },
+            { c: 'B', at: 'N16', note: 'Black hanes at N16 to give O17 some room toward D16.' },
+            { c: 'W', at: 'P16', note: 'White connects at P16, and its stones become a solid wall.' },
+            {
+              c: 'B',
+              at: 'N17',
+              note: 'Black connects at N17. The three stones are safe, but they’re low and small.',
+            },
             {
               c: 'W',
-              at: 'R15',
-              note: 'White blocks at R15. R16 has no base left, and saving it means running with a weak group.',
-              confidence: 'low',
+              at: 'N15',
+              note: 'White blocks N16 from the center side. White’s wall faces the center, and R16 is alone in the corner.',
             },
           ],
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-high-side-approach',
+      name: "Two-space high approach, knight's move, White approaches the other side",
+      difficulty: 2,
+      order: 84,
+      line: [
+        { c: 'W', at: 'O16', note: '' },
+        { c: 'B', at: 'Q14', note: '' },
+        {
+          c: 'W',
+          at: 'R12',
+          note: 'White approaches on the Q4 side, a knight’s move from Q14, before Black’s side gets any bigger.',
+        },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black closes the corner with Q17. White can’t slide in anymore.',
+        },
+        {
+          c: 'W',
+          at: 'P13',
+          note: 'White hits Q14 on the shoulder from the center side. P13 works with both O16 and R12.',
+        },
+        { c: 'B', at: 'P14', note: 'Black pushes at P14 so White can’t seal Q14 in.' },
+        {
+          c: 'W',
+          at: 'K17',
+          note: 'White extends to K17 toward D16 and gives O16 a base. Black has the corner, White has the D16 side.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-high-diagonal',
+      name: 'Two-space high approach, diagonal move',
+      difficulty: 1,
+      order: 85,
+      line: [
+        { c: 'W', at: 'O16', note: '' },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black plays the diagonal move to Q17. The corner is closed, so White turns to the outside.',
+        },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White hits R16 on the shoulder. With O16 close by, White builds a wall facing the center.',
+        },
+        { c: 'B', at: 'R15', note: 'Black pushes along the third line toward Q4 for more room.' },
+        {
+          c: 'W',
+          at: 'Q13',
+          note: 'White jumps ahead to Q13 instead of pushing again. Black has the corner, White has the center.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. The corner is alive and needs nothing more for now.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-high-undercut',
+      name: 'Two-space high approach, Black takes the edge',
+      difficulty: 2,
+      order: 86,
+      line: [
+        { c: 'W', at: 'O16', note: '' },
+        {
+          c: 'B',
+          at: 'P17',
+          note: 'Black makes a knight’s move to P17, along the edge toward O16. It takes the edge before White can slide in.',
+        },
+        { c: 'W', at: 'O17', note: 'White blocks at O17 so Black can’t go further along the edge.' },
+        {
+          c: 'B',
+          at: 'P16',
+          note: 'Black extends to P16. A White stone there would split P17 from R16.',
+        },
+        { c: 'W', at: 'O15', note: 'White extends to O15, and its stones face the center.' },
+        {
+          c: 'B',
+          at: 'Q13',
+          note: 'Black takes a high base toward Q4 with Q13. Black has the corner and that side, White has the outside.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-high-tenuki-33',
+      name: 'Two-space high approach, tenuki, White takes the 3-3 point',
+      difficulty: 3,
+      order: 87,
+      line: [
+        { c: 'W', at: 'O16', note: '' },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. O16 is far off, and a big point elsewhere is worth more for now.',
+        },
+        {
+          c: 'W',
+          at: 'R17',
+          note: 'White attaches at the 3-3 point, under R16. White wants the corner itself.',
+        },
+        {
+          c: 'B',
+          at: 'S17',
+          note: 'Black hanes at S17. White can’t go toward Q4, so it has to live on the D16 side.',
+        },
+        { c: 'W', at: 'Q16', note: 'White hanes at Q16. R16 is down to two liberties.' },
+        {
+          c: 'B',
+          at: 'Q15',
+          note: 'Black hanes at Q15, at the head of Q16. White can’t come any closer to Q4.',
+        },
+        { c: 'W', at: 'Q17', note: 'White connects at Q17, and its corner stones become one group.' },
+        {
+          c: 'B',
+          at: 'S15',
+          note: 'Black covers the cut at R15. A White stone there would now be captured at once.',
+        },
+        {
+          c: 'W',
+          at: 'P15',
+          note: 'White hanes at P15 and links toward O16. Black’s wall can’t grow on that side.',
+        },
+        {
+          c: 'B',
+          at: 'Q14',
+          note: 'Black extends to Q14 and keeps Q15 safe. White has the corner, and Black’s wall faces Q4.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-low-diagonal',
+      name: 'Two-space low approach, diagonal move, shoulder hit',
+      difficulty: 1,
+      order: 88,
+      line: [
+        {
+          c: 'W',
+          at: 'O17',
+          note: 'The two-space low approach. On the third line, it aims at a base along the edge more than at the corner.',
+        },
+        {
+          c: 'B',
+          at: 'Q17',
+          note: 'Black plays the diagonal move to Q17 and closes the corner.',
+        },
+        {
+          c: 'W',
+          at: 'Q15',
+          note: 'White hits R16 on the shoulder from the center side instead of settling O17 first.',
+        },
+        { c: 'B', at: 'R15', note: 'Black pushes along the third line toward Q4.' },
+        {
+          c: 'W',
+          at: 'Q13',
+          note: 'White jumps to Q13. Black has a small, solid corner, and White has a wall facing the center.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. The corner is settled, and nothing here needs a move yet.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-low-extend',
+      name: 'Two-space low approach, diagonal move, White extends',
+      difficulty: 1,
+      order: 89,
+      line: [
+        { c: 'W', at: 'O17', note: '' },
+        { c: 'B', at: 'Q17', note: '' },
+        {
+          c: 'W',
+          at: 'L17',
+          note: 'White extends two spaces along the third line toward D16. O17 has a base now.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. The corner is closed, and White’s group is settled.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-low-shoulder',
+      name: 'Two-space low approach, shoulder hit',
+      difficulty: 2,
+      order: 90,
+      line: [
+        { c: 'W', at: 'O17', note: '' },
+        {
+          c: 'B',
+          at: 'P16',
+          note: 'Black hits O17 on the shoulder from the center side. White stays low, and Black faces the center.',
+        },
+        { c: 'W', at: 'O16', note: 'White pushes at O16, against P16.' },
+        {
+          c: 'B',
+          at: 'P17',
+          note: 'Black blocks at P17 so White can’t crawl into the corner along the edge.',
+        },
+        {
+          c: 'W',
+          at: 'O15',
+          note: 'White extends to O15 toward the center. White gets the outside, Black gets the corner.',
+        },
+        {
+          c: 'B',
+          at: 'Q13',
+          note: 'Black takes a high base toward Q4 with Q13. The corner and that side are Black’s.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-low-knight',
+      name: "Two-space low approach, knight's move answer",
+      difficulty: 2,
+      order: 91,
+      line: [
+        { c: 'W', at: 'O17', note: '' },
+        {
+          c: 'B',
+          at: 'Q14',
+          note: 'Black makes a knight’s move toward Q4 and takes that side first.',
+        },
+        { c: 'W', at: 'P13', note: 'White hits Q14 on the shoulder from the center side.' },
+        { c: 'B', at: 'P14', note: 'Black pushes at P14. If White got there first, Q14 would be sealed in.' },
+        {
+          c: 'W',
+          at: 'L17',
+          note: 'White settles O17 with a two-space extension toward D16.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. Both groups have a base, and nothing here is urgent.',
+        },
+      ],
+    },
+    {
+      id: 'komoku34-two-low-tenuki',
+      name: 'Two-space low approach, tenuki, White attaches',
+      difficulty: 3,
+      order: 92,
+      line: [
+        { c: 'W', at: 'O17', note: '' },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. A two-space low approach doesn’t threaten the corner yet, so Black can leave it.',
+        },
+        { c: 'W', at: 'Q16', note: 'White attaches at Q16, on the center side of R16.' },
+        { c: 'B', at: 'R17', note: 'Black draws back to R17 and keeps the corner.' },
+        {
+          c: 'W',
+          at: 'Q14',
+          note: 'White jumps to Q14 and keeps Black low along the edge toward Q4.',
+        },
+        { c: 'B', at: 'Q15', note: 'Black wedges in at Q15, between Q16 and Q14.' },
+        { c: 'W', at: 'P15', note: 'White ataris Q15 from the center side.' },
+        {
+          c: 'B',
+          at: 'R15',
+          note: 'Black connects at R15. Now Q16 is the weak stone, with just two liberties.',
+        },
+        {
+          c: 'W',
+          at: 'P14',
+          note: 'White connects at P14, so Black has no cut against the wall.',
+        },
+        {
+          c: 'B',
+          at: 'tenuki',
+          note: 'Black plays elsewhere. The corner has its base, and Q16 is weak enough to attack later.',
         },
       ],
     },

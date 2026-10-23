@@ -232,6 +232,70 @@ describe('judgeMove: off book', () => {
     expect(v).toEqual({ type: 'fine-offbook', pointsLost: 1, bookMove: null })
   })
 
+  describe('one search when the move was looked at (R40)', () => {
+    // Before the move, the search saw S12 at 1.6 and P13 at 2. The fresh search after the move comes back
+    // 2 points lower than the search's own value (a short, noisy search), which used to read as a mistake.
+    const before = analysisOf('black', [['P13', 2], ['S12', 1.6], ['O14', -1]], ['D10', -20])
+
+    it('playing the engine’s own best move is fine with loss 0, however low the search after it says', () => {
+      const v = judgeMove({ node: afterHane, played: P('P13'), ...free, before, scoreAfter: 0, thresholds: T })
+      // P13 is a book move here, so leave the book for this one: same position, no book node.
+      expect(v.type).toBe('good')
+      const off = judgeMove({ node: null, played: P('P13'), ...free, before, scoreAfter: -3, thresholds: T })
+      expect(off).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: null })
+      const noAfter = judgeMove({ node: null, played: P('P13'), ...free, before, scoreAfter: null, thresholds: T })
+      expect(noAfter).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: null })
+    })
+
+    it('a move the search looked at loses the difference inside that one search', () => {
+      const close = judgeMove({ node: afterHane, played: P('S12'), ...free, before, scoreAfter: -5, thresholds: T })
+      expect(close).toEqual({ type: 'fine-offbook', pointsLost: 0.4, bookMove: P('P13') })
+      const far = judgeMove({ node: afterHane, played: P('O14'), ...free, before, scoreAfter: 5, thresholds: T })
+      expect(far).toEqual({ type: 'mistake', inBook: false, better: P('P13'), pointsLost: 3, big: false })
+    })
+
+    it('a move the search didn’t look at falls back to the search after it', () => {
+      const v = judgeMove({ node: afterHane, played: P('Q12'), ...free, before, scoreAfter: -1, thresholds: T })
+      expect(v).toEqual({ type: 'mistake', inBook: false, better: P('P13'), pointsLost: 3, big: false })
+      expect(judgeMove({ node: afterHane, played: P('Q12'), ...free, before, scoreAfter: null, thresholds: T }).type).toBe('unjudged')
+    })
+
+    it('a candidate scored above the best one loses nothing', () => {
+      const odd = analysisOf('black', [['P13', 1], ['S12', 1.8]], null)
+      const v = judgeMove({ node: null, played: P('S12'), ...free, before: odd, scoreAfter: -4, thresholds: T })
+      expect(v).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: null })
+    })
+
+    it('a tenuki on the engine’s best point elsewhere is judged inside the same analysis (R19 still picks the reference)', () => {
+      // Elsewhere is bigger than the corner and the owner played exactly there: loss 0, nothing named.
+      const big = analysisOf('black', [['P13', 0]], ['D10', 2])
+      const v = judgeMove({ node: afterHane, played: 'tenuki', tenukiAt: P('D10'), ...free, before: big, scoreAfter: -2, thresholds: T })
+      expect(v).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: P('P13') })
+      // The corner is urgent: the best point elsewhere still loses the corner's lead over it.
+      const urgent = analysisOf('black', [['P13', 6]], ['D10', -2])
+      const u = judgeMove({ node: afterHane, played: 'tenuki', tenukiAt: P('D10'), ...free, before: urgent, scoreAfter: 3, thresholds: T })
+      expect(u).toEqual({ type: 'mistake', inBook: false, better: P('P13'), pointsLost: 8, big: true })
+      // A tenuki somewhere else is measured with the search after it, as before.
+      const other = judgeMove({ node: afterHane, played: 'tenuki', tenukiAt: P('K4'), ...free, before: big, scoreAfter: -1, thresholds: T })
+      expect(other).toEqual({ type: 'mistake', inBook: false, better: P('D10'), pointsLost: 3, big: false })
+    })
+
+    it('never names the move played as the better one', () => {
+      for (const scoreAfter of [-10, -2, 0, null]) {
+        for (const played of [P('P13'), P('S12'), P('O14')]) {
+          const v = judgeMove({ node: null, played, ...free, before, scoreAfter, thresholds: T })
+          if (v.type === 'mistake') expect(v.better).not.toEqual(played)
+        }
+      }
+    })
+
+    it('an in-book mistake without a checked loss takes its points from the one search too', () => {
+      const withMistake = analysisOf('black', [['P13', 1.2], ['R13', -1.3]], ['D10', -20])
+      const v = judgeMove({ node: afterHane, played: P('R13'), ...drill('fixture-hane'), before: withMistake, scoreAfter: 4, thresholds: T })
+      expect(v).toMatchObject({ type: 'mistake', inBook: true, pointsLost: 2.5, better: P('P13') })
+    })
+  })
+
   it('rounds points lost to one decimal and judges the rounded value', () => {
     const v = judgeMove({ node: null, played: P('S12'), ...free, before: engine('P13', 1.54), scoreAfter: 0, thresholds: T })
     expect(v).toEqual({ type: 'fine-offbook', pointsLost: 1.5, bookMove: null })

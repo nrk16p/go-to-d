@@ -47,6 +47,20 @@ export function newItems(book: Book, p: Progress, n: number): CourseItem[] {
     .slice(0, n)
 }
 
+/** How many patterns × sides were first played on `today` (R44). Reviews with no first day (older saves) don't count. */
+export function startedToday(p: Progress, today: string): number {
+  return Object.values(p.reviews).filter((r) => r.firstDay === today).length
+}
+
+/**
+ * The new items Today offers (R44, spec §4: about newPerDay a day, a suggestion): newPerDay less the ones
+ * already started today, in course order. Once they're done the list is empty until tomorrow; the next one
+ * stays one tap away (newItems(book, p, 1)) for whoever wants more.
+ */
+export function newToday(book: Book, p: Progress, today: string): CourseItem[] {
+  return newItems(book, p, Math.max(0, p.settings.newPerDay - startedToday(p, today)))
+}
+
 /** The reviews due on `today`, most overdue first, leaving out keys the book no longer drills. */
 export function dueItems(book: Book, p: Progress, today: string): CourseItem[] {
   const out: CourseItem[] = []

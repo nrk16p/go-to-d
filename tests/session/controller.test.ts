@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildBook } from '../../src/book/build'
-import type { Book, FamilyDef } from '../../src/book/types'
+import { BOOK as REAL_BOOK } from '../../src/book/data'
+import type { Book, FamilyDef, FamilyId } from '../../src/book/types'
 import type { TeacherEngine } from '../../src/engine/teacher'
 import { CORNER_REGION, parseGtp, toGtp, transform, transformRegion, type Pt, type Sym } from '../../src/go/coords'
 import { ENGINE_TIMEOUT_MS, SparController, type SparState } from '../../src/session/controller'
@@ -456,6 +457,15 @@ describe('SparController: when the engine is missing or slow', () => {
     expect(off.state.status).toBe('done')
     expect(off.state.message).toEqual(expect.any(String))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('analyzeCorner failed'), expect.any(Error))
+    // Without the search before the move there is nothing to judge with, so the second one isn't asked (R40).
+    expect(engine.scoreCalls).toEqual([])
+
+    // The search before the move worked but the one after it fails: still unjudged, and said in the console.
+    const half = new FakeEngine({ score: () => Promise.reject(new Error('stopped')) })
+    const h = make({}, half)
+    await h.start()
+    await h.ownerPlay(at('R17'))
+    expect(h.state.log[1].verdict).toEqual({ type: 'unjudged', reason: 'engine-failed' })
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('scoreFor failed'), expect.any(Error))
   })
 
@@ -532,6 +542,62 @@ describe('SparController: off book', () => {
     score = 1
     await c.ownerPlay(at('R17', sym))
     expect(c.state.lastVerdict).toEqual({ type: 'fine-offbook', pointsLost: 1, bookMove: at('Q14', sym) })
+  })
+
+  describe('the owner’s move judged inside one search (R40)', () => {
+    // A slow phone's short searches: before Black's move the corner search likes O17 (+2) and has looked at
+    // R17 (+1.6); the separate search after the move always comes back 3 points lower (one-sided noise).
+    const lowVisits = () =>
+      new FakeEngine({
+        analyze: (pos, _komi, region) =>
+          pos.toMove === 'black' && pos.history.length === 1
+            ? analysisOf('black', [['O17', 2], ['R17', 1.6]], ['K4', -8])
+            : defaultAnalysis(pos, region),
+        score: () => -1,
+      })
+
+    it('playing the engine’s best move is fine with loss 0, and needs no second search', async () => {
+      const engine = lowVisits()
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay(at('O17'))
+      expect(c.state.log[1].verdict).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: at('Q14') })
+      expect(engine.scoreCalls).toEqual([])
+    })
+
+    it('another move the search looked at loses the difference inside it', async () => {
+      const engine = lowVisits()
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay(at('R17'))
+      expect(c.state.log[1].verdict).toEqual({ type: 'fine-offbook', pointsLost: 0.4, bookMove: at('Q14') })
+      expect(engine.scoreCalls).toEqual([])
+    })
+
+    it('a move the search didn’t look at is scored after it, as before', async () => {
+      const engine = lowVisits()
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay(at('R10'))
+      expect(c.state.lastVerdict).toEqual({ type: 'mistake', inBook: false, better: at('O17'), pointsLost: 3, big: false })
+      expect(engine.scoreCalls).toHaveLength(1)
+    })
+
+    it('Play elsewhere lands on the engine’s point elsewhere and is judged from the same analysis', async () => {
+      const engine = new FakeEngine({
+        analyze: (pos, _komi, region) =>
+          pos.toMove === 'black' && pos.history.length === 1
+            ? analysisOf('black', [['O17', 0]], ['K4', 1])
+            : defaultAnalysis(pos, region),
+        score: () => -5,
+      })
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay('tenuki')
+      expect(stoneAt(c, 'K4')).toBe('black')
+      expect(c.state.log[1].verdict).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: at('Q14') })
+      expect(engine.scoreCalls).toEqual([])
+    })
   })
 
   it('a big off-book loss stops play; play on lets the engine answer', async () => {
@@ -666,6 +732,260 @@ describe('SparController: tenuki in the book', () => {
     expect(stoneAt(without, 'R15')).toBe('white')
     expect(without.state.status).toBe('done')
     expect(without.state.result?.clean).toBe(true)
+  })
+})
+
+describe('SparController: families that start the same way share their book (R42)', () => {
+  // A second family on the same start (Black Q16, four handicap stones): a 3-3 invasion, and after the
+  // fixture's W R14 a knight's move O17 (joseki) and a low S14 (mistake, punished by W R15).
+  const SIBLING: FamilyDef = {
+    id: 'invade33',
+    name: 'fixture 3-3 invasion',
+    setup: 'handicap4',
+    start: [{ c: 'B', at: 'Q16', note: 'The corner stone.' }],
+    patterns: [
+      {
+        id: 'fx-invade',
+        name: 'Invade',
+        difficulty: 1,
+        order: 10,
+        line: [
+          { c: 'W', at: 'R17', note: 'White invades at the 3-3 point.' },
+          { c: 'B', at: 'Q17', note: 'Black blocks.' },
+          { c: 'W', at: 'R16', note: 'White crawls.' },
+        ],
+      },
+      {
+        id: 'fx-wide',
+        name: 'Knight’s move',
+        difficulty: 1,
+        order: 11,
+        line: [
+          { c: 'W', at: 'R14', note: '' },
+          { c: 'B', at: 'O17', note: 'Black answers with a knight’s move toward O17.' },
+          { c: 'W', at: 'R11', note: 'White extends to R11.' },
+        ],
+        branches: [
+          {
+            after: 1,
+            move: { c: 'B', at: 'S14', kind: 'mistake', note: 'Too low. White presses from R15.' },
+            then: [{ c: 'W', at: 'R15', note: 'White presses.' }],
+          },
+        ],
+      },
+    ],
+  }
+  const PAIR = buildBook([FIXTURE_FAMILY, SIBLING])
+  const pair = (over: Partial<Config> = {}, engine: TeacherEngine = new FakeEngine(), opts: ConstructorParameters<typeof SparController>[3] = {}) =>
+    new SparController(
+      PAIR,
+      engine,
+      {
+        mode: 'drill',
+        family: 'star44',
+        patternId: 'fixture-hane',
+        side: 'defend',
+        sym: 0,
+        seed: 1,
+        thresholds: DEFAULT_THRESHOLDS,
+        missed: new Set(),
+        ...over,
+      },
+      opts,
+    )
+
+  it.each([0, 3] as Sym[])('in a drill, the other family’s joseki is other-joseki and Switch goes to that family (sym %i)', async (sym) => {
+    const engine = new FakeEngine()
+    const c = pair({ sym }, engine)
+    await c.start()
+    await c.ownerPlay(at('O17', sym))
+    expect(c.state.lastVerdict).toEqual({
+      type: 'other-joseki',
+      note: orientNote('Black answers with a knight’s move toward O17.', sym),
+      patternIds: ['fx-wide'],
+    })
+    expect(c.state.status).toBe('stopped')
+    // A sound book move, so the engine isn't asked to judge it.
+    expect(engine.scoreCalls).toEqual([])
+    c.retry()
+    expect(c.state.node).toBe(PAIR.families.star44.root.children[0])
+    c.retry()
+    await c.ownerPlay(at('O17', sym))
+    expect(c.switchTo('fx-wide')).toBeNull()
+    await vi.waitFor(() => expect(c.state.status).toBe('owner-to-move'))
+    expect(c.state.node).toBe(PAIR.patterns['fx-wide'].path[0])
+  })
+
+  it('in free sparring it is simply good, and play goes on in that family’s tree, which gets the credit', async () => {
+    const c = pair({ mode: 'free', patternId: undefined, side: 'attack' })
+    await c.start()
+    await c.ownerPlay(at('R17'))
+    expect(c.state.log[0].verdict).toEqual({ type: 'good', kind: 'joseki', note: 'White invades at the 3-3 point.' })
+    expect(moves(c.state)).toEqual(['W R17', 'B Q17'])
+    expect(c.state.note).toBe('Black blocks.')
+    await c.ownerPlay(at('R16'))
+    expect(c.state.status).toBe('done')
+    expect(c.state.result).toMatchObject({ patternIds: ['fx-invade'], clean: true })
+  })
+
+  it('a mistake from the other family is judged as in book, with that family’s checked loss; Play on runs its punishment', async () => {
+    const asked: string[] = []
+    const bookLoss = (family: FamilyId, key: string) => {
+      asked.push(`${family}:${key}`)
+      return family === 'invade33' && key === 'W:R14/B:S14' ? 2.7 : null
+    }
+    const engine = new FakeEngine()
+    const c = pair({}, engine, { bookLoss })
+    await c.start()
+    await c.ownerPlay(at('S14'))
+    expect(c.state.lastVerdict).toEqual({
+      type: 'mistake',
+      inBook: true,
+      better: at('Q14'),
+      pointsLost: 2.7,
+      big: false,
+      note: 'Too low. White presses from R15.',
+    })
+    expect(asked).toEqual(['invade33:W:R14/B:S14'])
+    expect(engine.scoreCalls).toEqual([])
+    await c.playOn()
+    expect(moves(c.state)).toEqual(['W R14', 'B S14', 'W R15'])
+    expect(c.state.note).toBe('White presses.')
+  })
+
+  it('in free sparring the teacher picks from both families’ moves', async () => {
+    const first = new Set<string>()
+    for (let seed = 1; seed <= 40; seed++) {
+      const c = pair({ mode: 'free', patternId: undefined, seed })
+      await c.start()
+      first.add(moves(c.state)[0])
+    }
+    expect([...first].sort()).toEqual(['W R14', 'W R17'])
+  })
+
+  describe('in the real book', () => {
+    const real = (over: Partial<Config>, engine: TeacherEngine = new FakeEngine()) =>
+      new SparController(REAL_BOOK, engine, {
+        mode: 'drill',
+        family: 'invade33',
+        side: 'attack',
+        sym: 0,
+        seed: 1,
+        thresholds: DEFAULT_THRESHOLDS,
+        missed: new Set(),
+        ...over,
+      })
+
+    it('the 3-3 slide S16 in a 3-3 invasion drill is the 4-4 point’s joseki, with a Switch to it', async () => {
+      // invade33-after-knight, attacking: White R14, Black's knight's move O17, then White slides to S16.
+      const drillId = 'invade33-after-knight'
+      const key = 'W:R14/B:O17'
+      expect(REAL_BOOK.patterns[drillId].path[1].key).toBe(key)
+      const inStar = REAL_BOOK.families.star44.root.children
+        .find((n) => n.key === 'W:R14')
+        ?.children.find((n) => n.key === key)
+        ?.children.find((n) => n.key === `${key}/W:S16`)
+      expect(inStar?.kind).toBe('joseki')
+      expect(REAL_BOOK.patterns[drillId].path[2].key).not.toBe(`${key}/W:S16`)
+
+      const c = real({ patternId: drillId })
+      await c.start()
+      await c.ownerPlay(at('R14'))
+      expect(moves(c.state)).toEqual(['W R14', 'B O17'])
+      await c.ownerPlay(at('S16'))
+      const v = c.state.lastVerdict
+      expect(v?.type).toBe('other-joseki')
+      const ids = v?.type === 'other-joseki' ? v.patternIds : []
+      expect(ids.length).toBeGreaterThan(0)
+      for (const id of ids) {
+        expect(REAL_BOOK.patterns[id].family).toBe('star44')
+        expect(REAL_BOOK.patterns[id].path).toContain(inStar)
+      }
+      expect(c.switchTo(ids[0])).toBeNull()
+      await vi.waitFor(() => expect(c.state.status).toBe('owner-to-move'))
+      expect(c.state.log).toEqual([])
+    })
+
+    it('a 3-3 invasion in a 4-4 point free spar is good and goes on as the 3-3 invasion', async () => {
+      const invade = REAL_BOOK.families.invade33.root.children.find(
+        (n) => n.move?.color === 'white' && !REAL_BOOK.families.star44.root.children.some((s) => s.key === n.key),
+      )!
+      expect(invade.key).toBe('W:R17')
+      const c = real({ mode: 'free', family: 'star44' })
+      await c.start()
+      await c.ownerPlay(at('R17'))
+      expect(c.state.log[0].verdict).toMatchObject({ type: 'good' })
+      expect(c.state.status).toBe('owner-to-move')
+      // The teacher answered from the 3-3 invasion's tree: its node belongs to invade33 patterns only.
+      const node = c.state.node!
+      expect(node.parent).toBe(invade)
+      expect(node.patternIds.every((id) => REAL_BOOK.patterns[id].family === 'invade33')).toBe(true)
+    })
+  })
+})
+
+describe('SparController: the margin line is part of the corner (R43)', () => {
+  it.each([0, 6] as Sym[])('a tap one line outside the region is a local move judged by the engine, never the book’s tenuki (sym %i)', async (sym) => {
+    // fixture-tenuki: after W R14, B Q14 the book's White move is a tenuki. R8 is the line just below the region.
+    const engine = new FakeEngine()
+    const c = make({ side: 'attack', patternId: 'fixture-tenuki', sym }, engine)
+    await c.start()
+    await c.ownerPlay(at('R14', sym))
+    const asked = engine.analyzeCalls.length
+    await c.ownerPlay(at('R8', sym))
+    expect(stoneAt(c, 'R8', sym)).toBe('white')
+    expect(c.state.log[2]).toMatchObject({ move: { ...at('R8', sym), player: 'white' }, by: 'owner' })
+    expect(c.state.lastVerdict?.type).toBe('fine-offbook')
+    expect(c.state.node).toBeNull()
+    expect(engine.analyzeCalls.length).toBeGreaterThan(asked)
+  })
+
+  it('…and judged against the best corner move: the reviewer’s R8 in the 3-3 invasion after a knight’s-move answer', async () => {
+    // invade33-after-knight, defending: after W R11 the book says Black plays elsewhere. Black attacks the
+    // extension with R8 instead. That's a corner move: the engine judges it, here as a mistake.
+    const id = 'invade33-after-knight'
+    const path = REAL_BOOK.patterns[id].path
+    const k = path.findIndex((n) => n.move?.at === 'tenuki')
+    expect(path[k].key).toBe('W:R14/B:O17/W:R11/B:tenuki')
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) =>
+        pos.toMove === 'black' && pos.history.length === 3 ? analysisOf('black', [['Q14', 1]], ['D10', 2]) : defaultAnalysis(pos, region),
+      score: () => -2,
+    })
+    const c = new SparController(REAL_BOOK, engine, {
+      mode: 'drill',
+      family: 'invade33',
+      patternId: id,
+      side: 'defend',
+      sym: 0,
+      seed: 1,
+      thresholds: DEFAULT_THRESHOLDS,
+      missed: new Set(),
+    })
+    await c.start()
+    await c.ownerPlay(at('O17'))
+    expect(c.state.node?.key).toBe('W:R14/B:O17/W:R11')
+    await c.ownerPlay(at('R8'))
+    expect(c.state.lastVerdict).toEqual({ type: 'mistake', inBook: false, better: at('Q14'), pointsLost: 3, big: false })
+    expect(c.state.status).toBe('stopped')
+    expect(c.state.log.at(-1)?.move).toMatchObject({ ...at('R8'), player: 'black' })
+    // The Play elsewhere button still plays the book's tenuki.
+    c.retry()
+    await c.ownerPlay('tenuki')
+    expect(c.state.log[3]).toMatchObject({ move: { tenuki: 'black' }, by: 'owner', verdict: { type: 'good' } })
+  })
+
+  it('a tenuki never lands on the margin line: the engine’s point there gives way to a big point', async () => {
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) =>
+        pos.toMove === 'white' ? analysisOf('white', [['R13', 0]], ['R8', 3]) : defaultAnalysis(pos, region),
+    })
+    const c = make({ patternId: 'fixture-tenuki' }, engine)
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    expect(stoneAt(c, 'R8')).toBeNull()
+    expect(stoneAt(c, 'D10')).toBe('white')
+    expect(c.state.log[2]).toEqual({ move: { tenuki: 'white' }, by: 'teacher' })
   })
 })
 

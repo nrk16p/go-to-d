@@ -81,3 +81,16 @@ export function transformRegion(r: Region, sym: Sym): Region {
 export function inRegion(p: Pt, r: Region): boolean {
   return p.x >= r.xMin && p.x <= r.xMax && p.y >= r.yMin && p.y <= r.yMax
 }
+
+/**
+ * The region plus one line all round, clamped to the board: what the corner view shows, and where a
+ * stone still counts as played in the corner (R43). Only beyond it is a stone "elsewhere".
+ */
+export function withMargin(r: Region): Region {
+  return {
+    xMin: Math.max(0, r.xMin - 1),
+    xMax: Math.min(BOARD_SIZE - 1, r.xMax + 1),
+    yMin: Math.max(0, r.yMin - 1),
+    yMax: Math.min(BOARD_SIZE - 1, r.yMax + 1),
+  }
+}

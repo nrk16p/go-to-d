@@ -4,7 +4,7 @@
 
 import { BOARD_SIZE, inRegion, parseGtp, type Color, type Pt, type Region } from '../../src/go/coords'
 import { play, type Position } from '../../src/go/rules'
-import type { CornerAnalysis, TeacherEngine } from '../../src/engine/teacher'
+import type { CornerAnalysis, EngineFailure, TeacherEngine } from '../../src/engine/teacher'
 
 export type EngineStatus = 'loading' | 'ready' | 'failed'
 
@@ -58,6 +58,8 @@ export function analysisOf(
 
 export class FakeEngine implements TeacherEngine {
   current: EngineStatus
+  /** Why it stopped, for the engine hub's respawn rules (R41). */
+  failedBy: EngineFailure | null = null
   readonly analyzeCalls: Array<{ pos: Position; komi: number; region: Region }> = []
   readonly scoreCalls: Array<{ pos: Position; komi: number; color: Color }> = []
   private readonly script: FakeScript
@@ -89,7 +91,17 @@ export class FakeEngine implements TeacherEngine {
     return this.script.score ? this.script.score(pos, komi, color) : 0
   }
 
-  dispose(): void {
+  /** Stops it the way a real engine stops: status 'failed', with a reason. */
+  fail(why: EngineFailure): void {
+    this.failedBy ??= why
     this.current = 'failed'
+  }
+
+  failure(): EngineFailure | null {
+    return this.failedBy
+  }
+
+  dispose(): void {
+    this.fail('disposed')
   }
 }

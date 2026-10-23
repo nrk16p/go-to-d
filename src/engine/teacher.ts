@@ -19,10 +19,10 @@ import { inRegion, type Board, type Color, type Pt, type Region } from '../go/co
 import type { Position } from '../go/rules'
 import type { KataGoAnalyzeRequest } from './katago/types'
 import { DEFAULT_MAX_TIME_MS, DEFAULT_VISITS, MODEL_URL } from './model'
-import { compactSearch, type Backend, type EngineSearch, type SearchRunner } from './search'
+import { compactSearch, failureOf, type Backend, type EngineFailure, type EngineSearch, type SearchRunner } from './search'
 import { workerRunner } from './workerRunner'
 
-export type { Backend, EngineSearch, SearchRunner } from './search'
+export type { Backend, EngineFailure, EngineSearch, SearchRunner } from './search'
 
 export interface CornerAnalysis {
   toMove: Color
@@ -53,6 +53,8 @@ export interface TeacherEngine {
   scoreFor(pos: Position, komi: number, color: Color, opts?: { visits?: number }): Promise<number>
   /** Stops the engine (terminates the worker) and sets status to 'failed'. Safe to call twice. */
   dispose(): void
+  /** Why the engine stopped (the first reason), or null while it hasn't. Optional: test engines leave it out. */
+  failure?(): EngineFailure | null
 }
 
 type PositionRequest = Pick<
@@ -147,14 +149,24 @@ function now(): number {
   return globalThis.performance?.now() ?? Date.now()
 }
 
+/** This many searches in a row answered with an error (a lost GPU device, say) and the engine counts as stopped (M2). */
+export const MAX_SEARCH_ERRORS = 3
+
 /** The TeacherEngine logic on top of any SearchRunner. */
 export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
   let state: 'loading' | 'ready' | 'failed' = 'loading'
+  let failure: EngineFailure | null = null
   let disposed = false
+  const fail = (why: EngineFailure) => {
+    failure ??= why
+    state = 'failed'
+  }
+  /** Read through a call: the state changes while a search is awaited. */
+  const stopped = (): boolean => state === 'failed'
   let loaded: Promise<{ backend: string; model: string }>
   try {
     loaded = runner.load((err) => {
-      state = 'failed'
+      fail(failureOf(err, 'crash'))
       if (!disposed) console.warn(`[teacher] engine stopped: ${err.message}`)
     })
   } catch (err) {
@@ -166,7 +178,7 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
       return info
     },
     (err: unknown) => {
-      state = 'failed'
+      fail(failureOf(err, 'load'))
       throw err
     },
   )
@@ -174,6 +186,8 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
   loaded.catch(() => {})
 
   let queue: Promise<unknown> = Promise.resolve()
+  /** Searches answered with an error since the last good answer. */
+  let errorsInARow = 0
   /** Queues one search. `onStart` is called when it leaves the queue. */
   const search = (req: KataGoAnalyzeRequest, onStart?: () => void): Promise<EngineSearch> => {
     const run = async () => {
@@ -181,7 +195,20 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
       await loaded
       if (state === 'failed') throw new Error('The engine has stopped')
       onStart?.()
-      return runner.search(req)
+      try {
+        const result = await runner.search(req)
+        errorsInARow = 0
+        return result
+      } catch (err) {
+        // An engine that answers every search with an error is as good as stopped: say so, so the
+        // app offers Try again instead of "Engine ready" with nothing checked.
+        if (!stopped() && ++errorsInARow >= MAX_SEARCH_ERRORS) {
+          console.warn(`[teacher] engine stopped after ${errorsInARow} failed searches in a row`)
+          fail('errors')
+          runner.dispose?.()
+        }
+        throw err
+      }
     }
     const p = queue.then(run, run)
     queue = p.catch(() => {})
@@ -222,6 +249,7 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
   return {
     status: () => state,
     ready: () => loaded,
+    failure: () => failure,
 
     async analyzeCorner(pos, komi, region, opts = {}) {
       const req = engineRequestFor(pos)
@@ -256,7 +284,7 @@ export function createTeacherFromRunner(runner: SearchRunner): TeacherEngine {
     dispose() {
       if (disposed) return
       disposed = true
-      state = 'failed'
+      fail('disposed')
       runner.dispose?.()
     },
   }
@@ -286,7 +314,8 @@ export function createInProcessEngine(model: string | Uint8Array, opts: { backen
 
 /**
  * The app's engine: KataGo in a Web Worker. Loading starts right away. Loading has a ceiling and
- * every search a deadline (src/engine/workerRunner.ts); missing one stops the worker for good.
+ * every search a deadline (src/engine/workerRunner.ts), not counting time the page is hidden; missing
+ * one stops the worker for good (the app's EngineHub may start a new one).
  */
 export function createTeacherEngine(modelUrl: string = MODEL_URL, opts: { backend?: Backend } = {}): TeacherEngine {
   return createTeacherFromRunner(workerRunner(modelUrl, opts.backend))

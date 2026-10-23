@@ -80,12 +80,13 @@ describe('resolveSpar', () => {
     expect(r.ok && r.config.patternId).toBeUndefined()
   })
 
-  it('steers free sparring toward the family’s missed positions on that side', () => {
+  it('steers free sparring toward the missed positions on that side, in the family and the ones that start the same way (R42)', () => {
     const p = defaultProgress()
     p.reviews['star44-low-jump:defend'] = { box: 1, due: '2026-10-23', runs: 1, cleanRuns: 0, missedKeys: ['W:R14/B:O16'] }
     p.reviews['star44-low-jump:attack'] = { box: 1, due: '2026-10-23', runs: 1, cleanRuns: 0, missedKeys: ['W:R14'] }
     p.reviews['invade33-stand:defend'] = { box: 1, due: '2026-10-23', runs: 1, cleanRuns: 0, missedKeys: ['W:R17'] }
+    p.reviews['komoku34-tenuki:defend'] = { box: 1, due: '2026-10-23', runs: 1, cleanRuns: 0, missedKeys: ['W:P17'] }
     const r = resolveSpar({ family: 'star44', side: 'defend' }, BOOK, p, fixed)
-    expect(r.ok && [...r.config.missed]).toEqual(['W:R14/B:O16'])
+    expect(r.ok && [...r.config.missed].sort()).toEqual(['W:R14/B:O16', 'W:R17'])
   })
 })

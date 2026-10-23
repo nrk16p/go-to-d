@@ -43,6 +43,10 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['R17', 2.46],
   ],
   'verdict.betterElsewhere': [[null], [3]],
+  'verdict.betterElsewhereAt': [
+    ['D10', null],
+    ['D10', 5],
+  ],
   'verdict.costOnly': [[1], [4.5]],
   'verdict.otherJosekiOne': [['ฮาเนะ แล้วกัน']],
   'verdict.switchTo': [['ฮาเนะ แล้วกัน']],

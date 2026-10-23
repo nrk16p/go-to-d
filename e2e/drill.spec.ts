@@ -271,13 +271,14 @@ async function drillFlow(page: Page, hasTouch: boolean, engine: 'book only' | 'e
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.report.clean)
 
     const review = (await readProgress(page)).reviews[first.key]
-    expect(review).toMatchObject({ box: 1, runs: 1, cleanRuns: 1, due: addDays(today, BOX_DAYS[1]) })
+    expect(review).toMatchObject({ box: 1, runs: 1, cleanRuns: 1, due: addDays(today, BOX_DAYS[1]), firstDay: today })
 
     await page.getByRole('navigation').getByRole('link', { name: COPY.nav.today }).click()
     await page.reload()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.today.title)
+    // One of today's new ones is done (R44): the list offers the rest of the day's share.
     const fresh = queueNames(page, COPY.today.newTitle)
-    await expect(fresh).toHaveCount(defaultProgress().settings.newPerDay)
+    await expect(fresh).toHaveCount(defaultProgress().settings.newPerDay - 1)
     expect(await fresh.allTextContents()).not.toContain(entry.def.name)
     // Due later, not today: there is no "Reviews due" list at all.
     await expect(page.getByRole('heading', { name: COPY.today.dueTitle })).toHaveCount(0)

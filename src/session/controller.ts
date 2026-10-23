@@ -4,16 +4,22 @@
 //
 // Frames (frame.ts): the book is canonical (studied corner upper right); the board is that frame
 // turned by `sym`. Engine calls go through engineAccess.ts, what a session counts for through result.ts.
+//
+// Families that start the same way share their book (R42, src/book/siblings.ts): at every position the
+// book's moves are the session tree's own plus those its siblings have there. A move found in a sibling
+// tree is judged as book, and the session goes on in that tree, so its patterns get the credit.
 
+import { nodeSetups } from '../book/build'
 import type { CheckedLoss } from '../book/checkedLoss'
 import { startPosition } from '../book/setups'
-import type { Book, BookNode } from '../book/types'
+import { bookIndex, type BookIndex } from '../book/siblings'
+import type { Book, BookNode, SetupId } from '../book/types'
 import type { TeacherEngine } from '../engine/teacher'
-import { BOARD_SIZE, inRegion, type Pt } from '../go/coords'
+import { BOARD_SIZE, inRegion, withMargin, type Pt } from '../go/coords'
 import { otherColor, play, type Color, type Position } from '../go/rules'
 import { EngineAccess, legal } from './engineAccess'
 import { analysisToBook, lineKey, noteOn, toBoardPt, toBookPt, verdictToBoard } from './frame'
-import { bookChild, isSound, judgeMove, type Verdict } from './judge'
+import { bookChild, isSound, judgeMove, scoreAfterNeeded, type Verdict } from './judge'
 import { mulberry32, pickTeacherMove } from './pick'
 import { countOwnerMove, newTally, sessionResult, switchablePatterns, type SessionResult, type Tally } from './result'
 import { drillableSides, ownerColor } from './sides'
@@ -55,11 +61,14 @@ export class SparController {
   private readonly book: Book
   private readonly engine: TeacherEngine
   private readonly bookLoss: CheckedLoss | undefined
+  private readonly index: BookIndex
   private disposed = false
   private readonly listeners = new Set<(s: SparState) => void>()
   private s!: SparState
   private cfg!: SparConfig
   private owner!: Color
+  /** The setup this session is played in; a sibling's move counts only if it was checked in it too. */
+  private setup!: SetupId
   private eng!: EngineAccess
   private drillPath: BookNode[] | undefined
   private rng!: () => number
@@ -77,6 +86,7 @@ export class SparController {
     this.book = book
     this.engine = engine
     this.bookLoss = options.bookLoss
+    this.index = bookIndex(book)
     this.reset({ ...config })
   }
 
@@ -124,8 +134,10 @@ export class SparController {
       }
       after = r.pos
     }
-    // A tap outside the corner is a tenuki played on that point.
-    const played = p !== 'tenuki' && inRegion(p, region) ? toBookPt(p, sym) : 'tenuki'
+    // A tap in the corner, its margin line included, is a corner move (R43): the margin looks and plays
+    // like the corner. Only the Play elsewhere button, or a tap beyond the margin on the full board, is a
+    // tenuki played on that point.
+    const played = p !== 'tenuki' && inRegion(p, withMargin(region)) ? toBookPt(p, sym) : 'tenuki'
     const undo: Undo = { pos, node, offBookMoves, log, note, lastBook: this.lastBook }
     const engineState = this.engine.status()
     // The stone shows at once; its verdict follows.
@@ -136,8 +148,9 @@ export class SparController {
       after = this.place(pos, this.eng.tenukiPoint(pos, a, this.owner), this.owner)
       this.set({ pos: after })
     }
-    const child = node ? bookChild(node, played) : null
-    const verdict = await this.judge(node, child, played, pos, after, engineState)
+    const child = node ? bookChild(this.withSiblings(node), played) : null
+    const tenukiAt = played === 'tenuki' ? toBookPt(lastMove(after), sym) : undefined
+    const verdict = await this.judge(gen, node && this.withSiblings(node), child, played, tenukiAt, pos, after, engineState)
     if (gen !== this.gen) return
 
     const where = node ? `book:${node.key}` : `off:${lineKey(pos, sym)}`
@@ -214,6 +227,7 @@ export class SparController {
     const gen = ++this.gen
     this.cfg = cfg
     this.owner = ownerColor(fam.def, cfg.side)
+    this.setup = setup
     const komi = start.komi + (setup === 'handicap4' ? HANDICAP_BONUS : 0)
     const isCurrent = (pos: Position) => gen === this.gen && this.s.pos === pos && this.s.status === 'owner-to-move'
     this.eng = new EngineAccess(this.engine, komi, start.region, cfg.sym, isCurrent)
@@ -257,7 +271,7 @@ export class SparController {
     if (!node || node.move === null) return false
     if (this.drillPath && node === this.drillPath[this.drillPath.length - 1]) return true
     // A mistake or trick at the end of a line still wants an answer.
-    return node.children.length === 0 && isSound(node)
+    return this.bookMoves(node).length === 0 && isSound(node)
   }
 
   private finish(message: string | null = null): void {
@@ -274,10 +288,13 @@ export class SparController {
     this.eng.lookAhead(this.s.pos)
   }
 
+  /** The verdict on the owner's move. If the session moves on (or ends) meanwhile, the engine is asked nothing more. */
   private async judge(
+    gen: number,
     node: BookNode | null,
     child: BookNode | null,
     played: Pt | 'tenuki',
+    tenukiAt: Pt | undefined,
     pos: Position,
     after: Position,
     engineState: ReturnType<TeacherEngine['status']>,
@@ -285,19 +302,25 @@ export class SparController {
     const { cfg } = this
     // A sound book move needs no engine. A book mistake takes its points from the book check (R29), or
     // from the engine when the check has none for it.
-    const checked = child && !isSound(child) && this.bookLoss ? this.bookLoss(cfg.family, child.key) : null
+    // The check's numbers are per family: a move from a sibling tree (R42) takes its own family's.
+    const checked = child && !isSound(child) && this.bookLoss ? this.bookLoss(this.index.familyOf(child) ?? cfg.family, child.key) : null
     const needEngine = !(child && isSound(child)) && checked === null && engineState === 'ready'
-    const [before, scoreAfter] = needEngine
-      ? await Promise.all([this.eng.analysis(pos), this.eng.score(after, this.owner)])
-      : [null, null]
+    // The analysis of the position before the move is usually the look-ahead, already done or under way.
+    // Most moves are among its candidates and are judged from it alone (R40); only a move it didn't look
+    // at needs a search of the position after it.
+    const analysis = needEngine ? await this.eng.analysis(pos) : null
+    const before = analysis && analysisToBook(analysis, cfg.sym)
+    const second = scoreAfterNeeded({ before, played, tenukiAt }) && gen === this.gen
+    const scoreAfter = second ? await this.eng.score(after, this.owner) : null
     const drill = cfg.mode === 'drill' && !this.leftDrill
     let v = judgeMove({
       node,
       played,
+      tenukiAt,
       mode: drill ? 'drill' : 'free',
       drillPatternId: drill ? cfg.patternId : undefined,
       drillPath: drill ? this.drillPath : undefined,
-      before: before && analysisToBook(before, cfg.sym),
+      before,
       scoreAfter,
       thresholds: cfg.thresholds,
       checkedLoss: checked,
@@ -324,7 +347,8 @@ export class SparController {
   }
 
   /** Drill: the drilled line; off it (a punishment line, another joseki) or in free sparring: by weight. */
-  private pickBook(node: BookNode): BookNode | null {
+  private pickBook(at: BookNode): BookNode | null {
+    const node = this.withSiblings(at)
     const opts = { missed: this.cfg.missed, rng: this.rng }
     const onPath = this.drillPath ? pickTeacherMove(node, { ...opts, mode: 'drill', drillPath: this.drillPath }) : null
     return onPath ?? pickTeacherMove(node, { ...opts, mode: 'free' })
@@ -341,7 +365,7 @@ export class SparController {
     const color = otherColor(this.owner)
     const { cornerBest, tenukiBest } = a
     if (tenukiBest && tenukiBest.scoreLead > cornerBest.scoreLead + TENUKI_MARGIN && legal(pos, tenukiBest.pt, color)) {
-      this.teacherPlays(tenukiBest.pt, true, node && bookChild(node, 'tenuki'))
+      this.teacherPlays(tenukiBest.pt, true, node && bookChild(this.withSiblings(node), 'tenuki'))
       return this.finish()
     }
     const near = a.candidates.filter((c) => c.scoreLead >= cornerBest.scoreLead - NEAR_BEST)
@@ -349,8 +373,33 @@ export class SparController {
     const pt = [pick, cornerBest.pt, ...a.candidates.map((c) => c.pt)].find((p) => inRegion(p, region) && legal(pos, p, color))
     if (!pt) return this.finish(MESSAGES.noMove)
     // The engine's answer may still be a book move.
-    this.teacherPlays(pt, false, node && bookChild(node, toBookPt(pt, this.cfg.sym)))
+    this.teacherPlays(pt, false, node && bookChild(this.withSiblings(node), toBookPt(pt, this.cfg.sym)))
     await this.next(gen)
+  }
+
+  /**
+   * The book's moves from `node` (R42): its own children, then the moves the families that start the same
+   * way have at this position and checked under this session's setup. Each node stays in its own tree.
+   */
+  private bookMoves(node: BookNode): BookNode[] {
+    const own = this.index.familyOf(node)
+    if (!own) return node.children
+    const out = [...node.children]
+    const seen = new Set(out.map((c) => c.key))
+    for (const family of this.index.group(own).slice(1)) {
+      for (const c of this.index.node(family, node.key)?.children ?? []) {
+        if (seen.has(c.key) || !nodeSetups(this.book, family, c).some((s) => s.setup === this.setup)) continue
+        seen.add(c.key)
+        out.push(c)
+      }
+    }
+    return out
+  }
+
+  /** `node` with all of bookMoves as its children: what judgeMove and pickTeacherMove look at. */
+  private withSiblings(node: BookNode): BookNode {
+    const children = this.bookMoves(node)
+    return children.length === node.children.length ? node : { ...node, children }
   }
 
   /** Puts the teacher's stone on `pt`; `child` is the book move it is, or null off book. */

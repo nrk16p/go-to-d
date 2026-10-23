@@ -5,6 +5,7 @@ import { COPY } from './ui/copy'
 import type { EngineHub } from './ui/engine'
 import { LangSwitch } from './ui/LangSwitch'
 import { href, parseRoute, useHash, wantsWatch, type Route } from './ui/router'
+import { ScreenBoundary } from './ui/ScreenBoundary'
 import { Library } from './ui/screens/Library'
 import { NotFound } from './ui/screens/NotFound'
 import { Pattern } from './ui/screens/Pattern'
@@ -68,7 +69,9 @@ export default function App({ engine }: { engine: EngineHub }) {
         </div>
       </header>
       <main className="screen">
-        <Screen route={route} hash={hash} engine={engine} />
+        <ScreenBoundary key={hash}>
+          <Screen route={route} hash={hash} engine={engine} />
+        </ScreenBoundary>
       </main>
     </div>
   )

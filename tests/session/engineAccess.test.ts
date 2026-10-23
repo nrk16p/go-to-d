@@ -5,6 +5,7 @@ import { parseGtp, transform, type Sym } from '../../src/go/coords'
 import { play, type Position } from '../../src/go/rules'
 import { ask, ENGINE_TIMEOUT_MS, EngineAccess, timed } from '../../src/session/engineAccess'
 import { FIXTURE_FAMILY } from '../book/fixture'
+import { FakeVisibility } from '../engine/fakeVisibility'
 import { analysisOf, defaultAnalysis, FakeEngine } from './fakeEngine'
 
 const BOOK = buildBook([FIXTURE_FAMILY])
@@ -30,6 +31,29 @@ describe('timed', () => {
     await vi.advanceTimersByTimeAsync(ENGINE_TIMEOUT_MS)
     expect(await r).toBeNull()
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('scoreFor took longer'))
+  })
+
+  it('doesn’t count time the page spends hidden (R41)', async () => {
+    vi.useFakeTimers()
+    const vis = new FakeVisibility()
+    let answer!: (n: number) => void
+    const r = timed(new Promise<number>((res) => (answer = res)), 'analyzeCorner', vis)
+    await vi.advanceTimersByTimeAsync(ENGINE_TIMEOUT_MS - 1000)
+    vis.set(true)
+    await vi.advanceTimersByTimeAsync(10 * 60_000)
+    vis.set(false)
+    await vi.advanceTimersByTimeAsync(500)
+    answer(7)
+    expect(await r).toBe(7)
+
+    const late = timed(new Promise<number>(() => {}), 'scoreFor', vis)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await vi.advanceTimersByTimeAsync(ENGINE_TIMEOUT_MS - 1000)
+    vis.set(true)
+    await vi.advanceTimersByTimeAsync(60_000)
+    vis.set(false)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(await late).toBeNull()
   })
 })
 

@@ -5,8 +5,12 @@
 // So every round trip has a deadline here. When one passes, the worker is stopped, everything
 // pending is rejected and the engine is reported as stopped, so the teacher's queue drains with
 // errors instead of waiting forever, and the app carries on with the book alone.
+//
+// The deadlines don't count time the page spends hidden (R41, deadline.ts): a phone suspends the
+// worker with the page, and a worker that was asleep hasn't missed anything.
 
-import type { Backend, EngineSearch, SearchRunner, WorkerRequest, WorkerResponse } from './search'
+import { deadline, pageVisibility, type PageVisibility } from './deadline'
+import { EngineError, failureOf, type Backend, type EngineSearch, type SearchRunner, type WorkerRequest, type WorkerResponse } from './search'
 
 /** Longest wait for the model to download, parse and warm up (3.8 MB on a slow 3G link is about a minute). */
 export const LOAD_TIMEOUT_MS = 90_000
@@ -21,7 +25,8 @@ const ENGINE_DEFAULT_MAX_TIME_MS = 800
 export type WorkerFactory = () => Worker
 
 function defaultWorker(): Worker {
-  if (typeof Worker !== 'function') throw new Error('This browser cannot run Web Workers')
+  // A browser without workers won't get them on a second try: that is a 'load' failure, not a 'start'.
+  if (typeof Worker !== 'function') throw new EngineError('This browser cannot run Web Workers', 'load')
   return new Worker(new URL('./teacher.worker.ts', import.meta.url), { type: 'module' })
 }
 
@@ -34,29 +39,29 @@ function absoluteUrl(url: string): string {
 export function workerRunner(
   modelUrl: string,
   backend: Backend | undefined,
-  opts: { createWorker?: WorkerFactory } = {},
+  opts: { createWorker?: WorkerFactory; visibility?: PageVisibility } = {},
 ): SearchRunner {
+  const visibility = opts.visibility ?? pageVisibility
   let worker: Worker | null = null
   let nextId = 1
   let dead: Error | null = null
-  let loadTimer: ReturnType<typeof setTimeout> | null = null
+  /** The worker has sent something: an error after this is a crash, before it the worker never started. */
+  let heard = false
+  let cancelLoad: (() => void) | null = null
   let pendingLoad: { resolve: (v: { backend: string; model: string }) => void; reject: (e: Error) => void } | null = null
-  const pending = new Map<
-    number,
-    { resolve: (s: EngineSearch) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }
-  >()
+  const pending = new Map<number, { resolve: (s: EngineSearch) => void; reject: (e: Error) => void; cancel: () => void }>()
   let crashed: (err: Error) => void = () => {}
 
   /** Stops the worker for good and rejects everything waiting on it. */
   const stop = (err: Error, report: boolean) => {
     if (dead) return
     dead = err
-    if (loadTimer) clearTimeout(loadTimer)
-    loadTimer = null
+    cancelLoad?.()
+    cancelLoad = null
     pendingLoad?.reject(err)
     pendingLoad = null
     for (const p of pending.values()) {
-      clearTimeout(p.timer)
+      p.cancel()
       p.reject(err)
     }
     pending.clear()
@@ -82,45 +87,52 @@ export function workerRunner(
           worker = (opts.createWorker ?? defaultWorker)()
         } catch (err) {
           pendingLoad = null
-          reject(new Error(`The engine worker did not start: ${err instanceof Error ? err.message : String(err)}`))
+          const why = err instanceof Error ? err.message : String(err)
+          reject(new EngineError(`The engine worker did not start: ${why}`, failureOf(err, 'start')))
           return
         }
-        loadTimer = setTimeout(
-          () => stop(new Error(`The engine did not load within ${LOAD_TIMEOUT_MS / 1000} s`), true),
+        cancelLoad = deadline(
           LOAD_TIMEOUT_MS,
+          () => stop(new EngineError(`The engine did not load within ${LOAD_TIMEOUT_MS / 1000} s`, 'deadline'), true),
+          visibility,
         )
         worker.onmessage = (ev: MessageEvent<WorkerResponse>) => {
+          heard = true
           const msg = ev.data
           if (msg.type === 'loaded') {
             const p = pendingLoad
             pendingLoad = null
-            if (loadTimer) clearTimeout(loadTimer)
-            loadTimer = null
+            cancelLoad?.()
+            cancelLoad = null
             if (!p) return
             if (msg.ok) {
               if (msg.note) console.warn(`[teacher] ${msg.note}`)
               p.resolve({ backend: msg.backend, model: msg.model })
             } else {
-              p.reject(new Error(msg.error))
+              p.reject(new EngineError(msg.error, 'load'))
             }
             return
           }
           const p = pending.get(msg.id)
           if (!p) return
           pending.delete(msg.id)
-          clearTimeout(p.timer)
+          p.cancel()
           if (msg.ok) p.resolve(msg.search)
           else p.reject(new Error(msg.error))
         }
         worker.onerror = (ev) => {
           ev.preventDefault?.()
-          stop(new Error(`The engine worker crashed: ${ev.message || 'unknown error'}`), true)
+          // Before the worker has said anything, its script didn't run: most likely the file couldn't be
+          // fetched (a page from before an app update asks for a worker file the update removed).
+          const kind = heard ? 'crash' : 'start'
+          stop(new EngineError(`The engine worker ${heard ? 'crashed' : 'did not start'}: ${ev.message || 'unknown error'}`, kind), true)
         }
-        worker.onmessageerror = () => stop(new Error('The engine worker sent a message that could not be read'), true)
+        worker.onmessageerror = () =>
+          stop(new EngineError('The engine worker sent a message that could not be read', 'crash'), true)
         try {
           post({ type: 'load', modelUrl: absoluteUrl(modelUrl), backend })
         } catch (err) {
-          stop(err instanceof Error ? err : new Error(String(err)), true)
+          stop(new EngineError(err instanceof Error ? err.message : String(err), 'start'), true)
         }
       })
     },
@@ -133,15 +145,16 @@ export function workerRunner(
         }
         const id = nextId++
         const limitMs = (req.maxTimeMs ?? ENGINE_DEFAULT_MAX_TIME_MS) + SEARCH_SLACK_MS
-        const timer = setTimeout(
-          () => stop(new Error(`The engine did not answer within ${Math.round(limitMs / 1000)} s`), true),
+        const cancel = deadline(
           limitMs,
+          () => stop(new EngineError(`The engine did not answer within ${Math.round(limitMs / 1000)} s`, 'deadline'), true),
+          visibility,
         )
-        pending.set(id, { resolve, reject, timer })
+        pending.set(id, { resolve, reject, cancel })
         try {
           post({ type: 'search', id, req })
         } catch (err) {
-          clearTimeout(timer)
+          cancel()
           pending.delete(id)
           reject(err instanceof Error ? err : new Error(String(err)))
         }
@@ -149,7 +162,7 @@ export function workerRunner(
     },
 
     dispose() {
-      stop(new Error('The engine was shut down'), false)
+      stop(new EngineError('The engine was shut down', 'disposed'), false)
     },
   }
 }

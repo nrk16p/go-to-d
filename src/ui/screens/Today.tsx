@@ -1,11 +1,12 @@
-// The home screen: what to play today, in order. Reviews that are due come first, then the next new
-// patterns in course order (R32), and the very first item carries the Play button so the next step is
-// never in doubt. Below: the streak, how much is mastered, and free sparring ("Teacher's choice").
+// The home screen: what to play today, in order. Reviews that are due come first, then the day's new
+// patterns in course order (R32): newPerDay less the ones already started today (R44), so the list runs
+// out and the day is done. One more stays a tap away. The very first item carries the Play button so the
+// next step is never in doubt. Below: the streak, how much is mastered, and free sparring ("Teacher's choice").
 
 import { useState } from 'react'
 import { BOOK } from '../shownBook'
 import type { FamilyId } from '../../book/types'
-import { currentStreak, dueItems, masteredCount, newItems, type CourseItem } from '../../progress/course'
+import { currentStreak, dueItems, masteredCount, newItems, newToday, type CourseItem } from '../../progress/course'
 import { loadProgress, saveProgress, todayLocal } from '../../progress/store'
 import type { Side } from '../../session/sides'
 import { CornerThumb } from '../CornerThumb'
@@ -25,7 +26,9 @@ export function Today({ today = todayLocal() }: { today?: string }) {
   const [freeSide, setFreeSide] = useState<Side>('defend')
 
   const due = dueItems(BOOK, progress, today)
-  const fresh = newItems(BOOK, progress, progress.settings.newPerDay)
+  const fresh = newToday(BOOK, progress, today)
+  // Today's share is done: the next new one, for "Learn one more".
+  const more = fresh.length === 0 ? newItems(BOOK, progress, 1)[0] : undefined
   const { mastered, total } = masteredCount(BOOK, progress)
   const first = due[0]?.key ?? fresh[0]?.key
 
@@ -87,7 +90,15 @@ export function Today({ today = todayLocal() }: { today?: string }) {
         <section className="queue" aria-labelledby="new-title">
           <h2 id="new-title">{T.newTitle}</h2>
           {fresh.length === 0 ? (
-            <p className="muted">{T.allStarted}</p>
+            more ? (
+              <p className="muted">
+                {T.doneNew}{' '}
+                {/* A new one too, so it is watched first (R45). */}
+                <a href={phaseHref({ family: more.family, pattern: more.patternId, side: more.side }, 'watch')}>{T.learnOneMore}</a>
+              </p>
+            ) : (
+              <p className="muted">{T.allStarted}</p>
+            )
           ) : (
             <ul className="queue-list">
               {fresh.map((item) => (

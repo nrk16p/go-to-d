@@ -78,6 +78,8 @@ export const COPY = {
     good: 'Good.',
     alternative: 'Also fine.',
     fineOffbook: 'Not the usual move, but it works.',
+    /** The same verdict once play is off the book: there is no usual move any more. */
+    fineNoBook: 'That works.',
     fineCost: (lost: number) => (lost > 0 ? `About ${points(lost)} behind the best move.` : ''),
     bookPlays: (gtp: string) => `The book plays ${gtp}.`,
     bookPlaysElsewhere: 'The book plays elsewhere here.',
@@ -88,6 +90,9 @@ export const COPY = {
       lost === null ? `${gtp} was better.` : `${gtp} was better, by about ${points(lost)}.`,
     betterElsewhere: (lost: number | null) =>
       lost === null ? 'Playing elsewhere was better.' : `Playing elsewhere was better, by about ${points(lost)}.`,
+    /** The better move is a point away from the corner. */
+    betterElsewhereAt: (gtp: string, lost: number | null) =>
+      lost === null ? `Playing elsewhere at ${gtp} was better.` : `Playing elsewhere at ${gtp} was better, by about ${points(lost)}.`,
     costOnly: (lost: number) => `It costs about ${points(lost)}.`,
     retry: 'Retry',
     playOn: 'Play on',
@@ -137,6 +142,8 @@ export const COPY = {
     dueTitle: 'Reviews due',
     newTitle: 'New today',
     allStarted: "You've started every pattern in the book. From here it's reviews.",
+    doneNew: "That's today's new ones.",
+    learnOneMore: 'Learn one more',
     play: 'Play',
     freeTitle: "Teacher's choice",
     freeBody: 'The teacher picks the line, any branch in the book. Good as a warm-up, or once the list is done.',
@@ -161,7 +168,8 @@ export const COPY = {
   library: {
     title: 'Library',
     lead: (n: number) => `${n} patterns. Tap one to step through its main line.`,
-    legend: 'The dots fill up each time a pattern comes back and you play it clean. Four dots counts as mastered.',
+    legend:
+      'A pattern gets its first dot the first time you play it, and one more each time it comes back and you play it clean. A mistake takes it back to one. Four dots counts as mastered.',
     sideShort: (side: Side) => (side === 'defend' ? 'Defend' : 'Attack'),
   },
 
@@ -247,6 +255,12 @@ export const COPY = {
   notFound: {
     title: "There's nothing here.",
     body: 'That link points nowhere in this app.',
+  },
+
+  /** A screen that failed to draw (ScreenBoundary). */
+  broken: {
+    title: 'Something went wrong on this page.',
+    body: 'Your progress is safe. Go back to Today and carry on.',
   },
 }
 

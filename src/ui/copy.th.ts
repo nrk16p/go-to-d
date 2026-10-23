@@ -172,6 +172,16 @@ export const COPY: Copy = {
     oneSide: 'ท่านี้ซ้อมได้ฝั่งเดียว อีกฝั่งเป็นกล ไม่ใช่ท่าที่ควรจำไปเล่น',
   },
 
+  watch: {
+    lead: (c, side) => `ดูก่อนรอบนึง แล้วค่อยลองเล่นเองเป็น${colorName(c)} ${side === 'defend' ? 'ฝ่ายรับมุม' : 'ฝ่ายบุกมุม'}`,
+    autoPlay: 'เล่นอัตโนมัติ',
+    pause: 'หยุด',
+    tryIt: 'ลองเล่นเอง',
+    watchFirst: 'ดูก่อน',
+    watch: 'ดู',
+    test: 'ทดสอบ',
+  },
+
   settings: {
     title: 'ตั้งค่า',
     teacherTitle: 'ครู',

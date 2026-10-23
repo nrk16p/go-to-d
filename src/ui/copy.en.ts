@@ -181,6 +181,18 @@ export const COPY = {
     oneSide: "Only one side to drill here. The other side's line is a trick, not something to copy.",
   },
 
+  /** Watch first, then test (R45): the teacher plays the line through once, then the owner plays it. */
+  watch: {
+    lead: (c: Color, side: Side) =>
+      `Watch it once, then you play ${colorName(c)}, ${side === 'defend' ? 'defending' : 'attacking'} the corner.`,
+    autoPlay: 'Auto-play',
+    pause: 'Pause',
+    tryIt: 'Try it yourself',
+    watchFirst: 'Watch first',
+    watch: 'Watch',
+    test: 'Test',
+  },
+
   settings: {
     title: 'Settings',
     teacherTitle: 'Teacher',

@@ -19,7 +19,7 @@ import { COPY } from '../copy'
 import { EngineChip } from '../EngineChip'
 import type { EngineHub } from '../engine'
 import { setLastReport } from '../reportStore'
-import { href, navigate, replaceQuietly, sparHref, type SparParams } from '../router'
+import { href, navigate, phaseHref, replaceQuietly, sparHref, type SparParams } from '../router'
 import { saveSession } from '../saveSession'
 import { SessionView, type FeedLine } from '../sessionView'
 import { resolveSpar } from '../sparSetup'
@@ -246,6 +246,15 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
       <header className="spar-head">
         <h1>{title}</h1>
         <p className="who">{COPY.spar.youAre(owner, side)}</p>
+        {/* R45: before the first move, the drill's line can be watched first on this same board. */}
+        {drill.mode === 'drill' && drill.patternId && !state.log.some((e) => e.by === 'owner') && (
+          <a
+            className="btn watch-first"
+            href={phaseHref({ family: drill.family, pattern: drill.patternId, side, sym: String(config.sym), seed: String(config.seed) }, 'watch')}
+          >
+            {COPY.watch.watchFirst}
+          </a>
+        )}
       </header>
 
       <div className="spar-board">

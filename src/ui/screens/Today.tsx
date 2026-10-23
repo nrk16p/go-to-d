@@ -12,7 +12,7 @@ import { CornerThumb } from '../CornerThumb'
 import { COPY } from '../copy'
 import { isInAppBrowser, needsIosInstallHint } from '../install'
 import { Pips } from '../Pips'
-import { href, sparHref } from '../router'
+import { href, phaseHref, sparHref } from '../router'
 
 const T = COPY.today
 
@@ -129,12 +129,11 @@ export function Today({ today = todayLocal() }: { today?: string }) {
 
 function QueueItem({ item, next, box }: { item: CourseItem; next: boolean; box?: number }) {
   const entry = BOOK.patterns[item.patternId]
+  // A new pattern (no review box yet) is watched once, then tested; a review goes straight to the test (R45).
+  const drill = { family: item.family, pattern: item.patternId, side: item.side }
   return (
     <li>
-      <a
-        className={`queue-item${next ? ' is-next' : ''}`}
-        href={sparHref({ family: item.family, pattern: item.patternId, side: item.side })}
-      >
+      <a className={`queue-item${next ? ' is-next' : ''}`} href={phaseHref(drill, box === undefined ? 'watch' : 'test')}>
         <CornerThumb patternId={item.patternId} />
         <span className="queue-text">
           <span className="queue-name">{entry.def.name}</span>

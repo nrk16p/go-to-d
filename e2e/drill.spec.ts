@@ -1,6 +1,7 @@
-// The whole app in a real browser, as the owner uses it: Today → the first new pattern → its book line
-// → a clean report that survives a reload → Today no longer offers it; then a drill of the book's known
-// mistake → Retry → finish; then Settings: Export, and an Import of a bad file.
+// The whole app in a real browser, as the owner uses it: Today → the first new pattern, watched first
+// (R45: Auto-play, Pause, step through, Try it yourself) → its book line → a clean report that survives a
+// reload → Today no longer offers it; then a drill of the book's known mistake → Retry → finish; then
+// Settings: Export, and an Import of a bad file.
 //
 // It runs twice. "Book only" blocks the engine's network (and the service worker, whose own fetch the
 // block can't reach), so the teacher answers from the book alone and book moves and book mistakes are
@@ -61,6 +62,39 @@ async function fitsWidth(page: Page): Promise<void> {
 
 const hit = (page: Page, p: Pt) => page.locator(`.board .hit[data-x="${p.x}"][data-y="${p.y}"]`)
 const status = (page: Page) => page.locator('.spar-panel .bar .status')
+
+/** A tap on a phone, a click on a desktop. */
+async function press(page: Page, touch: boolean, name: string, role: 'button' | 'link' = 'button'): Promise<void> {
+  const target = page.getByRole(role, { name })
+  if (touch) await target.tap()
+  else await target.click()
+}
+
+/**
+ * The watch phase (R45). Auto-play moves the line on by itself; Pause stops it. Then the line by hand from
+ * the start: each stone lands on this board's point, is marked as the last move, and its note is turned
+ * to this board too. At the end, Try it yourself leads.
+ */
+async function watchTheLine(page: Page, path: BookNode[], sym: Sym, touch: boolean): Promise<void> {
+  const count = page.locator('.step-count')
+  const n = path.length
+  await expect(count).toHaveText(COPY.pattern.step(1, n))
+  await press(page, touch, COPY.watch.pause)
+  await expect(page.getByRole('button', { name: COPY.watch.autoPlay })).toBeVisible()
+  const prev = page.getByRole('button', { name: COPY.pattern.prev })
+  while (await prev.isEnabled()) await press(page, touch, COPY.pattern.prev)
+  await expect(count).toHaveText(COPY.pattern.start)
+
+  for (const [i, node] of path.entries()) {
+    await press(page, touch, COPY.pattern.next)
+    await expect(count).toHaveText(COPY.pattern.step(i + 1, n))
+    const p = transform(bookPt(node), sym)
+    await expect(page.locator(`[data-last="${p.x},${p.y}"]`)).toBeVisible()
+    if (node.note) await expect(page.locator('.step')).toContainText(orientNote(node.note, sym))
+  }
+  await expect(page.getByRole('button', { name: COPY.pattern.next })).toBeDisabled()
+  await expect(page.getByRole('link', { name: COPY.watch.tryIt })).toHaveClass(/btn-primary/)
+}
 
 class Drill {
   /** Owner moves confirmed so far, to alternate between the "Play X" button and a second tap. */
@@ -200,9 +234,24 @@ async function drillFlow(page: Page, hasTouch: boolean, engine: 'book only' | 'e
     await fitsWidth(page)
 
     await page.locator('a.queue-item.is-next').click()
+    // A new pattern is watched first (R45), on the board the test will use.
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(entry.def.name)
+    await expect(page.getByText(COPY.watch.lead(owner, side))).toBeVisible()
+    await expect(page).toHaveURL(/[?&]phase=watch\b/)
+    const watched = await sparSym(page)
+    const watchedSeed = new URLSearchParams(new URL(page.url()).hash.split('?')[1]).get('seed')
+    await fitsWidth(page)
+    await watchTheLine(page, entry.path, watched, hasTouch)
+    await fitsWidth(page)
+    await press(page, hasTouch, COPY.watch.tryIt, 'link')
+
+    // Then the test: same board turn and seed, nothing reloaded.
     await expect(page.getByText(COPY.spar.youAre(owner, side))).toBeVisible()
-    const drill = new Drill(page, await sparSym(page), hasTouch)
+    await expect(page).not.toHaveURL(/phase=watch/)
+    const sym = await sparSym(page)
+    expect(sym).toBe(watched)
+    expect(new URLSearchParams(new URL(page.url()).hash.split('?')[1]).get('seed')).toBe(watchedSeed)
+    const drill = new Drill(page, sym, hasTouch)
     // Book only: the chip says the engine is off, and the drill goes on from the book.
     // Engine on: wait for it, so its look-ahead searches run while the drill is played.
     await expect(page.getByText(engine === 'book only' ? COPY.engine.off : COPY.engine.ready)).toBeVisible({ timeout: 30_000 })
@@ -253,7 +302,8 @@ async function drillFlow(page: Page, hasTouch: boolean, engine: 'book only' | 'e
     await page.locator('a.queue-item').filter({ hasText: m.def.name }).click()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(m.def.name)
     await fitsWidth(page)
-    await page.getByRole('link', { name: COPY.pattern.drill('defend', mOwner) }).click()
+    // Played once already, so straight to the test (R45).
+    await page.getByRole('group', { name: COPY.pattern.drill('defend', mOwner) }).getByRole('link', { name: COPY.watch.test }).click()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(m.def.name)
     const sym = await sparSym(page)
     const drill = new Drill(page, sym, hasTouch)

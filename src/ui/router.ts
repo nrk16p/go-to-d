@@ -1,12 +1,12 @@
 // Hash routes, so the app works from any folder on GitHub Pages:
 //   #/                         Today
-//   #/spar?family=&pattern=&side=&mode=&sym=&seed=
+//   #/spar?family=&pattern=&side=&mode=&sym=&seed=&phase=   (phase=watch: watch the line first, R45)
 //   #/report                   the last session's report
 //   #/library   #/pattern/:id   #/settings
 
 import { useSyncExternalStore } from 'react'
 
-export type SparParams = Partial<Record<'family' | 'pattern' | 'side' | 'mode' | 'sym' | 'seed', string>>
+export type SparParams = Partial<Record<'family' | 'pattern' | 'side' | 'mode' | 'sym' | 'seed' | 'phase', string>>
 
 export type Route =
   | { name: 'today' }
@@ -17,7 +17,7 @@ export type Route =
   | { name: 'settings' }
   | { name: 'not-found'; path: string }
 
-const SPAR_KEYS = ['family', 'pattern', 'side', 'mode', 'sym', 'seed'] as const
+const SPAR_KEYS = ['family', 'pattern', 'side', 'mode', 'sym', 'seed', 'phase'] as const
 
 export function parseRoute(hash: string): Route {
   const raw = hash.replace(/^#/, '')
@@ -53,6 +53,20 @@ export function sparHref(p: SparParams): string {
   for (const k of SPAR_KEYS) if (p[k] !== undefined) query.set(k, p[k]!)
   const s = query.toString()
   return `#/spar${s ? `?${s}` : ''}`
+}
+
+/** The Spar address asks to watch the line first (R45). Free sparring has no single line, so it never does. */
+export function wantsWatch(p: SparParams): boolean {
+  return p.phase === 'watch' && p.pattern !== undefined && p.mode !== 'free'
+}
+
+/**
+ * A drill in one phase (R45): `watch` plays the line through first, `test` is the drill itself. Keeps the
+ * family, pattern, side, sym and seed given, so watching and then testing happen on the same board.
+ */
+export function phaseHref(p: SparParams, phase: 'watch' | 'test'): string {
+  const { family, pattern, side, sym, seed } = p
+  return sparHref({ family, pattern, side, sym, seed, ...(phase === 'watch' ? { phase } : {}) })
 }
 
 export const href = {

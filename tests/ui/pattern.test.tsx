@@ -47,7 +47,7 @@ describe('Pattern', () => {
     expect(step()).toContain(P.step(path.length - 1, path.length))
   })
 
-  it('offers a drill per drillable side, and only one for a pattern with a trick', () => {
+  it('offers a drill per drillable side (watch first, or test), and only one side for a pattern with a trick', () => {
     render(<Pattern id="star44-low-jump" />)
     const hrefs = () =>
       screen
@@ -55,13 +55,18 @@ describe('Pattern', () => {
         .map((a) => a.getAttribute('href')!)
         .filter((h) => h.startsWith('#/spar'))
     expect(hrefs()).toEqual([
+      '#/spar?family=star44&pattern=star44-low-jump&side=defend&phase=watch',
       '#/spar?family=star44&pattern=star44-low-jump&side=defend',
+      '#/spar?family=star44&pattern=star44-low-jump&side=attack&phase=watch',
       '#/spar?family=star44&pattern=star44-low-jump&side=attack',
     ])
     cleanup()
 
     render(<Pattern id="invade33-cut-trick" />)
-    expect(hrefs()).toEqual(['#/spar?family=invade33&pattern=invade33-cut-trick&side=defend'])
+    expect(hrefs()).toEqual([
+      '#/spar?family=invade33&pattern=invade33-cut-trick&side=defend&phase=watch',
+      '#/spar?family=invade33&pattern=invade33-cut-trick&side=defend',
+    ])
     expect(screen.getByText(P.oneSide)).toBeTruthy()
   })
 

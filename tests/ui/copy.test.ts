@@ -87,6 +87,10 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['defend', 'black'],
     ['attack', 'white'],
   ],
+  'watch.lead': [
+    ['black', 'defend'],
+    ['white', 'attack'],
+  ],
   'settings.backendName': [['webgpu'], ['wasm'], ['cpu'], ['webgl']],
   'settings.importConfirm': [
     [0, 0],

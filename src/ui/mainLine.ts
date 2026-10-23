@@ -1,52 +1,18 @@
 // A pattern's main line replayed move by move in the book's own frame (sym 0, studied corner upper
-// right), for the Library thumbnails and the Pattern page. The book never changes while the app runs,
-// so each line is worked out once.
+// right), for the Library thumbnails. It is the watch line (watchLine.ts) with the board unturned, so a
+// line is replayed in one place only.
 
-import { startPosition } from '../book/setups'
-import type { Book, BookNode } from '../book/types'
-import { CORNER_REGION, type Pt, type Region } from '../go/coords'
-import { pass, play, type Position } from '../go/rules'
+import type { Book } from '../book/types'
+import { CORNER_REGION } from '../go/coords'
+import type { Position } from '../go/rules'
+import { watchLine, type WatchLine, type WatchStep } from './watchLine'
 
-export interface LineStep {
-  pos: Position
-  /** The book node just played; null at the start position. */
-  node: BookNode | null
-  /** Where it was played; null at the start and for a move elsewhere. */
-  at: Pt | null
-}
+export type LineStep = WatchStep
 
-export interface MainLine {
-  steps: LineStep[]
-  region: Region
-}
-
-const cache = new WeakMap<Book, Map<string, MainLine>>()
+export type MainLine = WatchLine
 
 export function mainLine(book: Book, patternId: string): MainLine {
-  let byId = cache.get(book)
-  if (!byId) cache.set(book, (byId = new Map()))
-  const hit = byId.get(patternId)
-  if (hit) return hit
-
-  const entry = book.patterns[patternId]
-  const start = startPosition(book, entry.family, patternId, 0)
-  const steps: LineStep[] = [{ pos: start.pos, node: null, at: null }]
-  let pos = start.pos
-  for (const node of entry.path) {
-    const m = node.move!
-    if (m.at === 'tenuki') {
-      pos = pass(pos)
-      steps.push({ pos, node, at: null })
-      continue
-    }
-    const r = play(pos, m.at, m.color)
-    if ('illegal' in r) throw new Error(`${patternId}: ${node.key} is ${r.illegal}`)
-    pos = r.pos
-    steps.push({ pos, node, at: m.at })
-  }
-  const line = { steps, region: start.region }
-  byId.set(patternId, line)
-  return line
+  return watchLine(book, patternId, 0)
 }
 
 /**

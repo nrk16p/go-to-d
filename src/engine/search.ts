@@ -33,6 +33,27 @@ export function compactSearch(p: KataGoAnalysisPayload): EngineSearch {
 
 export type Backend = 'webgpu' | 'wasm' | 'cpu'
 
+/**
+ * Why an engine stopped: a deadline passed, its worker never started (its file may be gone after an app
+ * update), it crashed, the network didn't load (or this browser can't run it), it answered search after
+ * search with an error, or it was shut down.
+ */
+export type EngineFailure = 'deadline' | 'start' | 'crash' | 'load' | 'errors' | 'disposed'
+
+/** An error that says why the engine stopped. */
+export class EngineError extends Error {
+  readonly failure: EngineFailure
+  constructor(message: string, failure: EngineFailure) {
+    super(message)
+    this.failure = failure
+  }
+}
+
+/** The failure an error names, or `fallback` for any other error. */
+export function failureOf(err: unknown, fallback: EngineFailure): EngineFailure {
+  return err instanceof EngineError ? err.failure : fallback
+}
+
 /** Loads a network and runs searches. A worker (workerRunner.ts) or the calling thread provides it. */
 export interface SearchRunner {
   /** `onCrash` is called if the engine dies after loading. */

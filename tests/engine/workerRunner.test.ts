@@ -6,6 +6,7 @@ import type { EngineSearch, WorkerRequest, WorkerResponse } from '../../src/engi
 import { createTeacherFromRunner } from '../../src/engine/teacher'
 import { LOAD_TIMEOUT_MS, SEARCH_SLACK_MS, workerRunner } from '../../src/engine/workerRunner'
 import { FIXTURE_FAMILY } from '../book/fixture'
+import { FakeVisibility } from './fakeVisibility'
 
 // The worker-backed runner with a fake Worker: message ids, failures, and the deadlines that keep a
 // worker that never answers from wedging the engine.
@@ -32,7 +33,7 @@ class FakeWorker {
 
 const MODEL = 'https://example.test/go-to-d/models/net.bin.gz'
 
-function setup() {
+function setup(visibility = new FakeVisibility()) {
   const workers: FakeWorker[] = []
   const runner = workerRunner(MODEL, undefined, {
     createWorker: () => {
@@ -40,9 +41,10 @@ function setup() {
       workers.push(w)
       return w as unknown as Worker
     },
+    visibility,
   })
   const engine = createTeacherFromRunner(runner)
-  return { runner, engine, worker: () => workers[0] }
+  return { runner, engine, worker: () => workers[0], visibility }
 }
 
 const start = () => startPosition(buildBook([FIXTURE_FAMILY]), 'star44', null, 0)
@@ -164,6 +166,124 @@ describe('workerRunner', () => {
     expect(engine.status()).toBe('failed')
     const { pos, komi, region } = start()
     await expect(engine.analyzeCorner(pos, komi, region)).rejects.toThrow()
+  })
+})
+
+describe('workerRunner while the page is hidden (R41)', () => {
+  it('a search’s deadline stops while the owner is in another app, and the answer after coming back counts', async () => {
+    vi.useFakeTimers()
+    const { engine, worker, visibility } = setup()
+    worker().answer({ type: 'loaded', ok: true, backend: 'wasm', model: 'net', note: null })
+    await engine.ready()
+    const { pos, komi } = start()
+    const score = engine.scoreFor(pos, komi, 'black', { visits: 50 })
+    await settle()
+    await vi.advanceTimersByTimeAsync(500)
+    visibility.set(true)
+    await vi.advanceTimersByTimeAsync(10 * 60_000)
+    expect(engine.status()).toBe('ready')
+    visibility.set(false)
+    // The worker wakes up with the page and answers: the deadline didn't go off meanwhile.
+    worker().answer({ type: 'searched', id: worker().searchIds()[0], ok: true, search: SEARCH })
+    await expect(score).resolves.toBe(30)
+    expect(engine.status()).toBe('ready')
+    expect(worker().terminated).toBe(false)
+  })
+
+  it('…and still goes off with the time it had left when the worker never answers', async () => {
+    vi.useFakeTimers()
+    const { engine, worker, visibility } = setup()
+    worker().answer({ type: 'loaded', ok: true, backend: 'wasm', model: 'net', note: null })
+    await engine.ready()
+    const { pos, komi } = start()
+    const score = engine.scoreFor(pos, komi, 'black', { visits: 50 }).catch((e: Error) => e)
+    await settle()
+    // scoreFor's search is capped at 1000 ms, so its deadline is 1000 + slack.
+    await vi.advanceTimersByTimeAsync(1000)
+    visibility.set(true)
+    await vi.advanceTimersByTimeAsync(10 * 60_000)
+    visibility.set(false)
+    await vi.advanceTimersByTimeAsync(SEARCH_SLACK_MS - 1)
+    expect(engine.status()).toBe('ready')
+    await vi.advanceTimersByTimeAsync(1)
+    expect(await score).toBeInstanceOf(Error)
+    expect(engine.status()).toBe('failed')
+    expect(engine.failure?.()).toBe('deadline')
+  })
+
+  it('the load ceiling stops too while the page is hidden', async () => {
+    vi.useFakeTimers()
+    const { engine, worker, visibility } = setup()
+    await vi.advanceTimersByTimeAsync(LOAD_TIMEOUT_MS - 10_000)
+    visibility.set(true)
+    await vi.advanceTimersByTimeAsync(10 * 60_000)
+    visibility.set(false)
+    await vi.advanceTimersByTimeAsync(9_000)
+    expect(engine.status()).toBe('loading')
+    worker().answer({ type: 'loaded', ok: true, backend: 'wasm', model: 'net', note: null })
+    await expect(engine.ready()).resolves.toMatchObject({ backend: 'wasm' })
+  })
+})
+
+describe('why the engine stopped', () => {
+  it('says deadline, start, crash, load or disposed', async () => {
+    vi.useFakeTimers()
+    const late = setup()
+    await vi.advanceTimersByTimeAsync(LOAD_TIMEOUT_MS)
+    expect(late.engine.failure?.()).toBe('deadline')
+
+    // An error before the worker said anything: its file didn't load (gone after an app update, M1).
+    const start = setup()
+    start.worker().onerror?.({ message: '' })
+    await start.engine.ready().catch(() => {})
+    expect(start.engine.failure?.()).toBe('start')
+
+    const crash = setup()
+    crash.worker().answer({ type: 'loaded', ok: true, backend: 'wasm', model: 'net', note: null })
+    await crash.engine.ready()
+    crash.worker().onerror?.({ message: 'out of memory' })
+    expect(crash.engine.failure?.()).toBe('crash')
+
+    const load = setup()
+    load.worker().answer({ type: 'loaded', ok: false, error: 'Failed to fetch model: 404' })
+    await load.engine.ready().catch(() => {})
+    expect(load.engine.failure?.()).toBe('load')
+
+    const gone = setup()
+    gone.worker().answer({ type: 'loaded', ok: true, backend: 'wasm', model: 'net', note: null })
+    await gone.engine.ready()
+    expect(gone.engine.failure?.()).toBeNull()
+    gone.engine.dispose()
+    expect(gone.engine.failure?.()).toBe('disposed')
+  })
+
+  it('an engine that answers every search with an error stops after three in a row (M2)', async () => {
+    const { engine, worker } = setup()
+    worker().answer({ type: 'loaded', ok: true, backend: 'webgpu', model: 'net', note: null })
+    await engine.ready()
+    const { pos, komi } = start()
+    const failOne = async (visits: number) => {
+      const n = worker().searchIds().length
+      const p = engine.scoreFor(pos, komi, 'black', { visits }).catch((e: Error) => e)
+      await vi.waitFor(() => expect(worker().searchIds()).toHaveLength(n + 1))
+      const id = worker().searchIds()[n]
+      worker().answer({ type: 'searched', id, ok: false, error: 'GPU device was lost' })
+      return p
+    }
+    await failOne(11)
+    await failOne(12)
+    // A good answer in between starts the count again.
+    const ok = engine.scoreFor(pos, komi, 'black', { visits: 13 })
+    await vi.waitFor(() => expect(worker().searchIds()).toHaveLength(3))
+    worker().answer({ type: 'searched', id: worker().searchIds()[2], ok: true, search: SEARCH })
+    await ok
+    await failOne(14)
+    await failOne(15)
+    expect(engine.status()).toBe('ready')
+    await failOne(16)
+    expect(engine.status()).toBe('failed')
+    expect(engine.failure?.()).toBe('errors')
+    expect(worker().terminated).toBe(true)
   })
 })
 

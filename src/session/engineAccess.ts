@@ -2,6 +2,7 @@
 // handled (and logged), at most one look-ahead analysis runs at a time, and a tenuki without a point
 // gets one here.
 
+import { deadline, pageVisibility, type PageVisibility } from '../engine/deadline'
 import type { CornerAnalysis, TeacherEngine } from '../engine/teacher'
 import { BOARD_SIZE, inRegion, parseGtp, transform, type Pt, type Region, type Sym } from '../go/coords'
 import { play, type Color, type Position } from '../go/rules'
@@ -12,15 +13,22 @@ export const ENGINE_TIMEOUT_MS = 8000
 /** Big points away from the studied corner (canonical frame): where a tenuki goes when the engine has none. */
 const BIG_POINTS: Pt[] = ['D10', 'K4', 'C14', 'N3', 'C6', 'F3', 'F17', 'R7', 'G10', 'K7'].map(parseGtp)
 
-/** The value, or null if the call rejects or takes longer than ENGINE_TIMEOUT_MS. */
-export function timed<T>(p: Promise<T>, what: string): Promise<T | null> {
+/**
+ * The value, or null if the call rejects or takes longer than ENGINE_TIMEOUT_MS. Time the page spends
+ * hidden doesn't count (R41): the engine is asleep with it, and wakes up with it.
+ */
+export function timed<T>(p: Promise<T>, what: string, vis: PageVisibility = pageVisibility): Promise<T | null> {
   return new Promise((resolve) => {
-    const timer = setTimeout(() => {
-      console.warn(`[spar] ${what} took longer than ${ENGINE_TIMEOUT_MS} ms`)
-      resolve(null)
-    }, ENGINE_TIMEOUT_MS)
+    const cancel = deadline(
+      ENGINE_TIMEOUT_MS,
+      () => {
+        console.warn(`[spar] ${what} took longer than ${ENGINE_TIMEOUT_MS} ms`)
+        resolve(null)
+      },
+      vis,
+    )
     const done = (v: T | null) => {
-      clearTimeout(timer)
+      cancel()
       resolve(v)
     }
     p.then(done, () => done(null))

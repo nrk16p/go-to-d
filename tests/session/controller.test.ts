@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildBook } from '../../src/book/build'
+import { BOOK as REAL_BOOK } from '../../src/book/data'
 import type { Book, FamilyDef } from '../../src/book/types'
 import type { TeacherEngine } from '../../src/engine/teacher'
 import { CORNER_REGION, parseGtp, toGtp, transform, transformRegion, type Pt, type Sym } from '../../src/go/coords'
@@ -731,6 +732,71 @@ describe('SparController: tenuki in the book', () => {
     expect(stoneAt(without, 'R15')).toBe('white')
     expect(without.state.status).toBe('done')
     expect(without.state.result?.clean).toBe(true)
+  })
+})
+
+describe('SparController: the margin line is part of the corner (R43)', () => {
+  it.each([0, 6] as Sym[])('a tap one line outside the region is a local move judged by the engine, never the book’s tenuki (sym %i)', async (sym) => {
+    // fixture-tenuki: after W R14, B Q14 the book's White move is a tenuki. R8 is the line just below the region.
+    const engine = new FakeEngine()
+    const c = make({ side: 'attack', patternId: 'fixture-tenuki', sym }, engine)
+    await c.start()
+    await c.ownerPlay(at('R14', sym))
+    const asked = engine.analyzeCalls.length
+    await c.ownerPlay(at('R8', sym))
+    expect(stoneAt(c, 'R8', sym)).toBe('white')
+    expect(c.state.log[2]).toMatchObject({ move: { ...at('R8', sym), player: 'white' }, by: 'owner' })
+    expect(c.state.lastVerdict?.type).toBe('fine-offbook')
+    expect(c.state.node).toBeNull()
+    expect(engine.analyzeCalls.length).toBeGreaterThan(asked)
+  })
+
+  it('…and judged against the best corner move: the reviewer’s R8 in the 3-3 invasion after a knight’s-move answer', async () => {
+    // invade33-after-knight, defending: after W R11 the book says Black plays elsewhere. Black attacks the
+    // extension with R8 instead. That's a corner move: the engine judges it, here as a mistake.
+    const id = 'invade33-after-knight'
+    const path = REAL_BOOK.patterns[id].path
+    const k = path.findIndex((n) => n.move?.at === 'tenuki')
+    expect(path[k].key).toBe('W:R14/B:O17/W:R11/B:tenuki')
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) =>
+        pos.toMove === 'black' && pos.history.length === 3 ? analysisOf('black', [['Q14', 1]], ['D10', 2]) : defaultAnalysis(pos, region),
+      score: () => -2,
+    })
+    const c = new SparController(REAL_BOOK, engine, {
+      mode: 'drill',
+      family: 'invade33',
+      patternId: id,
+      side: 'defend',
+      sym: 0,
+      seed: 1,
+      thresholds: DEFAULT_THRESHOLDS,
+      missed: new Set(),
+    })
+    await c.start()
+    await c.ownerPlay(at('O17'))
+    expect(c.state.node?.key).toBe('W:R14/B:O17/W:R11')
+    await c.ownerPlay(at('R8'))
+    expect(c.state.lastVerdict).toEqual({ type: 'mistake', inBook: false, better: at('Q14'), pointsLost: 3, big: false })
+    expect(c.state.status).toBe('stopped')
+    expect(c.state.log.at(-1)?.move).toMatchObject({ ...at('R8'), player: 'black' })
+    // The Play elsewhere button still plays the book's tenuki.
+    c.retry()
+    await c.ownerPlay('tenuki')
+    expect(c.state.log[3]).toMatchObject({ move: { tenuki: 'black' }, by: 'owner', verdict: { type: 'good' } })
+  })
+
+  it('a tenuki never lands on the margin line: the engine’s point there gives way to a big point', async () => {
+    const engine = new FakeEngine({
+      analyze: (pos, _komi, region) =>
+        pos.toMove === 'white' ? analysisOf('white', [['R13', 0]], ['R8', 3]) : defaultAnalysis(pos, region),
+    })
+    const c = make({ patternId: 'fixture-tenuki' }, engine)
+    await c.start()
+    await c.ownerPlay(at('Q14'))
+    expect(stoneAt(c, 'R8')).toBeNull()
+    expect(stoneAt(c, 'D10')).toBe('white')
+    expect(c.state.log[2]).toEqual({ move: { tenuki: 'white' }, by: 'teacher' })
   })
 })
 

@@ -9,7 +9,7 @@ import type { CheckedLoss } from '../book/checkedLoss'
 import { startPosition } from '../book/setups'
 import type { Book, BookNode } from '../book/types'
 import type { TeacherEngine } from '../engine/teacher'
-import { BOARD_SIZE, inRegion, type Pt } from '../go/coords'
+import { BOARD_SIZE, inRegion, withMargin, type Pt } from '../go/coords'
 import { otherColor, play, type Color, type Position } from '../go/rules'
 import { EngineAccess, legal } from './engineAccess'
 import { analysisToBook, lineKey, noteOn, toBoardPt, toBookPt, verdictToBoard } from './frame'
@@ -124,8 +124,10 @@ export class SparController {
       }
       after = r.pos
     }
-    // A tap outside the corner is a tenuki played on that point.
-    const played = p !== 'tenuki' && inRegion(p, region) ? toBookPt(p, sym) : 'tenuki'
+    // A tap in the corner, its margin line included, is a corner move (R43): the margin looks and plays
+    // like the corner. Only the Play elsewhere button, or a tap beyond the margin on the full board, is a
+    // tenuki played on that point.
+    const played = p !== 'tenuki' && inRegion(p, withMargin(region)) ? toBookPt(p, sym) : 'tenuki'
     const undo: Undo = { pos, node, offBookMoves, log, note, lastBook: this.lastBook }
     const engineState = this.engine.status()
     // The stone shows at once; its verdict follows.

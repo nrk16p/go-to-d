@@ -4,7 +4,7 @@
 
 import { deadline, pageVisibility, type PageVisibility } from '../engine/deadline'
 import type { CornerAnalysis, TeacherEngine } from '../engine/teacher'
-import { BOARD_SIZE, inRegion, parseGtp, transform, type Pt, type Region, type Sym } from '../go/coords'
+import { BOARD_SIZE, inRegion, parseGtp, transform, withMargin, type Pt, type Region, type Sym } from '../go/coords'
 import { play, type Color, type Position } from '../go/rules'
 
 /** The longest any engine call is waited for; after that the move is unjudged (or the teacher stops). */
@@ -109,9 +109,13 @@ export class EngineAccess {
     )
   }
 
-  /** Where a tenuki goes: the engine's move elsewhere, else the first free big point, else any free point outside the corner. */
+  /**
+   * Where a tenuki goes: the engine's move elsewhere, else the first free big point, else any free point
+   * away from the corner. Never on the corner's margin line, which counts as the corner (R43).
+   */
   tenukiPoint(pos: Position, a: CornerAnalysis | null, color: Color): Pt {
-    const ok = (p: Pt) => !inRegion(p, this.region) && legal(pos, p, color)
+    const near = withMargin(this.region)
+    const ok = (p: Pt) => !inRegion(p, near) && legal(pos, p, color)
     if (a?.tenukiBest && ok(a.tenukiBest.pt)) return a.tenukiBest.pt
     const big = BIG_POINTS.map((p) => transform(p, this.sym)).find(ok)
     if (big) return big

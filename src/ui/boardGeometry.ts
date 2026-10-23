@@ -1,7 +1,7 @@
 // Where things go on the drawn board: which points are shown, the SVG coordinate system, labels.
 // One SVG unit is the distance between two lines; point (x, y) sits at (x - view.xMin, y - view.yMin).
 
-import { BOARD_SIZE, toGtp, type Pt, type Region } from '../go/coords'
+import { BOARD_SIZE, toGtp, withMargin, type Pt, type Region } from '../go/coords'
 
 const LAST = BOARD_SIZE - 1
 
@@ -9,13 +9,7 @@ export const FULL_BOARD: Region = { xMin: 0, xMax: LAST, yMin: 0, yMax: LAST }
 
 /** The points the board shows: the session region plus one line of margin, clamped to the board. No region = all 361. */
 export function shownRegion(region?: Region): Region {
-  if (!region) return FULL_BOARD
-  return {
-    xMin: Math.max(0, region.xMin - 1),
-    xMax: Math.min(LAST, region.xMax + 1),
-    yMin: Math.max(0, region.yMin - 1),
-    yMax: Math.min(LAST, region.yMax + 1),
-  }
+  return region ? withMargin(region) : FULL_BOARD
 }
 
 export const STAR_POINTS: Pt[] = [3, 9, 15].flatMap((x) => [3, 9, 15].map((y) => ({ x, y })))

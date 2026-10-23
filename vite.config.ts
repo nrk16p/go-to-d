@@ -2,8 +2,14 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// GitHub Pages serves the site from /go-to-d/
-const BASE = '/go-to-d/'
+// Where the site lives. GitHub Pages serves it from /go-to-d/; Vercel (which sets VERCEL=1 while
+// building) serves it from the domain root. BASE_PATH overrides both, e.g. BASE_PATH=/ for another host.
+function basePath(): string {
+  const raw = process.env.BASE_PATH ?? (process.env.VERCEL ? '/' : '/go-to-d/')
+  const trimmed = raw.replace(/^\/+|\/+$/g, '')
+  return trimmed ? `/${trimmed}/` : '/'
+}
+const BASE = basePath()
 
 // Theme colours from src/ui/theme.css (--page, light).
 const PAGE_LIGHT = '#f1f4f0'

@@ -13,7 +13,7 @@ import { BOARD_SIZE, inRegion, type Pt } from '../go/coords'
 import { otherColor, play, type Color, type Position } from '../go/rules'
 import { EngineAccess, legal } from './engineAccess'
 import { analysisToBook, lineKey, noteOn, toBoardPt, toBookPt, verdictToBoard } from './frame'
-import { bookChild, isSound, judgeMove, type Verdict } from './judge'
+import { bookChild, isSound, judgeMove, scoreAfterNeeded, type Verdict } from './judge'
 import { mulberry32, pickTeacherMove } from './pick'
 import { countOwnerMove, newTally, sessionResult, switchablePatterns, type SessionResult, type Tally } from './result'
 import { drillableSides, ownerColor } from './sides'
@@ -137,7 +137,8 @@ export class SparController {
       this.set({ pos: after })
     }
     const child = node ? bookChild(node, played) : null
-    const verdict = await this.judge(node, child, played, pos, after, engineState)
+    const tenukiAt = played === 'tenuki' ? toBookPt(lastMove(after), sym) : undefined
+    const verdict = await this.judge(gen, node, child, played, tenukiAt, pos, after, engineState)
     if (gen !== this.gen) return
 
     const where = node ? `book:${node.key}` : `off:${lineKey(pos, sym)}`
@@ -274,10 +275,13 @@ export class SparController {
     this.eng.lookAhead(this.s.pos)
   }
 
+  /** The verdict on the owner's move. If the session moves on (or ends) meanwhile, the engine is asked nothing more. */
   private async judge(
+    gen: number,
     node: BookNode | null,
     child: BookNode | null,
     played: Pt | 'tenuki',
+    tenukiAt: Pt | undefined,
     pos: Position,
     after: Position,
     engineState: ReturnType<TeacherEngine['status']>,
@@ -287,17 +291,22 @@ export class SparController {
     // from the engine when the check has none for it.
     const checked = child && !isSound(child) && this.bookLoss ? this.bookLoss(cfg.family, child.key) : null
     const needEngine = !(child && isSound(child)) && checked === null && engineState === 'ready'
-    const [before, scoreAfter] = needEngine
-      ? await Promise.all([this.eng.analysis(pos), this.eng.score(after, this.owner)])
-      : [null, null]
+    // The analysis of the position before the move is usually the look-ahead, already done or under way.
+    // Most moves are among its candidates and are judged from it alone (R40); only a move it didn't look
+    // at needs a search of the position after it.
+    const analysis = needEngine ? await this.eng.analysis(pos) : null
+    const before = analysis && analysisToBook(analysis, cfg.sym)
+    const second = scoreAfterNeeded({ before, played, tenukiAt }) && gen === this.gen
+    const scoreAfter = second ? await this.eng.score(after, this.owner) : null
     const drill = cfg.mode === 'drill' && !this.leftDrill
     let v = judgeMove({
       node,
       played,
+      tenukiAt,
       mode: drill ? 'drill' : 'free',
       drillPatternId: drill ? cfg.patternId : undefined,
       drillPath: drill ? this.drillPath : undefined,
-      before: before && analysisToBook(before, cfg.sym),
+      before,
       scoreAfter,
       thresholds: cfg.thresholds,
       checkedLoss: checked,

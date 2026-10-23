@@ -456,6 +456,15 @@ describe('SparController: when the engine is missing or slow', () => {
     expect(off.state.status).toBe('done')
     expect(off.state.message).toEqual(expect.any(String))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('analyzeCorner failed'), expect.any(Error))
+    // Without the search before the move there is nothing to judge with, so the second one isn't asked (R40).
+    expect(engine.scoreCalls).toEqual([])
+
+    // The search before the move worked but the one after it fails: still unjudged, and said in the console.
+    const half = new FakeEngine({ score: () => Promise.reject(new Error('stopped')) })
+    const h = make({}, half)
+    await h.start()
+    await h.ownerPlay(at('R17'))
+    expect(h.state.log[1].verdict).toEqual({ type: 'unjudged', reason: 'engine-failed' })
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('scoreFor failed'), expect.any(Error))
   })
 
@@ -532,6 +541,62 @@ describe('SparController: off book', () => {
     score = 1
     await c.ownerPlay(at('R17', sym))
     expect(c.state.lastVerdict).toEqual({ type: 'fine-offbook', pointsLost: 1, bookMove: at('Q14', sym) })
+  })
+
+  describe('the owner’s move judged inside one search (R40)', () => {
+    // A slow phone's short searches: before Black's move the corner search likes O17 (+2) and has looked at
+    // R17 (+1.6); the separate search after the move always comes back 3 points lower (one-sided noise).
+    const lowVisits = () =>
+      new FakeEngine({
+        analyze: (pos, _komi, region) =>
+          pos.toMove === 'black' && pos.history.length === 1
+            ? analysisOf('black', [['O17', 2], ['R17', 1.6]], ['K4', -8])
+            : defaultAnalysis(pos, region),
+        score: () => -1,
+      })
+
+    it('playing the engine’s best move is fine with loss 0, and needs no second search', async () => {
+      const engine = lowVisits()
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay(at('O17'))
+      expect(c.state.log[1].verdict).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: at('Q14') })
+      expect(engine.scoreCalls).toEqual([])
+    })
+
+    it('another move the search looked at loses the difference inside it', async () => {
+      const engine = lowVisits()
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay(at('R17'))
+      expect(c.state.log[1].verdict).toEqual({ type: 'fine-offbook', pointsLost: 0.4, bookMove: at('Q14') })
+      expect(engine.scoreCalls).toEqual([])
+    })
+
+    it('a move the search didn’t look at is scored after it, as before', async () => {
+      const engine = lowVisits()
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay(at('R10'))
+      expect(c.state.lastVerdict).toEqual({ type: 'mistake', inBook: false, better: at('O17'), pointsLost: 3, big: false })
+      expect(engine.scoreCalls).toHaveLength(1)
+    })
+
+    it('Play elsewhere lands on the engine’s point elsewhere and is judged from the same analysis', async () => {
+      const engine = new FakeEngine({
+        analyze: (pos, _komi, region) =>
+          pos.toMove === 'black' && pos.history.length === 1
+            ? analysisOf('black', [['O17', 0]], ['K4', 1])
+            : defaultAnalysis(pos, region),
+        score: () => -5,
+      })
+      const c = make({}, engine)
+      await c.start()
+      await c.ownerPlay('tenuki')
+      expect(stoneAt(c, 'K4')).toBe('black')
+      expect(c.state.log[1].verdict).toEqual({ type: 'fine-offbook', pointsLost: 0, bookMove: at('Q14') })
+      expect(engine.scoreCalls).toEqual([])
+    })
   })
 
   it('a big off-book loss stops play; play on lets the engine answer', async () => {

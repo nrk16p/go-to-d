@@ -1430,3 +1430,8 @@ a {
   font-weight: 700;
   font-size: 0.9375rem;
 }
+
+/* Watch and Test side by side at the same width, however short the word ("ดู"). */
+.drill-side .btn {
+  min-width: 96px;
+}

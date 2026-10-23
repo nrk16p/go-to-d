@@ -360,7 +360,7 @@ function VerdictView({ v, low, stopped, onRetry, onPlayOn, onSwitch }: VerdictPr
       return (
         <div className="verdict verdict-fine">
           <p>
-            <strong>{C.fineOffbook}</strong> {C.fineCost(v.pointsLost)} {book}
+            <strong>{v.bookMove === null ? C.fineNoBook : C.fineOffbook}</strong> {C.fineCost(v.pointsLost)} {book}
           </p>
         </div>
       )
@@ -461,7 +461,7 @@ function verdictWord(v: Verdict | undefined): string {
     case 'good':
       return v.kind === 'alternative' ? C.alternative : C.good
     case 'fine-offbook':
-      return C.fineOffbook
+      return v.bookMove === null ? C.fineNoBook : C.fineOffbook
     case 'mistake':
       return v.big ? C.bigMistake : C.mistake
     case 'other-joseki':

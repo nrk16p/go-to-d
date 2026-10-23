@@ -224,6 +224,19 @@ describe('Spar', () => {
     expect(saved()?.reviews['star44-low-attach-extend:defend']).toBeUndefined()
   })
 
+  it('a move that works says it isn’t the usual one only while there is a usual one (M12)', async () => {
+    const engine = new EngineHub(() => new FakeEngine({ status: 'ready' }))
+    hubs.push(engine.start())
+    const { container } = await startKnight(engine)
+    await tap(container, 'P17')
+    expect(verdict()).toContain(COPY.verdict.fineOffbook)
+    expect(verdict()).toContain(COPY.verdict.bookPlays('O17'))
+    // The teacher answered off the book: from here there is no usual move to compare with.
+    await tap(container, 'O15')
+    expect(verdict()).toContain(COPY.verdict.fineNoBook)
+    expect(verdict()).not.toContain(COPY.verdict.fineOffbook)
+  })
+
   it('an off-book move with the engine loading is not checked, and says so', async () => {
     const { container } = await startKnight()
     await tap(container, 'P17')

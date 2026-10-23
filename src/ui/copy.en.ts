@@ -78,6 +78,8 @@ export const COPY = {
     good: 'Good.',
     alternative: 'Also fine.',
     fineOffbook: 'Not the usual move, but it works.',
+    /** The same verdict once play is off the book: there is no usual move any more. */
+    fineNoBook: 'That works.',
     fineCost: (lost: number) => (lost > 0 ? `About ${points(lost)} behind the best move.` : ''),
     bookPlays: (gtp: string) => `The book plays ${gtp}.`,
     bookPlaysElsewhere: 'The book plays elsewhere here.',
@@ -163,7 +165,8 @@ export const COPY = {
   library: {
     title: 'Library',
     lead: (n: number) => `${n} patterns. Tap one to step through its main line.`,
-    legend: 'The dots fill up each time a pattern comes back and you play it clean. Four dots counts as mastered.',
+    legend:
+      'A pattern gets its first dot the first time you play it, and one more each time it comes back and you play it clean. A mistake takes it back to one. Four dots counts as mastered.',
     sideShort: (side: Side) => (side === 'defend' ? 'Defend' : 'Attack'),
   },
 
@@ -237,6 +240,12 @@ export const COPY = {
   notFound: {
     title: "There's nothing here.",
     body: 'That link points nowhere in this app.',
+  },
+
+  /** A screen that failed to draw (ScreenBoundary). */
+  broken: {
+    title: 'Something went wrong on this page.',
+    body: 'Your progress is safe. Go back to Today and carry on.',
   },
 }
 

@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { BOOK } from '../shownBook'
-import { dueKeys, reviewKey } from '../../progress/srs'
+import { dueItems } from '../../progress/course'
+import { reviewKey } from '../../progress/srs'
 import { loadProgress, todayLocal } from '../../progress/store'
-import type { Side } from '../../session/sides'
 import { Board } from '../Board'
 import { COPY, points } from '../copy'
 import { getLastReport, type SessionReport } from '../reportStore'
@@ -48,15 +48,8 @@ export function Report() {
   const days = due ? daysBetween(today, due) : null
   const next = days === null ? null : days <= 0 ? R.nextToday : days === 1 ? R.nextTomorrow : R.nextIn(days)
 
-  const dueList = dueKeys(progress, today)
-    .map((key) => {
-      const cut = key.lastIndexOf(':')
-      const id = key.slice(0, cut)
-      const side = key.slice(cut + 1) as Side
-      const entry = Object.hasOwn(BOOK.patterns, id) ? BOOK.patterns[id] : undefined
-      return entry && (side === 'attack' || side === 'defend') ? { key, id, side, entry } : null
-    })
-    .filter((d) => d !== null)
+  // The same list as Today's (M4): sides the book can no longer drill are left out.
+  const dueList = dueItems(BOOK, progress, today).map((d) => ({ ...d, id: d.patternId, entry: BOOK.patterns[d.patternId] }))
 
   const again = sparHref({
     family: report.family,

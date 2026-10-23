@@ -166,7 +166,8 @@ export const SANSAN33: FamilyDef = {
         {
           c: 'W',
           at: 'tenuki',
-          note: 'White plays elsewhere. The gap at Q15 looks thin, but cutting there isn’t worth a move for Black yet.',
+          note: 'White plays elsewhere. Q16 is light: if Black cuts at Q15, White can let that stone go.',
+          confidence: 'low',
         },
       ],
     },
@@ -198,7 +199,7 @@ export const SANSAN33: FamilyDef = {
             {
               c: 'W',
               at: 'P17',
-              note: 'White hanes at P17. O17 can’t lean on the corner stone any more and has to look after itself.',
+              note: 'White hanes at P17, between O17 and the corner stone.',
             },
             { c: 'B', at: 'N16', note: 'Black hanes at N16 so O17 isn’t sealed in.' },
             {
@@ -290,7 +291,7 @@ export const SANSAN33: FamilyDef = {
       difficulty: 2,
       order: 100,
       line: [
-        { c: 'W', at: 'tenuki', note: 'White plays elsewhere first, so Black gets a second move here.' },
+        { c: 'W', at: 'tenuki', note: 'White plays elsewhere first, so Black gets a second move here.', weight: 0.5 },
         {
           c: 'B',
           at: 'Q14',

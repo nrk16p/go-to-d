@@ -5,7 +5,10 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { parseGtp } from '../../src/go/coords'
+import { BOOK } from '../../src/book/data'
+import { checkedLoss } from '../../src/book/checkedLoss'
+import { parseGtp, toGtp } from '../../src/go/coords'
+import { round1 } from '../../src/session/judge'
 import { SparController } from '../../src/session/controller'
 import { STORAGE_KEY } from '../../src/progress/store'
 import { COPY } from '../../src/ui/copy'
@@ -15,6 +18,19 @@ import { parseRoute, sparHref } from '../../src/ui/router'
 import { Spar } from '../../src/ui/screens/Spar'
 import { Report } from '../../src/ui/screens/Report'
 import { FakeEngine, type EngineStatus } from '../session/fakeEngine'
+
+/** The book check's loss for the S17 mistake in the knight's-move drill, as the verdict shows it (R29). */
+function s17Loss(): number {
+  for (const node of BOOK.patterns['star44-low-knight-slide'].path) {
+    for (const c of node.children) {
+      if (c.kind === 'mistake' && c.move && c.move.at !== 'tenuki' && toGtp(c.move.at) === 'S17') {
+        const loss = checkedLoss('star44', c.key)
+        if (loss !== null) return round1(loss)
+      }
+    }
+  }
+  throw new Error('The knight-slide drill has no checked S17 mistake')
+}
 
 // The knight's-move drill, defending (Black), with the book's own orientation.
 const KNIGHT = { family: 'star44', pattern: 'star44-low-knight-slide', side: 'defend', sym: '0', seed: '1' }
@@ -140,9 +156,9 @@ describe('Spar', () => {
     await tap(container, 'O17')
     await tap(container, 'S17')
 
-    // R29: the book check's loss for S17 (5.12), even with the engine still loading.
+    // R29: the book check's loss for S17, even with the engine still loading.
     expect(verdict()).toContain(COPY.verdict.bigMistake)
-    expect(verdict()).toContain(COPY.verdict.better('R17', 5.1))
+    expect(verdict()).toContain(COPY.verdict.better('R17', s17Loss()))
     const r17 = parseGtp('R17')
     const s17 = parseGtp('S17')
     expect(container.querySelector(`[data-marker="better"][data-at="${r17.x},${r17.y}"]`)).not.toBeNull()
@@ -163,7 +179,7 @@ describe('Spar', () => {
     await tap(container, 'R16')
 
     expect(window.location.hash).toBe('#/report')
-    expect(getLastReport()?.result).toMatchObject({ clean: false, mistakes: 1, pointsLost: 5.1 })
+    expect(getLastReport()?.result).toMatchObject({ clean: false, mistakes: 1, pointsLost: s17Loss() })
     expect(saved()?.reviews['star44-low-knight-slide:defend']).toMatchObject({ box: 1 })
   })
 

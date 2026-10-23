@@ -1,6 +1,7 @@
-// A whole-board opening (R46) in a real browser, book only: Today's opening → the drill on the whole
-// board, at phone width with the touch ghost and its confirm button → a clean report. The moves come from
-// the book module, turned by the symmetry the Spar screen wrote into the address.
+// A whole-board opening (R46) in a real browser, book only: Today's opening → watched first on the whole
+// board (R45) → Try it yourself → the drill at phone width with the touch ghost and its confirm button →
+// a clean report. The moves come from the book module, turned by the symmetry the screen wrote into the
+// address. Nothing on the way talks about a corner.
 
 import { expect, test, type Page } from 'playwright/test'
 import { BOOK } from '../src/book/data'
@@ -40,8 +41,21 @@ test('the day’s opening, drilled on the whole board, to a clean report', async
   await expect(section.locator('.queue-meta')).toContainText(COPY.colorName(owner))
   await section.locator('a.queue-item').click()
 
+  // A new opening is watched first, on the whole board.
+  await expect(page).toHaveURL(/[?&]phase=watch\b/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(entry.def.name)
+  await expect(page.getByText(COPY.watch.leadColor(owner))).toBeVisible()
+  await expect(page.locator('.spar-board .hit')).toHaveCount(361)
+  await expect(page.locator('.spar-head .who')).not.toContainText('corner')
+  await fitsWidth(page)
+  const tryIt = page.getByRole('link', { name: COPY.watch.tryIt })
+  if (hasTouch) await tryIt.tap()
+  else await tryIt.click()
+
+  await expect(page).not.toHaveURL(/phase=watch/)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(entry.def.name)
   await expect(page.getByText(COPY.spar.youAreColor(owner))).toBeVisible()
+  await expect(page.locator('.spar-head .who')).not.toContainText('corner')
   await expect(page).toHaveURL(/#\/spar\?.*\bsym=[0-7]\b/)
   const sym = Number(new URLSearchParams(new URL(page.url()).hash.split('?')[1]).get('sym')) as Sym
   await expect(page.locator('.spar-board .hit')).toHaveCount(361)

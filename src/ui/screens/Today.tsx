@@ -24,7 +24,7 @@ import { CornerThumb } from '../CornerThumb'
 import { COPY } from '../copy'
 import { isInAppBrowser, needsIosInstallHint } from '../install'
 import { Pips } from '../Pips'
-import { href, sparHref } from '../router'
+import { href, phaseHref, sparHref } from '../router'
 import { sideLabel } from '../seat'
 
 const T = COPY.today
@@ -112,7 +112,8 @@ export function Today({ today = todayLocal() }: { today?: string }) {
             more ? (
               <p className="muted">
                 {T.doneNew}{' '}
-                <a href={sparHref({ family: more.family, pattern: more.patternId, side: more.side })}>{T.learnOneMore}</a>
+                {/* A new one too, so it is watched first (R45). */}
+                <a href={phaseHref({ family: more.family, pattern: more.patternId, side: more.side }, 'watch')}>{T.learnOneMore}</a>
               </p>
             ) : (
               <p className="muted">{T.allStarted}</p>
@@ -134,7 +135,8 @@ export function Today({ today = todayLocal() }: { today?: string }) {
             moreOpening ? (
               <p className="muted">
                 {T.doneOpenings}{' '}
-                <a href={sparHref({ family: moreOpening.family, pattern: moreOpening.patternId, side: moreOpening.side })}>
+                {/* A new one, so it is watched first (R45). */}
+                <a href={phaseHref({ family: moreOpening.family, pattern: moreOpening.patternId, side: moreOpening.side }, 'watch')}>
                   {T.learnOneMore}
                 </a>
               </p>
@@ -198,12 +200,11 @@ export function Today({ today = todayLocal() }: { today?: string }) {
 
 function QueueItem({ item, next, box }: { item: CourseItem; next: boolean; box?: number }) {
   const entry = BOOK.patterns[item.patternId]
+  // A new pattern (no review box yet) is watched once, then tested; a review goes straight to the test (R45).
+  const drill = { family: item.family, pattern: item.patternId, side: item.side }
   return (
     <li>
-      <a
-        className={`queue-item${next ? ' is-next' : ''}`}
-        href={sparHref({ family: item.family, pattern: item.patternId, side: item.side })}
-      >
+      <a className={`queue-item${next ? ' is-next' : ''}`} href={phaseHref(drill, box === undefined ? 'watch' : 'test')}>
         <CornerThumb patternId={item.patternId} />
         <span className="queue-text">
           <span className="queue-name">{entry.def.name}</span>

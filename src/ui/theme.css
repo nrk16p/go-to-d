@@ -1335,3 +1335,118 @@ a {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
+
+/* ---------- watch first, then test (R45) ---------- */
+
+/* Under the stepper: Auto-play, and the screen's own button beside it (the watch's "Try it yourself"). */
+.line-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.line-auto {
+  gap: 8px;
+}
+
+/* A play triangle, or two pause bars, in the button's own text colour. */
+.line-auto-icon {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent currentColor;
+}
+
+.line-auto-icon.is-pause {
+  width: 10px;
+  height: 12px;
+  border-width: 0 3px;
+  border-color: currentColor;
+}
+
+/* Always there, on the right; at the end of the line it fills the row as the next step. */
+.try-it {
+  margin-left: auto;
+}
+
+.try-it.is-end {
+  flex: 1 1 auto;
+}
+
+/* The test's "Watch first": beside the title and who-plays-what, so the board doesn't move down. */
+.spar-head:has(> .watch-first) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  align-items: center;
+}
+
+.spar-head:has(> .watch-first) > h1,
+.spar-head:has(> .watch-first) > .who {
+  grid-column: 1;
+}
+
+.spar-head > .watch-first {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+
+.btn-small {
+  min-width: 64px;
+  padding: 4px 12px;
+  font-size: 0.875rem;
+}
+
+/* Library: the row's link (picture and name), then under the name each side's level, Watch and Test. */
+.lib-row {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.lib-row .queue-item {
+  min-height: 0;
+  padding-bottom: 6px;
+  border-bottom: 0;
+}
+
+.lib-sides {
+  display: grid;
+  gap: 6px;
+  /* Lined up with the name: the picture is 56px wide, then a 12px gap. */
+  padding-left: 68px;
+}
+
+.lib-side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.lib-side .side-level {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Pattern page: one group per side, its name over Watch and Test. */
+.drill-side {
+  display: grid;
+  gap: 6px;
+}
+
+.drill-who {
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+/* Watch and Test side by side at the same width, however short the word ("ดู"). */
+.drill-side .btn {
+  min-width: 96px;
+}

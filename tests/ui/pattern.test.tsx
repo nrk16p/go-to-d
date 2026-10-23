@@ -47,7 +47,7 @@ describe('Pattern', () => {
     expect(step()).toContain(P.step(path.length - 1, path.length))
   })
 
-  it('offers a drill per drillable side, and only one for a pattern with a trick', () => {
+  it('offers a drill per drillable side (watch first, or test), and only one side for a pattern with a trick', () => {
     render(<Pattern id="star44-low-jump" />)
     const hrefs = () =>
       screen
@@ -55,13 +55,18 @@ describe('Pattern', () => {
         .map((a) => a.getAttribute('href')!)
         .filter((h) => h.startsWith('#/spar'))
     expect(hrefs()).toEqual([
+      '#/spar?family=star44&pattern=star44-low-jump&side=defend&phase=watch',
       '#/spar?family=star44&pattern=star44-low-jump&side=defend',
+      '#/spar?family=star44&pattern=star44-low-jump&side=attack&phase=watch',
       '#/spar?family=star44&pattern=star44-low-jump&side=attack',
     ])
     cleanup()
 
     render(<Pattern id="invade33-cut-trick" />)
-    expect(hrefs()).toEqual(['#/spar?family=invade33&pattern=invade33-cut-trick&side=defend'])
+    expect(hrefs()).toEqual([
+      '#/spar?family=invade33&pattern=invade33-cut-trick&side=defend&phase=watch',
+      '#/spar?family=invade33&pattern=invade33-cut-trick&side=defend',
+    ])
     expect(screen.getByText(P.oneSide)).toBeTruthy()
   })
 
@@ -88,25 +93,24 @@ describe('Library', () => {
     const even = BOOK.families['open-even']
     expect(within(section).getByRole('heading', { name: h4.def.name })).toBeTruthy()
     expect(within(section).getByRole('heading', { name: even.def.name })).toBeTruthy()
-    const rows = within(section).getAllByRole('link')
+    const rows = [...section.querySelectorAll('a.queue-item')]
     expect(rows).toHaveLength(h4.def.patterns.length + even.def.patterns.length)
+    // Each side's Watch and Test sit in a group named by colour.
+    expect(within(section).getAllByRole('group', { name: P.drillColor('black') }).length).toBeGreaterThan(0)
     const sides = [...section.querySelectorAll('.side-level')].map((e) => e.textContent)
     expect(sides).toContain(COPY.colorName('black'))
     expect(sides).toContain(COPY.colorName('white'))
     expect(sides).not.toContain(COPY.library.sideShort('defend'))
     // Corner families come first and keep defend/attack.
     const all = [...document.querySelectorAll('a.queue-item')]
-    expect(all.indexOf(rows[0] as Element)).toBe(all.length - rows.length)
+    expect(all.indexOf(rows[0])).toBe(all.length - rows.length)
   })
 })
 
 describe('Pattern: an opening (R46)', () => {
   const first = (family: 'open-h4' | 'open-even') => BOOK.families[family].def.patterns[0].id
-  const drills = () =>
-    screen
-      .getAllByRole('link')
-      .filter((a) => a.getAttribute('href')!.startsWith('#/spar'))
-      .map((a) => a.textContent)
+  /** The drill sides' labels, one per side (each with its Watch and Test). */
+  const drills = () => [...document.querySelectorAll('.drill .drill-who')].map((e) => e.textContent)
 
   it('starts the even game on an empty board and drills it as Black or White', () => {
     render(<Pattern id={first('open-even')} />)

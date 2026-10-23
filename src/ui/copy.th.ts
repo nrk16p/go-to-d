@@ -196,6 +196,17 @@ export const COPY: Copy = {
     emptyBoard: 'กระดานว่าง ดำเดินก่อน',
   },
 
+  watch: {
+    lead: (c, side) => `ดูก่อนรอบนึง แล้วค่อยลองเล่นเองเป็น${colorName(c)} ${side === 'defend' ? 'ฝ่ายรับมุม' : 'ฝ่ายบุกมุม'}`,
+    leadColor: (c) => `ดูก่อนรอบนึง แล้วค่อยลองเล่นเองเป็น${colorName(c)}`,
+    autoPlay: 'เล่นอัตโนมัติ',
+    pause: 'หยุด',
+    tryIt: 'ลองเล่นเอง',
+    watchFirst: 'ดูก่อน',
+    watch: 'ดู',
+    test: 'ทดสอบ',
+  },
+
   settings: {
     title: 'ตั้งค่า',
     teacherTitle: 'ครู',

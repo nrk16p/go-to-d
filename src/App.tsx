@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { COPY } from './ui/copy'
 import type { EngineHub } from './ui/engine'
 import { LangSwitch } from './ui/LangSwitch'
-import { href, parseRoute, useHash, type Route } from './ui/router'
+import { href, parseRoute, useHash, wantsWatch, type Route } from './ui/router'
 import { ScreenBoundary } from './ui/ScreenBoundary'
 import { Library } from './ui/screens/Library'
 import { NotFound } from './ui/screens/NotFound'
@@ -13,13 +13,15 @@ import { Report } from './ui/screens/Report'
 import { Settings } from './ui/screens/Settings'
 import { Spar } from './ui/screens/Spar'
 import { Today } from './ui/screens/Today'
+import { Watch } from './ui/screens/Watch'
 
 function Screen({ route, hash, engine }: { route: Route; hash: string; engine: EngineHub }) {
   switch (route.name) {
     case 'today':
       return <Today />
     case 'spar':
-      // A new address is a new session.
+      // A new address is a new session. phase=watch plays the line through first (R45).
+      if (wantsWatch(route.params)) return <Watch key={hash} params={route.params} />
       return <Spar key={hash} params={route.params} engine={engine} />
     case 'report':
       return <Report key={hash} />

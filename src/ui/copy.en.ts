@@ -214,6 +214,20 @@ export const COPY = {
     emptyBoard: 'An empty board. Black plays first.',
   },
 
+  /** Watch first, then test (R45): the teacher plays the line through once, then the owner plays it. */
+  watch: {
+    lead: (c: Color, side: Side) =>
+      `Watch it once, then you play ${colorName(c)}, ${side === 'defend' ? 'defending' : 'attacking'} the corner.`,
+    /** An opening (R46): no corner, only the colour. */
+    leadColor: (c: Color) => `Watch it once, then you play ${colorName(c)}.`,
+    autoPlay: 'Auto-play',
+    pause: 'Pause',
+    tryIt: 'Try it yourself',
+    watchFirst: 'Watch first',
+    watch: 'Watch',
+    test: 'Test',
+  },
+
   settings: {
     title: 'Settings',
     teacherTitle: 'Teacher',

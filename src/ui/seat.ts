@@ -24,3 +24,9 @@ export function sideShortLabel(family: FamilyDef, side: Side, copy: Copy = COPY)
   const c = seatColor(family, side)
   return c ? copy.colorName(c) : copy.library.sideShort(side)
 }
+
+/** A drill's side as a button or group label: "Defend as Black" in a corner, "Play as Black" in an opening. */
+export function drillLabel(family: FamilyDef, side: Side, copy: Copy = COPY): string {
+  const c = ownerColor(family, side)
+  return seatColor(family, side) ? copy.pattern.drillColor(c) : copy.pattern.drill(side, c)
+}

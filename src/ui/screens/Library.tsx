@@ -1,6 +1,7 @@
-// Every pattern in the book, family by family in course order, with how far each drillable side has got.
-// The corner families come first, then the whole-board openings in a section of their own (R46), whose
-// sides read as colours.
+// Every pattern in the book, family by family in course order. Each row opens the pattern's page, and
+// under it each drillable side has its level and two ways in (R45): Watch (the line played through once,
+// then the test) and Test (straight to the drill). The corner families come first, then the whole-board
+// openings in a section of their own (R46), whose sides read as colours.
 
 import { useState } from 'react'
 import { BOOK } from '../shownBook'
@@ -13,10 +14,11 @@ import { drillableSides } from '../../session/sides'
 import { CornerThumb } from '../CornerThumb'
 import { COPY } from '../copy'
 import { Pips } from '../Pips'
-import { href } from '../router'
-import { sideShortLabel } from '../seat'
+import { href, phaseHref } from '../router'
+import { drillLabel, sideShortLabel } from '../seat'
 
 const L = COPY.library
+const W = COPY.watch
 
 const byOrder = Object.keys(BOOK.patterns).sort((a, b) => BOOK.patterns[a].def.order - BOOK.patterns[b].def.order)
 const FAMILIES = (Object.keys(BOOK.families) as FamilyId[]).filter((f) => byOrder.some((id) => BOOK.patterns[id].family === f))
@@ -66,24 +68,33 @@ function PatternList({ family, progress }: { family: FamilyId; progress: Progres
       {byOrder
         .filter((id) => BOOK.patterns[id].family === family)
         .map((id) => (
-          <li key={id}>
+          <li key={id} className="lib-row">
             <a className="queue-item" href={href.pattern(id)}>
               <CornerThumb patternId={id} />
               <span className="queue-text">
                 <span className="queue-name">{BOOK.patterns[id].def.name}</span>
-                <span className="queue-meta sides">
-                  {drillableSides(BOOK, id).map((side) => {
-                    const box = progress.reviews[reviewKey(id, side)]?.box ?? 0
-                    return (
-                      <span key={side} className="side-level">
-                        {sideShortLabel(def, side)}
-                        <Pips box={box} />
-                      </span>
-                    )
-                  })}
-                </span>
               </span>
             </a>
+            <div className="lib-sides">
+              {drillableSides(BOOK, id).map((side) => {
+                const box = progress.reviews[reviewKey(id, side)]?.box ?? 0
+                const drill = { family, pattern: id, side }
+                return (
+                  <div key={side} className="lib-side" role="group" aria-label={drillLabel(def, side)}>
+                    <span className="side-level">
+                      {sideShortLabel(def, side)}
+                      <Pips box={box} />
+                    </span>
+                    <a className="btn btn-small" href={phaseHref(drill, 'watch')}>
+                      {W.watch}
+                    </a>
+                    <a className="btn btn-small" href={phaseHref(drill, 'test')}>
+                      {W.test}
+                    </a>
+                  </div>
+                )
+              })}
+            </div>
           </li>
         ))}
     </ul>

@@ -1,19 +1,22 @@
-// One pattern's main line, a move at a time, with the teacher's note on each move, then a way into the
-// drill from each side it can be drilled from. Shown in the book's own frame (sym 0), as notes are written.
-// An opening (R46) shows the whole board, and its drills are named by colour.
+// One pattern's main line, a move at a time, with the teacher's note on each move (the same player the
+// watch phase uses), then the ways into the drill from each side it can be drilled from: Watch first or
+// Test straight away (R45). Shown in the book's own frame (sym 0), as notes are written. An opening (R46)
+// shows the whole board, and its drills are named by colour.
 
-import { useEffect, useState } from 'react'
+import { useId, useState } from 'react'
 import { BOOK } from '../shownBook'
-import { toGtp, type Color } from '../../go/coords'
-import { drillableSides, familySides, ownerColor } from '../../session/sides'
-import { Board } from '../Board'
+import { reviewKey } from '../../progress/srs'
+import { loadProgress } from '../../progress/store'
+import { drillableSides, familySides, type Side } from '../../session/sides'
 import { COPY } from '../copy'
-import { mainLine } from '../mainLine'
-import { href, sparHref } from '../router'
-import { seatColor } from '../seat'
+import { LinePlayer } from '../LinePlayer'
+import { href, phaseHref } from '../router'
+import { drillLabel } from '../seat'
+import { watchLine } from '../watchLine'
 import { NotFound } from './NotFound'
 
 const P = COPY.pattern
+const W = COPY.watch
 
 export function Pattern({ id }: { id: string }) {
   if (!Object.hasOwn(BOOK.patterns, id)) return <NotFound />
@@ -23,28 +26,8 @@ export function Pattern({ id }: { id: string }) {
 function PatternView({ id }: { id: string }) {
   const entry = BOOK.patterns[id]
   const family = BOOK.families[entry.family].def
-  const line = mainLine(BOOK, id)
-  const last = line.steps.length - 1
-  const [step, setStep] = useState(0)
-  const s = line.steps[step]
   const sides = drillableSides(BOOK, id)
-
-  // Arrow keys step too, unless the focus is somewhere that uses them.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
-      const t = e.target as HTMLElement | null
-      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
-      if (e.key === 'ArrowLeft') setStep((i) => Math.max(0, i - 1))
-      else if (e.key === 'ArrowRight') setStep((i) => Math.min(last, i + 1))
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [last])
-
-  const node = s.node
-  const move = node?.move ?? null
-  const kind = node && node.kind !== 'joseki' ? P.kind[node.kind] : null
+  const [progress] = useState(loadProgress)
 
   return (
     <div className="pattern">
@@ -56,60 +39,41 @@ function PatternView({ id }: { id: string }) {
         <p className="who">{P.meta(family.name, entry.def.difficulty)}</p>
       </header>
 
-      <div className="pattern-board">
-        <Board board={s.pos.board} region={line.region} lastMove={s.at ?? undefined} />
-      </div>
-
-      <div className="pattern-panel">
-        <div className="stepper">
-          <button type="button" className="btn" disabled={step === 0} onClick={() => setStep(step - 1)}>
-            {P.prev}
-          </button>
-          <p className="step-count">{step === 0 ? P.start : P.step(step, last)}</p>
-          <button type="button" className="btn" disabled={step === last} onClick={() => setStep(step + 1)}>
-            {P.next}
-          </button>
-        </div>
-
-        <div className="step" aria-live="polite">
-          <p>
-            {move ? (
-              <>
-                <StoneGlyph color={move.color} />
-                <strong>{move.at === 'tenuki' ? P.elsewhere(move.color) : P.move(move.color, toGtp(move.at))}</strong>{' '}
-                {kind && <span className={`tag tag-${node!.kind}`}>{kind}</span>} {node!.note}
-              </>
-            ) : (
-              (family.start[0]?.note ?? P.emptyBoard)
-            )}
-          </p>
-          {node?.confidence === 'low' && <p className="low">{COPY.spar.lowConfidence}</p>}
-        </div>
-
+      <LinePlayer line={watchLine(BOOK, id, 0)} boardClass="pattern-board" panelClass="pattern-panel">
         <section className="drill" aria-labelledby="drill-title">
           <h2 id="drill-title">{P.drillTitle}</h2>
-          <div className="actions">
-            {sides.map((side, i) => (
-              <a
-                key={side}
-                className={`btn${i === 0 ? ' btn-primary' : ''}`}
-                href={sparHref({ family: entry.family, pattern: id, side })}
-              >
-                {seatColor(family, side) ? P.drillColor(ownerColor(family, side)) : P.drill(side, ownerColor(family, side))}
-              </a>
-            ))}
-          </div>
+          {sides.map((side) => (
+            <DrillSide
+              key={side}
+              label={drillLabel(family, side)}
+              drill={{ family: entry.family, pattern: id, side }}
+              played={Object.hasOwn(progress.reviews, reviewKey(id, side))}
+            />
+          ))}
+          {/* One side because the handicap opening is Black's (R46), or because the other side's line is a trick (R14). */}
           {sides.length === 1 && <p className="muted small">{familySides(family).length === 1 ? P.blackOnly : P.oneSide}</p>}
         </section>
-      </div>
+      </LinePlayer>
     </div>
   )
 }
 
-function StoneGlyph({ color }: { color: Color }) {
+/** One side's two ways in. A side not played yet leads with Watch; a played one with Test. */
+function DrillSide({ label, drill, played }: { label: string; drill: { family: string; pattern: string; side: Side }; played: boolean }) {
+  const labelId = useId()
   return (
-    <svg className="glyph" viewBox="-1 -1 2 2" aria-hidden="true">
-      <circle className={`stone ${color}`} r={0.86} />
-    </svg>
+    <div className="drill-side" role="group" aria-labelledby={labelId}>
+      <p id={labelId} className="drill-who">
+        {label}
+      </p>
+      <div className="actions">
+        <a className={`btn${played ? '' : ' btn-primary'}`} href={phaseHref(drill, 'watch')}>
+          {W.watch}
+        </a>
+        <a className={`btn${played ? ' btn-primary' : ''}`} href={phaseHref(drill, 'test')}>
+          {W.test}
+        </a>
+      </div>
+    </div>
   )
 }

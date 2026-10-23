@@ -117,7 +117,8 @@ describe('Today', () => {
     expect(within(region).getByText(COPY.today.doneNew)).toBeTruthy()
     const next = course[newPerDay]
     const more = within(region).getByRole('link', { name: COPY.today.learnOneMore })
-    expect(more.getAttribute('href')).toBe(sparHref({ family: next.family, pattern: next.patternId, side: next.side }))
+    // A new one, so it opens on the watch first (R45).
+    expect(more.getAttribute('href')).toBe(sparHref({ family: next.family, pattern: next.patternId, side: next.side, phase: 'watch' }))
     expect(within(region).queryByText(COPY.today.play)).toBeNull()
 
     // Tomorrow the day's share is back.

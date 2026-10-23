@@ -106,6 +106,11 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['attack', 'white'],
   ],
   'pattern.drillColor': [['black'], ['white']],
+  'watch.lead': [
+    ['black', 'defend'],
+    ['white', 'attack'],
+  ],
+  'watch.leadColor': [['black'], ['white']],
   'settings.backendName': [['webgpu'], ['wasm'], ['cpu'], ['webgl']],
   'settings.importConfirm': [
     [0, 0],

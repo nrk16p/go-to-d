@@ -1,5 +1,5 @@
 {
-  "familyHash": "099471c3c60a8c",
+  "familyHash": "0eb10131f1f563",
   "model": "kata1-b18c384nbt-s9996604416-d4316597426",
   "visits": 800,
   "nodes": {
@@ -10,7 +10,7 @@
     },
     "open-even:B:Q16/W:D4": {
       "loss": 0,
-      "bestAt": "D16",
+      "bestAt": "D4",
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4": {
@@ -69,7 +69,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R17/B:Q17/W:R16/B:Q15/W:R15/B:R14/W:S14/B:R12": {
-      "loss": 2.8,
+      "loss": 2.79,
       "bestAt": "C17",
       "kind": "mistake"
     },
@@ -89,7 +89,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:E3": {
-      "loss": 0,
+      "loss": 0.05,
       "bestAt": "R17",
       "kind": "joseki"
     },
@@ -169,13 +169,13 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14": {
-      "loss": 0.16,
+      "loss": 0.17,
       "bestAt": "R17",
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11": {
-      "loss": 0.35,
-      "bestAt": "R15",
+      "loss": 0.33,
+      "bestAt": "C6",
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17": {
@@ -211,6 +211,11 @@
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17": {
       "loss": 0,
       "bestAt": "S17",
+      "kind": "joseki"
+    },
+    "open-even:B:Q16/W:D4/B:Q4/W:D16/B:F3/W:R14/B:R11/W:R17/B:R16/W:Q17/B:P16/W:S16/B:S15/W:S17/B:R15": {
+      "loss": 0.08,
+      "bestAt": "C6",
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:Q10": {
@@ -249,7 +254,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14": {
-      "loss": 0.12,
+      "loss": 0.14,
       "bestAt": "F17",
       "kind": "joseki"
     },
@@ -289,17 +294,17 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:D16/B:R14/W:R3/B:R4/W:Q3/B:O3/W:P3/B:P4/W:O2/B:F17": {
-      "loss": 0,
-      "bestAt": "F17",
+      "loss": 0.03,
+      "bestAt": "C17",
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:R17": {
-      "loss": 0.54,
+      "loss": 0.53,
       "bestAt": "D16",
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16": {
-      "loss": 0,
+      "loss": 0.02,
       "bestAt": "Q17",
       "kind": "joseki"
     },
@@ -309,7 +314,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:Q4/W:R17/B:R16/W:Q17/B:P16": {
-      "loss": 0.04,
+      "loss": 0.02,
       "bestAt": "O17",
       "kind": "joseki"
     },
@@ -344,7 +349,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:R4": {
-      "loss": 0.02,
+      "loss": 0.01,
       "bestAt": "Q4",
       "kind": "joseki"
     },
@@ -354,7 +359,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10": {
-      "loss": 0.53,
+      "loss": 0.54,
       "bestAt": "P4",
       "kind": "joseki"
     },
@@ -389,7 +394,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:R4/W:D16/B:R10/W:P4/B:P3/W:O3/B:Q3/W:O4/B:Q6/W:R8": {
-      "loss": 0.1,
+      "loss": 0.09,
       "bestAt": "K4",
       "kind": "joseki"
     },
@@ -449,7 +454,7 @@
       "kind": "joseki"
     },
     "open-even:B:Q16/W:D4/B:R4/W:D16/B:P4/W:R17/B:R16/W:Q17/B:O17/W:P17/B:P16/W:O18/B:P14": {
-      "loss": 2.55,
+      "loss": 2.57,
       "bestAt": "Q10",
       "kind": "mistake"
     },

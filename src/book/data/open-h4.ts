@@ -37,7 +37,7 @@ export const OPEN_H4: FamilyDef = {
         {
           c: 'B',
           at: 'R12',
-          note: 'Black pincers from the Q4 side. R14 now sits between two Black corners with no room to settle.',
+          note: 'Black pincers from the Q4 side. R14 is squeezed between Q16 and R12, with no room to settle.',
         },
         {
           c: 'W',
@@ -99,7 +99,7 @@ export const OPEN_H4: FamilyDef = {
             c: 'B',
             at: 'S16',
             kind: 'mistake',
-            note: 'Black guards the corner on the second line, under R14. It’s small, and it leaves the big move on the Q4 side to White.',
+            note: 'Black guards the corner on the second line, where White could slide in. It’s small, and it leaves the big move on the Q4 side to White.',
           },
           then: [
             {
@@ -188,7 +188,7 @@ export const OPEN_H4: FamilyDef = {
         {
           c: 'B',
           at: 'Q14',
-          note: 'Black attaches to R14 from the center side. R14 is cut off from the center, stuck between Q16 and R12, and the new wall stands behind R12.',
+          note: 'Black attaches to R14 from the center side. R14 is pressed against the edge between Q16 and R12, and the new wall stands behind R12.',
         },
       ],
       branches: [
@@ -257,7 +257,7 @@ export const OPEN_H4: FamilyDef = {
             c: 'B',
             at: 'P12',
             kind: 'mistake',
-            note: 'Black adds a stone next to Q12 to make the wall solid. The wall was already strong, so this move adds almost nothing.',
+            note: 'Black adds a stone next to Q12, close to the wall. Q12 and the wall were already strong, so this move adds almost nothing.',
           },
           then: [
             {
@@ -289,7 +289,7 @@ export const OPEN_H4: FamilyDef = {
           note: 'White slides under Q16 on the second line. It gives R14 a base and pokes at the corner.',
         },
         { c: 'B', at: 'R17', note: 'Black blocks at the 3-3 point. The corner stays Black’s.' },
-        { c: 'W', at: 'R11', note: 'White extends two points along the edge, enough room to live.' },
+        { c: 'W', at: 'R11', note: 'White makes a two-space extension along the edge, enough room to live.' },
         {
           c: 'B',
           at: 'G17',
@@ -327,7 +327,7 @@ export const OPEN_H4: FamilyDef = {
         {
           c: 'B',
           at: 'D13',
-          note: 'Black extends from D16 along the side toward D4. The corner is safe, and White still has two groups without a base.',
+          note: 'Black extends from D16 along the side toward D4, giving the corner room on both sides. White still has two groups without a base.',
           confidence: 'low',
         },
       ],
@@ -342,7 +342,7 @@ export const OPEN_H4: FamilyDef = {
         {
           c: 'B',
           at: 'R10',
-          note: 'Black pincers wide, three points away. R14 still has a little room, so White doesn’t have to answer at once.',
+          note: 'Black makes a wide three-space pincer. R14 still has a little room, so White doesn’t have to answer at once.',
         },
         {
           c: 'W',
@@ -376,7 +376,7 @@ export const OPEN_H4: FamilyDef = {
         {
           c: 'B',
           at: 'R13',
-          note: 'Black blocks R14 from reaching R10. White is split into three small groups.',
+          note: 'Black blocks R14 from extending toward R10. White is split into three small groups.',
           confidence: 'low',
         },
       ],
@@ -421,7 +421,7 @@ export const OPEN_H4: FamilyDef = {
             {
               c: 'W',
               at: 'Q14',
-              note: 'White blocks and connects to R14. The pincered stone is part of a strong group now.',
+              note: 'White blocks and connects to R14. The pincered stone isn’t alone any more.',
             },
             { c: 'B', at: 'P14', note: 'Black cuts. P15 and Q14 were only joined on the diagonal.' },
             {
@@ -444,10 +444,10 @@ export const OPEN_H4: FamilyDef = {
         {
           c: 'B',
           at: 'R14',
-          note: 'Black adds a knight’s-move enclosure to Q16. That corner is now solid territory, and K10 can’t reach it.',
+          note: 'Black adds a knight’s-move enclosure to Q16. That corner is now hard to invade, and K10 is too far away to help.',
         },
         { c: 'W', at: 'C14', note: 'White approaches D16 from the D4 side.' },
-        { c: 'B', at: 'C12', note: 'Black pincers from the D4 side, the same answer as against any approach.' },
+        { c: 'B', at: 'C12', note: 'Black pincers from the D4 side and keeps C14 weak.' },
         { c: 'W', at: 'R6', note: 'White approaches Q4 from the Q16 side.' },
         {
           c: 'B',

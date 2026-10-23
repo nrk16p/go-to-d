@@ -21,7 +21,8 @@ afterEach(() => {
 })
 
 describe('openings name sides by colour (Thai)', () => {
+  // Renders every opening on five screens; under a full parallel run that takes longer than the default 5 s.
   it('on the watch screen, the drill, the Pattern page, the Library and Today', async () => {
     await checkOpeningSeats(/มุม|ฝ่ายรับ|ฝ่ายบุก|คุณ/)
-  })
+  }, 30_000)
 })

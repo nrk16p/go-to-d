@@ -33,7 +33,7 @@ export const OPEN_EVEN: FamilyDef = {
         {
           c: 'B',
           at: 'Q16',
-          note: 'Black starts in a corner, where territory is easiest to make. A star point takes the corner in one move.',
+          note: 'Black starts in a corner, where territory is easiest to make. A star point claims the corner fast, but leaves the 3-3 point open.',
         },
         { c: 'W', at: 'D4', note: 'White takes the corner across from Q16.' },
         {
@@ -79,7 +79,7 @@ export const OPEN_EVEN: FamilyDef = {
             c: 'B',
             at: 'R12',
             kind: 'mistake',
-            note: 'Black extends two points from the wall. A wall doesn’t need a stone this close, and the gap at R13 is easy to push into.',
+            note: 'Black jumps one space from the wall to R12. A wall doesn’t need a stone this close, and the gap at R13 is easy to wedge into.',
           },
           then: [
             { c: 'W', at: 'R13', note: 'White wedges between R14 and R12.' },
@@ -130,7 +130,7 @@ export const OPEN_EVEN: FamilyDef = {
     },
     {
       id: 'open-even-chinese',
-      name: 'Chinese opening',
+      name: 'Star point, 3-4 point and a side stone',
       difficulty: 2,
       order: 113,
       line: [
@@ -145,7 +145,7 @@ export const OPEN_EVEN: FamilyDef = {
         {
           c: 'B',
           at: 'R10',
-          note: 'Black adds a stone on the side between Q16 and R4. A star point, a 3-4 point and a side stone on one side: the Chinese opening.',
+          note: 'Black adds a stone on the side between Q16 and R4, so all three Black stones work along one side.',
         },
         { c: 'W', at: 'P4', note: 'White approaches R4 high, from the D4 side, before Black can enclose it.' },
         { c: 'B', at: 'P3', note: 'Black attaches under P4 to keep the corner.' },
@@ -155,7 +155,7 @@ export const OPEN_EVEN: FamilyDef = {
         {
           c: 'B',
           at: 'Q6',
-          note: 'Black extends from the corner toward R10. Corner, extension and side stone line up, and the side between them is Black’s.',
+          note: 'Black extends from the corner toward R10, and the side between them is nearly Black’s.',
         },
         { c: 'W', at: 'R8', note: 'White probes the gap between Q6 and R10 to see how Black answers.', confidence: 'low' },
         {
@@ -284,7 +284,7 @@ export const OPEN_EVEN: FamilyDef = {
         {
           c: 'B',
           at: 'C17',
-          note: 'Black dives into the 3-3 point under D16. White spent a move at D4, so Black takes a corner of its own.',
+          note: 'Black dives into the 3-3 point under D16. White used D6 to make D4 solid, so Black has time to take part of this corner.',
         },
         {
           c: 'W',
@@ -292,7 +292,7 @@ export const OPEN_EVEN: FamilyDef = {
           note: 'White blocks on the Q16 side, so Black has to live along the side toward D4.',
         },
         { c: 'B', at: 'C16', note: 'Black pushes along the side toward D4.' },
-        { c: 'W', at: 'D15', note: 'White blocks, keeping Black low.' },
+        { c: 'W', at: 'D15', note: 'White extends on the fourth line, keeping Black low.' },
         {
           c: 'B',
           at: 'B14',
@@ -325,7 +325,7 @@ export const OPEN_EVEN: FamilyDef = {
         {
           c: 'B',
           at: 'F17',
-          note: 'Black approaches D16 from the Q16 side. The enclosure and the wall both support it from a distance.',
+          note: 'Black approaches D16 from the Q16 side, with Q16 behind it.',
         },
       ],
     },
@@ -352,7 +352,7 @@ export const OPEN_EVEN: FamilyDef = {
         },
         { c: 'W', at: 'D3', note: 'White blocks on the F3 side, keeping F3 away from the corner.' },
         { c: 'B', at: 'C4', note: 'Black pushes along the side toward D16.' },
-        { c: 'W', at: 'D5', note: 'White blocks on the fourth line.' },
+        { c: 'W', at: 'D5', note: 'White extends on the fourth line, keeping Black low.' },
         { c: 'B', at: 'D2', note: 'Black hanes under D3 to make eye space.' },
         { c: 'W', at: 'E2', note: 'White blocks the hane.' },
         {
@@ -413,7 +413,7 @@ export const OPEN_EVEN: FamilyDef = {
         {
           c: 'B',
           at: 'R11',
-          note: 'Black pincers from the Q4 side. R14 is squeezed between Q16 and Q4, the two Black corners.',
+          note: 'Black pincers from the Q4 side. R14 is squeezed between Q16 and R11, with Q4 behind the pincer.',
         },
         {
           c: 'W',
@@ -430,6 +430,7 @@ export const OPEN_EVEN: FamilyDef = {
         { c: 'W', at: 'S16', note: 'White pushes along the edge, trying to reach R14.' },
         { c: 'B', at: 'S15', note: 'Black blocks, and R14 stays cut off.' },
         { c: 'W', at: 'S17', note: 'White connects. A Black stone here would put S16 in atari.' },
+        { c: 'B', at: 'R15', note: 'Black joins R16 and S15 into one wall. R14 is a lone stone now.' },
       ],
     },
   ],

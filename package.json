@@ -15,6 +15,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "npm run build && playwright test",
+    "e2e:answer-time": "npm run build && ANSWER_TIME=1 playwright test answer-time --project=chromium-phone --project=webkit-phone --workers=1",
     "check-book": "tsx tools/check-book.ts",
     "fetch-model": "node scripts/fetch-model.mjs",
     "bench-engine": "tsx tools/engine-bench/run.ts",

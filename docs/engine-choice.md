@@ -116,3 +116,27 @@ npx tsx tools/engine-bench/run.ts --browsers chromium,webkit --backend wasm --an
 ```
 
 The options are listed at the top of `run.ts`. Each run can write its raw numbers with `--out`; the runs behind this page are in `tools/engine-bench/results.json`. Stop other GPU work (a native KataGo, for one) before timing WebGPU.
+
+## In the app (2026-10-23)
+
+`e2e/answer-time.spec.ts` times the teacher in the real app: the production build served by `vite preview` at `/go-to-d/`, on the same M2 with Playwright 1.64.1. One page load and one engine serve all the trials, the way a session goes. A first trial warms the engine up and isn't counted.
+
+Each trial is the knight's-move drill. The teacher plays R14, then Black plays one of five moves the book doesn't have: N17, P17, R10, Q12 or P15. Each trial turns the board by the next of the 8 symmetries, so every trial gives the engine a position it hasn't searched. Otherwise the engine's cache of recent whole-board searches answers a repeat at once. Between trials the page sits on Today for 4 s, so no search from the last trial is still queued.
+
+Times are taken in the page, from the click that plays the move. **Verdict** runs until the verdict shows. **Reply** runs until the teacher's stone is down and it's Black's move again. A mistake stops the session, so there the reply is timed from the Play on click. "At once" plays as soon as it's Black's move. "After 3 s" waits first, as a person looking at the board would, so the look-ahead the app starts on each owner turn has finished.
+
+| Browser, backend | Black plays | Verdict, median (range) | Reply, median (range) | Reply after Play on |
+| --- | --- | --- | --- | --- |
+| Chromium phone, page 4× throttled, WASM in a worker | at once | 2.37 s (2.31–2.39) | 3.50 s (3.47–3.52) | 1.15–1.19 s (2 mistakes) |
+| Chromium phone, page 4× throttled, WASM in a worker | after 3 s | 1.13 s (1.08–1.17) | 2.29 s (2.21–2.33) | 1.12 s (1 mistake) |
+| WebKit phone, WebGPU, shared GPU | at once | 1.58 s (1.46–1.61) | 2.38 s (2.23–2.42) | – |
+| WebKit phone, WebGPU, shared GPU | after 3 s | 0.80 s (0.77–0.89) | 1.57 s (1.54–1.80) | – |
+
+How to read it:
+
+- **The Chromium rows aren't the slow-phone number.** DevTools throttles the page, not the engine's worker (see the top of this page), so the searches ran at full speed. They show what the app itself adds. After a pause the reply takes 2.29 s, close to the bench's full-speed WASM reply (2.28 s, WebKit worker), so the 4× slower page adds little. On a phone whose CPU is 4× slower, the engine part is the bench's 3.0 s.
+- **Playing at once costs about 1.2 s more in Chromium, 0.8 s in WebKit.** The verdict needs the search of the position before the move. That search is the look-ahead, still running when the move comes in. The engine runs one search at a time, so scoring the new position waits behind it. At full speed that comes to 3.5 s, over the 3 s target. On a 4× slower worker the bench's numbers put it near 4.5 s (the rest of the look-ahead, then the 3.0 s pair). That's under the 5 s limit, but it wasn't measured. If it matters, the lever is the look-ahead: a shorter budget for it, or cutting it short when the owner moves.
+- **WebKit had to share the GPU.** Two native KataGo book checks from other worktrees were running, like the "shared GPU" rows above. Expect it faster on an idle GPU.
+- Answers to a mistake after Play on are quick (about 1.1 s at full speed): the scoring for the verdict already did the whole-board search, so only the corner search is left.
+
+Rerun with `npm run e2e:answer-time` (it builds first). Stop other GPU and CPU work before timing.

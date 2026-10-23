@@ -8,3 +8,5 @@ coverage
 public/tfjs/
 tools/engine-bench/models/
 tools/engine-bench/results-*.json
+test-results/
+playwright-report/

@@ -1,12 +1,13 @@
 // Hash routes, so the app works from any folder on GitHub Pages:
 //   #/                         Today
-//   #/spar?family=&pattern=&side=&mode=&sym=&seed=&phase=   (phase=watch: watch the line first, R45)
+//   #/spar?family=&pattern=&side=&mode=&sym=&seed=&phase=&from=   (phase=watch: watch the line first, R45;
+//                              from=N: practice from the N-th book move, R51)
 //   #/report                   the last session's report
 //   #/library   #/pattern/:id   #/settings
 
 import { useSyncExternalStore } from 'react'
 
-export type SparParams = Partial<Record<'family' | 'pattern' | 'side' | 'mode' | 'sym' | 'seed' | 'phase', string>>
+export type SparParams = Partial<Record<'family' | 'pattern' | 'side' | 'mode' | 'sym' | 'seed' | 'phase' | 'from', string>>
 
 export type Route =
   | { name: 'today' }
@@ -17,7 +18,7 @@ export type Route =
   | { name: 'settings' }
   | { name: 'not-found'; path: string }
 
-const SPAR_KEYS = ['family', 'pattern', 'side', 'mode', 'sym', 'seed', 'phase'] as const
+const SPAR_KEYS = ['family', 'pattern', 'side', 'mode', 'sym', 'seed', 'phase', 'from'] as const
 
 export function parseRoute(hash: string): Route {
   const raw = hash.replace(/^#/, '')

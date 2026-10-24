@@ -66,6 +66,8 @@ export const COPY = {
     movesSoFar: (n: number) => `Moves so far (${n})`,
     done: 'That\'s the end of this line.',
     seeReport: 'See the report',
+    /** R51: a practice run starts at the move the owner missed. */
+    practice: (move: number) => `Practice from move ${move}. The book moves before it are already on the board.`,
     saveFailed: "Progress couldn't be saved in this browser.",
     lowConfidence: 'Not 100% sure about this one. Check with a stronger player.',
     unknownPattern: (id: string) => `There's no pattern called "${id}".`,
@@ -134,6 +136,21 @@ export const COPY = {
     /** An opening's side is its colour (R46). */
     subtitleColor: (title: string, c: Color) => `${title}, as ${colorName(c)}.`,
     dueColor: (c: Color) => `, as ${colorName(c)}`,
+    /** R51: the mistakes review. */
+    reviewTitle: 'Your mistakes',
+    reviewTip: (move: number) => `Biggest loss: move ${move}. Start there.`,
+    reviewMove: (move: number) => `Move ${move}`,
+    reviewBoard: (move: number) => `The board before move ${move}`,
+    /** `at` is the point played; a tenuki may have none. */
+    reviewPlayed: (at: string | null, tenuki: boolean, lost: number | null) => {
+      const where = tenuki ? (at ? `elsewhere, at ${at}` : 'elsewhere') : (at ?? '')
+      return lost === null ? `You played ${where}. The engine couldn't say how much it cost.` : `You played ${where} and lost about ${points(lost)}.`
+    },
+    reviewBest: (at: string) => `Best was ${at}.`,
+    reviewBestElsewhere: 'Best was to play elsewhere.',
+    reviewBestElsewhereAt: (at: string) => `Best was to play elsewhere, at ${at}.`,
+    practise: 'Practise this move again',
+    practiceRun: 'Practice run. Your reviews stay as they were.',
   },
 
   today: {

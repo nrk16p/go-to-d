@@ -151,13 +151,17 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
     if (state.sym === shownSym.current) return
     shownSym.current = state.sym
     const seed = String(config.seed)
+    // A practice run keeps its start while it is still the drill it began as.
+    const from = config.from !== undefined && drill.patternId === config.patternId ? { from: String(config.from) } : {}
     replaceQuietly(
       drill.mode === 'drill' && drill.patternId
-        ? sparHref({ family: drill.family, pattern: drill.patternId, side: config.side, sym: String(state.sym), seed })
+        ? sparHref({ family: drill.family, pattern: drill.patternId, side: config.side, sym: String(state.sym), seed, ...from })
         : sparHref({ family: drill.family, side: config.side, mode: 'free', sym: String(state.sym), seed }),
     )
-  }, [state.sym, drill, config.side, config.seed])
+  }, [state.sym, drill, config.side, config.seed, config.from, config.patternId])
   const pendingDispose = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  // R51: a practice run of one missed move. It is never saved, so it can't move a review on.
+  const practice = config.from !== undefined
 
   useEffect(() => {
     // StrictMode unmounts and remounts once in development: a dispose still pending means this is that
@@ -185,7 +189,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
   useEffect(() => {
     if (state.status !== 'done' || !state.result || reported.current) return
     reported.current = true
-    const saved = saveSession(state.result)
+    const saved = practice ? false : saveSession(state.result)
     const owned = state.log.filter((e) => e.by === 'owner')
     setLastReport({
       result: state.result,
@@ -203,9 +207,12 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
       message: state.message,
       right: owned.filter((e) => e.verdict?.type === 'good' || e.verdict?.type === 'fine-offbook').length,
       unchecked: owned.filter((e) => e.verdict?.type === 'unjudged').length,
+      mistakes: controller.mistakes,
+      seed: config.seed,
+      ...(practice ? { practice: true } : {}),
     })
     navigate(href.report)
-  }, [state, lastMove, title, drill, side])
+  }, [state, lastMove, title, drill, side, controller, config.seed, practice])
 
   if (failed) return <SessionError onRestart={onRestart} />
 
@@ -231,7 +238,7 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
       console.error('[spar] switch failed', err)
       return
     }
-    if (abandoned && !saveSession(abandoned)) setSaveFailed(true)
+    if (abandoned && !practice && !saveSession(abandoned)) setSaveFailed(true)
     const entry = BOOK.patterns[id]
     setDrill({ mode: 'drill', family: entry.family, patternId: id })
     reported.current = false
@@ -274,7 +281,9 @@ function Session({ config, engine, gapMs, onRestart }: SessionProps) {
         <h1>{title}</h1>
         <p className="who">{seat ? COPY.spar.youAreColor(seat) : COPY.spar.youAre(owner, side)}</p>
         {/* R45: before the first move, the drill's line can be watched first on this same board. */}
-        {drill.mode === 'drill' && drill.patternId && !movedOnce.current && (
+        {practice && config.from !== undefined && drill.patternId === config.patternId && <p className="practice-note">{COPY.spar.practice(config.from + 1)}</p>}
+        {/* A practice run starts mid-line: there is no line to watch up to it. */}
+        {drill.mode === 'drill' && drill.patternId && !movedOnce.current && !practice && (
           <a
             className="btn watch-first"
             href={phaseHref({ family: drill.family, pattern: drill.patternId, side, sym: String(state.sym), seed: String(config.seed) }, 'watch')}

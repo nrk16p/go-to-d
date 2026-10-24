@@ -42,13 +42,13 @@ import { mulberry32, pickTeacherMove } from './pick'
 import { countOwnerMove, newTally, sessionResult, switchablePatterns, type SessionResult, type Tally } from './result'
 import { drillableSides, ownerColor } from './sides'
 import { MESSAGES } from './messages'
-import { startState, type SparConfig, type SparState } from './types'
+import { startState, type MistakeRecord, type SparConfig, type SparState } from './types'
 
 export { ENGINE_TIMEOUT_MS } from './engineAccess'
 export { DEFAULT_THRESHOLDS, type Thresholds, type Verdict } from './judge'
 export type { SessionResult } from './result'
 export type { Side } from './sides'
-export type { LogEntry, SparConfig, SparState } from './types'
+export type { LogEntry, MistakeRecord, SparConfig, SparState } from './types'
 
 /** Moves played off the book, by either side, before the session ends. */
 const MAX_OFF_BOOK = 6
@@ -103,6 +103,10 @@ export class SparController {
   private lastBook: BookNode | null = null
   /** Play went on after a stopped move off the drilled line: book moves are judged as in free sparring. */
   private leftDrill = false
+  /** R51: each position's first mistake, by the tally's key for that position. */
+  private mistakeLog = new Map<string, MistakeRecord>()
+  /** R51 practice: book moves played for the owner before the session starts (0: none). */
+  private from = 0
 
   constructor(book: Book, engine: TeacherEngine, config: SparConfig, options: SparOptions = {}) {
     this.book = book
@@ -135,9 +139,15 @@ export class SparController {
     }
   }
 
+  /** The session's mistakes so far, one per position (R51), in the order they were made. */
+  get mistakes(): MistakeRecord[] {
+    return [...this.mistakeLog.values()]
+  }
+
   async start(): Promise<void> {
     if (this.started || this.disposed) return
     this.started = true
+    this.fastForward()
     await this.next(this.gen)
   }
 
@@ -188,6 +198,21 @@ export class SparController {
 
     const where = node ? `book:${node.key}` : `off:${lineKey(pos, sym)}`
     countOwnerMove(this.tally, { verdict, node, child, where, drill: this.cfg.mode === 'drill' })
+    if (verdict.type === 'mistake' && !this.mistakeLog.has(where)) {
+      const stone = lastMove(after)
+      this.mistakeLog.set(where, {
+        moveNumber: pos.history.length + 1,
+        before: pos.board,
+        region,
+        played: stone ? { x: stone.x, y: stone.y } : null,
+        tenuki: played === 'tenuki',
+        better: verdict.better,
+        pointsLost: verdict.pointsLost,
+        note: verdict.note ?? null,
+        sym,
+        practice: this.practiceFrom(node, pos.history.length),
+      })
+    }
     if (child) this.lastBook = child
     const stop = verdict.type === 'mistake' || verdict.type === 'other-joseki'
     if (stop) this.undo = undo
@@ -236,7 +261,8 @@ export class SparController {
     const entry = Object.hasOwn(this.book.patterns, patternId) ? this.book.patterns[patternId] : undefined
     if (!entry) throw new Error(`Unknown pattern "${patternId}"`)
     const abandoned = this.s.status !== 'done' && this.tally.mistakes.size > 0 ? this.result() : null
-    this.reset({ ...this.cfg, mode: 'drill', patternId, family: entry.family })
+    // A practice start (R51) was for the drill switched away from.
+    this.reset({ ...this.cfg, mode: 'drill', patternId, family: entry.family, from: undefined })
     this.started = true
     this.next(this.gen).catch((err: unknown) => {
       console.error('[spar] restart failed', err)
@@ -274,8 +300,68 @@ export class SparController {
     this.undo = null
     this.lastBook = null
     this.leftDrill = false
+    this.mistakeLog = new Map()
+    this.from = this.practiceStart(cfg)
     this.s = startState(start, fam.root, cfg.sym)
     this.emit()
+  }
+
+  /**
+   * R51: how many book moves a practice drill plays first: `cfg.from` when the drilled line has an owner
+   * move right after that many moves, else 0 (a plain drill).
+   */
+  private practiceStart(cfg: SparConfig): number {
+    const n = cfg.from
+    const path = this.drillPath
+    if (n === undefined || !path || !Number.isInteger(n) || n < 1 || n >= path.length) return 0
+    return path[n].move?.color === this.owner ? n : 0
+  }
+
+  /**
+   * R51: plays the drilled line's first `from` moves for both sides, unjudged and out of the log, so the
+   * session starts at the position where the owner went wrong. A book tenuki goes on a big point elsewhere
+   * (no engine is asked); the corner is the same as in the session the mistake came from.
+   */
+  private fastForward(): void {
+    if (this.from === 0 || !this.drillPath) return
+    const { sym } = this.cfg
+    let pos = this.s.pos
+    const line = this.drillPath.slice(0, this.from)
+    for (const n of line) {
+      const { color, at } = n.move!
+      pos = this.place(pos, at === 'tenuki' ? this.eng.tenukiPoint(pos, null, color) : toBoardPt(at, sym), color)
+    }
+    const node = line[line.length - 1]
+    this.lastBook = node
+    this.set({ pos, node, note: noteOn(node, sym) })
+  }
+
+  /**
+   * R51: where "Practise this move again" starts for a mistake played at `node` after `from` moves: a drill
+   * whose main line reaches `node` in exactly that many moves and goes on with an owner move, from this
+   * side. The drilled pattern first (unless play left its line), then the others by course order. Null off
+   * book, or on a line no pattern drills (a punishment line after Play on).
+   */
+  private practiceFrom(node: BookNode | null, from: number): MistakeRecord['practice'] {
+    if (!node) return null
+    const family = this.index.familyOf(node) ?? this.cfg.family
+    const pool =
+      node.move === null
+        ? Object.keys(this.book.patterns).filter((id) => this.book.patterns[id].family === family)
+        : node.patternIds
+    const order = (id: string) => this.book.patterns[id]?.def.order ?? Infinity
+    const drilled = this.cfg.mode === 'drill' && !this.leftDrill ? this.cfg.patternId : undefined
+    const ids = [...pool].sort((a, b) => (a === drilled ? -1 : b === drilled ? 1 : order(a) - order(b)))
+    for (const id of ids) {
+      const entry = this.book.patterns[id]
+      if (!entry) continue
+      const { path } = entry
+      const reached = from === 0 ? node.move === null : path[from - 1] === node
+      if (!reached || from >= path.length || path[from].move?.color !== this.owner) continue
+      if (!drillableSides(this.book, id).includes(this.cfg.side)) continue
+      return { family: entry.family, patternId: id, from }
+    }
+    return null
   }
 
   /**

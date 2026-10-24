@@ -4,7 +4,7 @@
 import type { FamilyId } from '../book/types'
 import type { Pt, Region } from '../go/coords'
 import type { Board as Grid } from '../go/coords'
-import type { SessionResult } from '../session/controller'
+import type { MistakeRecord, SessionResult } from '../session/controller'
 import type { Side } from '../session/sides'
 
 export interface SessionReport {
@@ -27,6 +27,43 @@ export interface SessionReport {
   message: string | null
   right: number
   unchecked: number
+  /**
+   * R51: each position the owner went wrong in, for "Your mistakes". Missing in a report stored before
+   * R51; the screen then just has no review.
+   */
+  mistakes?: MistakeRecord[]
+  /** The session's seed, so a practice run from a mistake plays the same way (R51). */
+  seed?: number
+  /** A practice run from one move (R51): nothing was saved, by design. */
+  practice?: boolean
+}
+
+/** Whether `m` looks like a MistakeRecord well enough to draw: a stored one may be from another version. */
+function isRecord(m: unknown): m is MistakeRecord {
+  if (!m || typeof m !== 'object') return false
+  const r = m as Partial<MistakeRecord>
+  return (
+    typeof r.moveNumber === 'number' &&
+    Array.isArray(r.before) &&
+    r.before.length === 19 &&
+    !!r.region &&
+    typeof r.region === 'object' &&
+    (r.pointsLost === null || typeof r.pointsLost === 'number')
+  )
+}
+
+/**
+ * The review list (R51): biggest loss first, a loss the engine couldn't put a number on last, and
+ * otherwise in the order played. Records that can't be drawn are left out.
+ */
+export function reviewList(r: Pick<SessionReport, 'mistakes'>): MistakeRecord[] {
+  const list = Array.isArray(r.mistakes) ? r.mistakes.filter(isRecord) : []
+  return list.sort((a, b) => {
+    if (a.pointsLost === null || b.pointsLost === null) {
+      if (a.pointsLost !== b.pointsLost) return a.pointsLost === null ? 1 : -1
+    } else if (a.pointsLost !== b.pointsLost) return b.pointsLost - a.pointsLost
+    return a.moveNumber - b.moveNumber
+  })
 }
 
 const KEY = 'go-to-d:last-report'

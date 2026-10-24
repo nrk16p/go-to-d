@@ -61,6 +61,7 @@ export const COPY: Copy = {
     movesSoFar: (n) => `ตาที่เล่นไปแล้ว (${n})`,
     done: 'จบลำดับนี้แล้ว',
     seeReport: 'ดูสรุป',
+    practice: (move) => `ฝึกตาที่ ${move} ตาก่อนหน้าครูวางให้ตามตำราแล้ว`,
     saveFailed: 'เบราว์เซอร์นี้บันทึกความคืบหน้าไม่ได้',
     lowConfidence: 'อันนี้ไม่ชัวร์ร้อยเปอร์เซ็นต์ ลองถามคนที่เก่งกว่าดูอีกที',
     unknownPattern: (id) => `ไม่มีท่าชื่อ "${id}"`,
@@ -122,6 +123,19 @@ export const COPY: Copy = {
     dueSide: (side) => ` · ${sideWord(side)}`,
     subtitleColor: (title, c) => `${title} · เล่น${colorName(c)}`,
     dueColor: (c) => ` · เล่น${colorName(c)}`,
+    reviewTitle: 'ทบทวนตาที่พลาด',
+    reviewTip: (move) => `เสียแต้มมากสุดที่ตาที่ ${move} เริ่มฝึกตรงนั้นก่อน`,
+    reviewMove: (move) => `ตาที่ ${move}`,
+    reviewBoard: (move) => `กระดานก่อนตาที่ ${move}`,
+    reviewPlayed: (at, tenuki, lost) => {
+      const where = tenuki ? (at ? `ไปเล่นที่อื่นที่ ${at}` : 'ไปเล่นที่อื่น') : `เล่น ${at ?? ''}`
+      return lost === null ? `${where} ตานี้ยังบอกไม่ได้ว่าเสียกี่แต้ม` : `${where} เสียไปราว ${points(lost)}`
+    },
+    reviewBest: (at) => `ตาที่ดีที่สุดคือ ${at}`,
+    reviewBestElsewhere: 'ตาที่ดีที่สุดคือไปเล่นที่อื่น',
+    reviewBestElsewhereAt: (at) => `ตาที่ดีที่สุดคือไปเล่นที่อื่นที่ ${at}`,
+    practise: 'ฝึกตานี้อีกครั้ง',
+    practiceRun: 'รอบนี้เป็นรอบฝึก ไม่นับเข้ารอบทบทวน',
   },
 
   today: {

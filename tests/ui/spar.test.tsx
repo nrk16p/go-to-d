@@ -491,3 +491,99 @@ describe('Spar lifecycle', () => {
     expect(screen.getByText(COPY.spar.yourMove)).toBeTruthy()
   })
 })
+
+describe('Spar: the mistakes review and practice from a move (R51)', () => {
+  const turn = (gtp: string, sym: Sym) => toGtp(transform(parseGtp(gtp), sym))
+
+  it('hands the report each mistake once, a retried one too, with where to practise it', async () => {
+    const { container } = await startKnight()
+    await tap(container, 'O17')
+    await tap(container, 'S17')
+    await press(COPY.verdict.retry)
+    await tap(container, 'S17')
+    await press(COPY.verdict.retry)
+    await tap(container, 'R17')
+
+    expect(window.location.hash).toBe('#/report')
+    const report = getLastReport()!
+    expect(report.result.mistakes).toBe(1)
+    expect(report.seed).toBe(1)
+    expect(report.practice).toBeUndefined()
+    expect(report.mistakes).toHaveLength(1)
+    expect(report.mistakes![0]).toMatchObject({
+      moveNumber: 4,
+      played: parseGtp('S17'),
+      better: parseGtp('R17'),
+      pointsLost: s17Loss(),
+      sym: 0,
+      practice: { family: 'star44', patternId: 'star44-low-knight-slide', from: 3 },
+    })
+
+    cleanup()
+    render(<Report />)
+    const link = screen.getByRole('link', { name: COPY.report.practise })
+    expect(link.getAttribute('href')).toBe('#/spar?family=star44&pattern=star44-low-knight-slide&side=defend&sym=0&seed=1&from=3')
+  })
+
+  it('from=3 under sym 5 starts on the board before the mistake; the run saves nothing', async () => {
+    const before = JSON.stringify({ version: 1, marker: 'untouched' })
+    localStorage.setItem(STORAGE_KEY, before)
+    const params = { ...KNIGHT, sym: '5', from: '3' }
+    window.location.hash = sparHref(params)
+    const { container } = render(<Spar params={params} engine={hub()} gapMs={0} />)
+    await settle()
+
+    // W R14, B O17, W S16 are on the board, turned; the owner is to play move 4.
+    expect(container.querySelectorAll('[data-stone]')).toHaveLength(4)
+    const placed = new Set(
+      [...container.querySelectorAll('[data-x][data-y]')]
+        .filter((h) => h.querySelector('.hover') === null)
+        .map((h) => toGtp({ x: Number(h.getAttribute('data-x')), y: Number(h.getAttribute('data-y')) })),
+    )
+    const book = ['Q16', 'R14', 'O17', 'S16'].map((m) => turn(m, 5))
+    for (const m of book) expect(placed.has(m)).toBe(true)
+    expect(screen.getByText(COPY.spar.yourMove)).toBeTruthy()
+    expect(screen.getByText(COPY.spar.practice(4))).toBeTruthy()
+    expect(screen.queryByRole('link', { name: COPY.watch.watchFirst })).toBeNull()
+    expect(document.querySelector('.feed')).toBeNull()
+    // The address keeps the practice start, so a reload comes back to the same move.
+    expect(new URLSearchParams(window.location.hash.split('?')[1]).get('from')).toBe('3')
+
+    await tap(container, turn('R17', 5))
+    expect(window.location.hash).toBe('#/report')
+    const report = getLastReport()!
+    expect(report.result).toMatchObject({ patternIds: ['star44-low-knight-slide'], clean: true })
+    expect(report.practice).toBe(true)
+    expect(report.saved).toBe(false)
+    // No SRS promotion: progress is exactly as it was.
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(before)
+
+    cleanup()
+    render(<Report />)
+    expect(screen.getByText(COPY.report.practiceRun)).toBeTruthy()
+    expect(screen.queryByText(COPY.report.nextTomorrow)).toBeNull()
+  })
+
+  it('a practice run with a mistake is not saved either', async () => {
+    const params = { ...KNIGHT, from: '3' }
+    const { container } = render(<Spar params={params} engine={hub()} gapMs={0} />)
+    await settle()
+    await tap(container, 'S17')
+    await press(COPY.verdict.playOn)
+    await tap(container, 'R16')
+    expect(window.location.hash).toBe('#/report')
+    expect(getLastReport()?.result).toMatchObject({ mistakes: 1 })
+    expect(saved()).toBeNull()
+  })
+
+  it('the address and the setup read from= only for a drill', async () => {
+    expect(parseRoute('#/spar?pattern=p&from=3')).toEqual({ name: 'spar', params: { pattern: 'p', from: '3' } })
+    const { resolveSpar } = await import('../../src/ui/sparSetup')
+    const drill = resolveSpar({ ...KNIGHT, from: '3' }, BOOK, null)
+    expect(drill.ok && drill.config.from).toBe(3)
+    const free = resolveSpar({ family: 'star44', mode: 'free', from: '3' }, BOOK, null)
+    expect(free.ok && free.config.from).toBeUndefined()
+    const bad = resolveSpar({ ...KNIGHT, from: 'x' }, BOOK, null)
+    expect(bad.ok && bad.config.from).toBeUndefined()
+  })
+})

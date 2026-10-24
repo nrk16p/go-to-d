@@ -1,4 +1,5 @@
-// After a session: how it went, the corner as it ended, when this pattern comes back, what else is due.
+// After a session: how it went, the corner as it ended, each mistake with the move to play instead (R51),
+// when this pattern comes back, what else is due.
 
 import { useState } from 'react'
 import { BOOK } from '../shownBook'
@@ -7,9 +8,11 @@ import type { Side } from '../../session/sides'
 import { dueItems } from '../../progress/course'
 import { reviewKey } from '../../progress/srs'
 import { loadProgress, todayLocal } from '../../progress/store'
-import { Board } from '../Board'
+import { inRegion, toGtp, withMargin } from '../../go/coords'
+import type { MistakeRecord } from '../../session/controller'
+import { Board, type BoardMarker } from '../Board'
 import { COPY, points } from '../copy'
-import { getLastReport, type SessionReport } from '../reportStore'
+import { getLastReport, reviewList, type SessionReport } from '../reportStore'
 import { href, sparHref } from '../router'
 import { seatColor } from '../seat'
 
@@ -32,6 +35,68 @@ function headline(r: SessionReport): string {
   if (r.result.clean) return COPY.report.clean
   if (r.result.mistakes > 0) return COPY.report.mistakes(r.result.mistakes)
   return COPY.report.unfinished
+}
+
+/** "Best was R17." / elsewhere, or nothing when no move was named. */
+function bestLine(m: MistakeRecord): string | null {
+  const R = COPY.report
+  if (m.better === null) return null
+  if (m.better === 'tenuki') return R.reviewBestElsewhere
+  return inRegion(m.better, withMargin(m.region)) ? R.reviewBest(toGtp(m.better)) : R.reviewBestElsewhereAt(toGtp(m.better))
+}
+
+function reviewMarkers(m: MistakeRecord): BoardMarker[] {
+  const out: BoardMarker[] = []
+  if (m.played) out.push({ pt: m.played, kind: 'mistake' })
+  if (m.better && m.better !== 'tenuki') out.push({ pt: m.better, kind: 'better' })
+  return out
+}
+
+/** R51: each position the owner went wrong in, biggest loss first, with a way to practise it. */
+function MistakesReview({ report }: { report: SessionReport }) {
+  const list = reviewList(report)
+  if (list.length === 0) return null
+  const R = COPY.report
+  const top = list[0]
+  return (
+    <section className="review" aria-labelledby="review-title">
+      <h2 id="review-title">{R.reviewTitle}</h2>
+      {top.pointsLost !== null && <p className="review-tip">{R.reviewTip(top.moveNumber)}</p>}
+      <ol className="review-list">
+        {list.map((m) => {
+          const best = bestLine(m)
+          const played = R.reviewPlayed(m.played && toGtp(m.played), m.tenuki, m.pointsLost)
+          return (
+            <li key={m.moveNumber} className="review-item" data-move={m.moveNumber}>
+              <div className="review-board">
+                <Board board={m.before} region={m.region} markers={reviewMarkers(m)} label={R.reviewBoard(m.moveNumber)} />
+              </div>
+              <div className="review-text">
+                <h3>{R.reviewMove(m.moveNumber)}</h3>
+                <p className="review-line">{best ? `${played} ${best}` : played}</p>
+                {m.note && <p className="review-note">{m.note}</p>}
+              </div>
+              {m.practice && (
+                <a
+                  className="btn review-practise"
+                  href={sparHref({
+                    family: m.practice.family,
+                    pattern: m.practice.patternId,
+                    side: report.side,
+                    sym: String(m.sym),
+                    ...(report.seed === undefined ? {} : { seed: String(report.seed) }),
+                    from: String(m.practice.from),
+                  })}
+                >
+                  {R.practise}
+                </a>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
 }
 
 export function Report() {
@@ -106,11 +171,14 @@ export function Report() {
         </dl>
 
         {report.message && <p className="notice">{report.message}</p>}
-        {!report.saved && <p className="notice">{COPY.spar.saveFailed}</p>}
+        {report.practice && <p className="practice-note">{R.practiceRun}</p>}
+        {!report.saved && !report.practice && <p className="notice">{COPY.spar.saveFailed}</p>}
         {report.saved && report.mode === 'free' && scheduled && BOOK.patterns[scheduled] && (
           <p>{R.countedFor(BOOK.patterns[scheduled].def.name)}</p>
         )}
         {report.saved && (scheduled ? next && <p>{next}</p> : <p>{R.nothingScheduled}</p>)}
+
+        <MistakesReview report={report} />
 
         <section className="due" aria-labelledby="due-title">
           <h2 id="due-title">{R.dueTitle}</h2>

@@ -1,6 +1,7 @@
 // The whole app in a real browser, as the owner uses it: Today → the first new pattern, watched first
 // (R45: Auto-play, Pause, step through, Try it yourself) → its book line → a clean report that survives a
-// reload → Today no longer offers it; then a drill of the book's known mistake → Retry → finish; then
+// reload → Today no longer offers it; then a drill of the book's known mistake → Retry → finish → the
+// report's review of it → Practise this move again from there (R51), which saves nothing; then
 // Settings: Export, and an Import of a bad file.
 //
 // It runs twice. "Book only" blocks the engine's network (and the service worker, whose own fetch the
@@ -346,6 +347,38 @@ async function drillFlow(page: Page, hasTouch: boolean, engine: 'book only' | 'e
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.report.mistakes(1))
     await expect(page.locator('.stats > div').filter({ hasText: COPY.report.wrong }).locator('dd')).toHaveText('1')
     await expect(page.locator('.stats > div').filter({ hasText: COPY.report.lost }).locator('dd')).toHaveText(String(lost))
+
+    // R51: the review shows the mistake on a small board, what it cost and the move to play.
+    const review = page.getByRole('region', { name: COPY.report.reviewTitle })
+    await expect(review.locator('.review-tip')).toHaveText(COPY.report.reviewTip(at + 1))
+    const item = review.locator(`.review-item[data-move="${at + 1}"]`)
+    await expect(item.locator('.review-line')).toHaveText(
+      `${COPY.report.reviewPlayed(toGtp(wrong), false, lost)} ${COPY.report.reviewBest(toGtp(better))}`,
+    )
+    await expect(item.locator('.review-note')).toHaveText(drill.note(mistake))
+    await expect(item.locator(`[data-marker="better"][data-at="${better.x},${better.y}"]`)).toBeVisible()
+    await expect(item.locator(`[data-marker="mistake"][data-at="${wrong.x},${wrong.y}"]`)).toBeVisible()
+    await fitsWidth(page)
+
+    // Practise this move again: the same drill, board turn and seed, with the book moves before the
+    // mistake already played. The owner's move is the one they missed. The run changes no review.
+    const stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)
+    await press(page, hasTouch, COPY.report.practise, 'link')
+    await expect(page).toHaveURL(new RegExp(`[?&]from=${at}\\b`))
+    expect(await sparSym(page)).toBe(sym)
+    await expect(page.getByText(COPY.spar.practice(at + 1))).toBeVisible()
+    await expect(status(page)).toHaveText(COPY.spar.yourMove)
+    await expect(page.locator(`[data-last="${prev.x},${prev.y}"]`)).toBeVisible()
+    // Every book stone before the mistake is down (an occupied point has no hover stone), the cutting point is free.
+    for (const n of m.path.slice(0, at)) await expect(hit(page, drill.board(bookPt(n))).locator('.hover')).toHaveCount(0)
+    await expect(hit(page, wrong).locator('.hover')).toHaveCount(1)
+    await fitsWidth(page)
+    // The feed starts at the practised move, so the moves are counted from there.
+    await new Drill(page, sym, hasTouch).play(m.path.slice(at), mOwner, 0, true)
+    await expect(page).toHaveURL(/#\/report$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.report.clean)
+    await expect(page.getByText(COPY.report.practiceRun)).toBeVisible()
+    expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBe(stored)
   })
 
   await test.step('Settings: Export gives the progress as JSON; a bad Import says so and changes nothing', async () => {

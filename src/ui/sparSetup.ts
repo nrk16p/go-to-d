@@ -1,6 +1,6 @@
 // Turns the Spar route's parameters into a session config (R28): side defaults to defend (and to a side
 // the family is played from, R46), mode to drill when a pattern is named (free otherwise), and sym and
-// seed are random unless given.
+// seed are random unless given. `from` (R51) makes the drill a practice run from that move.
 
 import { bookIndex } from '../book/siblings'
 import type { Book, FamilyId } from '../book/types'
@@ -60,6 +60,8 @@ export function resolveSpar(
   }
   const sym = (intIn(params.sym, 0, 7) ?? Math.floor(random() * 8)) as Sym
   const seed = intIn(params.seed, 0, 0xffffffff) ?? Math.floor(random() * 0x100000000)
+  // R51: a practice run of one move. Only a drill has a line to play up to it.
+  const from = mode === 'drill' ? intIn(params.from, 0, 400) : null
 
   return {
     ok: true,
@@ -72,6 +74,7 @@ export function resolveSpar(
       seed,
       thresholds: progress?.settings.thresholds ?? DEFAULT_THRESHOLDS,
       missed: missedKeys(book, progress, family, side),
+      ...(from === null ? {} : { from }),
     },
   }
 }
